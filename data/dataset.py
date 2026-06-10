@@ -13,6 +13,7 @@ from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
+from numpy.lib.stride_tricks import sliding_window_view
 
 
 def get_borders(name: str, n: int, seq_len: int) -> Tuple[List[int], List[int]]:
@@ -92,14 +93,16 @@ class TSData:
         """
         arr = self.split_array(split)  # (L, C)
         L, C = arr.shape
-        windows, meta = [], []
-        for c in range(C):
-            series = arr[:, c]
-            for s in range(0, L - self.win_len + 1, stride):
-                windows.append(series[s:s + self.win_len])
-                meta.append((c, s))
-        if not windows:
+        if L < self.win_len:
             raise ValueError(
                 f"No windows for split={split}: series length {L} < win_len {self.win_len}."
             )
-        return np.asarray(windows, dtype=np.float32), np.asarray(meta, dtype=np.int32)
+        # (n_full, C, win_len) view, then sub-sample by stride along the start axis
+        sw = sliding_window_view(arr, self.win_len, axis=0)[::stride]  # (n, C, win_len)
+        n = sw.shape[0]
+        # pool by channel: (C, n, win_len) -> (C*n, win_len), channel-major to match meta
+        windows = np.ascontiguousarray(sw.transpose(1, 0, 2).reshape(C * n, self.win_len),
+                                       dtype=np.float32)
+        starts = np.arange(0, L - self.win_len + 1, stride)[:n]
+        meta = np.stack([np.repeat(np.arange(C), n), np.tile(starts, C)], axis=1).astype(np.int32)
+        return windows, meta

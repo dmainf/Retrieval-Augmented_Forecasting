@@ -80,9 +80,11 @@ class ChronosBoltModelForForecastingWithRetrieval(ChronosBoltModelForForecasting
         retrieved_y = retrieved_y.to(sequence_output.dtype)
 
         if self.augment == "moe":
-            r_M = retrieved_seq.shape[1]
-            rx = torch.stack([self.encode_mlp_x(retrieved_x[:, i, :]) for i in range(r_M)], dim=1)  # B,K,d
-            ry = torch.stack([self.encode_mlp_y(retrieved_y[:, i, :]) for i in range(r_M)], dim=1)  # B,K,d
+            B, K, Lx = retrieved_x.shape
+            Ly = retrieved_y.shape[2]
+            # encode all K retrieved windows in one batched pass (B*K) -> (B, K, d)
+            rx = self.encode_mlp_x(retrieved_x.reshape(B * K, Lx)).reshape(B, K, -1)
+            ry = self.encode_mlp_y(retrieved_y.reshape(B * K, Ly)).reshape(B, K, -1)
 
             # cross branch: query attends to retrieved (keys=rx, values=ry)
             cross_out, _ = self.cross_mha(sequence_output, rx, ry)

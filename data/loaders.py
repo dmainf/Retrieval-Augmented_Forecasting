@@ -30,7 +30,7 @@ def window_loader(tsd: TSData, args, split: str, stride: int, shuffle: bool) -> 
 
 
 def build_retriever(tsd: TSData, args, device) -> Retriever:
-    db_windows, _ = tsd.make_windows(args.retrieval_split, stride=1)
+    db_windows, _ = tsd.make_windows(args.retrieval_split, stride=args.retrieval_stride)
     return Retriever(
         db_windows,
         seq_len=args.seq_len,

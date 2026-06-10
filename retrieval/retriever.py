@@ -68,7 +68,9 @@ class Retriever:
         self.device = device
 
         db = np.asarray(db_windows, dtype=np.float32)
-        self.db_windows = torch.as_tensor(db, device=device)  # (N, win)
+        # keep the (potentially large) database on CPU; only gathered windows
+        # are moved to the compute device by the caller
+        self.db_windows = torch.from_numpy(db)  # (N, win), CPU
         self.n_db, dim = db.shape[0], seq_len
 
         keys = _make_keys(db[:, :seq_len], metric)
@@ -113,6 +115,9 @@ class Retriever:
         )
 
     def gather(self, indices) -> torch.Tensor:
-        """indices: (B, k) -> retrieved full windows (B, k, win_len)."""
-        idx = torch.as_tensor(indices, dtype=torch.long, device=self.device)
+        """indices: (B, k) -> retrieved full windows (B, k, win_len) on CPU.
+
+        The caller moves the (small) gathered batch to the compute device.
+        """
+        idx = torch.as_tensor(indices, dtype=torch.long)
         return self.db_windows[idx]

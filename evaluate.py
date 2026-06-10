@@ -10,7 +10,6 @@ are reported and appended to ``--output-dir/--result-file``.
 import _bootstrap  # noqa: F401  (must precede torch/faiss; sets OpenMP safety)
 
 import os
-import random
 
 import numpy as np
 import torch
@@ -19,13 +18,7 @@ from config import eval_args
 from data.loaders import build_tsdata, window_loader, build_retriever
 from methods.registry import get_method
 from utils.metrics import metric
-from utils.tools import pick_device, save_results
-
-
-def set_seed(seed):
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
+from utils.tools import pick_device, save_results, set_seed
 
 
 def main():

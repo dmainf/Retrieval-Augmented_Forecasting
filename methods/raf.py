@@ -70,24 +70,21 @@ class RAFMethod(Method):
                   f"to fit backbone context_length={ctx_cap}.")
         return model
 
-    def _augment(self, context, device):
+    def _augment(self, context, device, exclude_self):
         ctx = context.to(device).float()
-        idx, _ = self.retriever.search(ctx, top_k=self._k, exclude_self=self._training_query)
+        # exclude_self: True for train queries (which live in the DB), False at eval
+        idx, _ = self.retriever.search(ctx, top_k=self._k, exclude_self=exclude_self)
         retrieved = self.retriever.gather(idx).to(device)  # (B, k, win_len)
         return build_raf_context(ctx, retrieved)
 
-    _training_query = False
-
     def compute_loss(self, model, context, target, device):
-        self._training_query = True
-        augmented = self._augment(context, device)
+        augmented = self._augment(context, device, exclude_self=True)
         out = model(context=augmented, target=target.to(device).float())
         return out.loss
 
     @torch.no_grad()
     def predict(self, model, context, device):
-        self._training_query = False
-        augmented = self._augment(context, device)
+        augmented = self._augment(context, device, exclude_self=False)
         out = model(context=augmented)
         point = median_point(out.quantile_preds, model)
         return point[:, : self.args.pred_len]

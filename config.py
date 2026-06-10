@@ -41,6 +41,9 @@ def add_common_args(p: argparse.ArgumentParser):
                    help="faiss similarity: cosine / euclidean (L2) / correlation (Pearson)")
     p.add_argument("--retrieval-split", default="train",
                    help="split used to build the retrieval database")
+    p.add_argument("--retrieval-stride", default=1, type=int,
+                   help="sliding-window stride for the retrieval database "
+                        "(1 = paper default / full KB; larger = fewer windows, less memory)")
 
     # cross_raf fusion
     p.add_argument("--augment-mode", default="moe", help="cross_raf fusion mode (moe = cross+self)")
@@ -58,14 +61,13 @@ def add_common_args(p: argparse.ArgumentParser):
 def train_args():
     p = argparse.ArgumentParser(description="RAF / Cross-RAF / Chronos — training")
     add_common_args(p)
-    p.add_argument("--epochs", default=10, type=int)
     p.add_argument("--train-steps", default=10000, type=int,
-                   help="max optimizer steps (Cross-RAG paper Table A.2: 10,000)")
+                   help="number of optimizer steps (Cross-RAG paper Table A.2: 10,000). "
+                        "Training is step-driven: the loader is cycled until this many steps.")
     p.add_argument("--lr", default=3e-4, type=float,
-                   help="Cross-RAG paper Table A.2: 3e-4 (good for cross_raf's small modules; "
+                   help="constant learning rate (Cross-RAG paper Table A.2: 3e-4, no scheduler; "
                         "for raf --raf-mode advanced fine-tuning the full backbone, try 1e-5~1e-4)")
     p.add_argument("--weight-decay", default=0.01, type=float)
-    p.add_argument("--tmax", default=20, type=int, help="CosineAnnealing T_max")
     p.add_argument("--grad-clip", default=1.0, type=float)
     p.add_argument("--train-stride", default=1, type=int, help="sliding-window stride for train windows")
     p.add_argument("--save-freq", default=2000, type=int, help="checkpoint every N steps")

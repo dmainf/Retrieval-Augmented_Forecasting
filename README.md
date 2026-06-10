@@ -105,6 +105,7 @@ python3 evaluate.py --method cross_raf --dataset ETTh1 \
 | `--top-k` | `15` | 検索件数。cross_raf=融合本数 / raf=連結本数（context長に自動cap、rafは1〜3推奨）|
 | `--retrieval-metric` | `cosine` | faiss類似度：`cosine` / `euclidean` / `correlation`(Pearson) |
 | `--retrieval-split` | `train` | 検索DBを作る分割 |
+| `--retrieval-stride` | `1` | 検索DBの窓スライド幅（1=論文どおり全窓 / 大きくすると件数・メモリ減）|
 | `--augment-mode` | `moe` | cross_raf 融合モード（`moe`=cross+self）|
 | `--mix-lambda` | `0.7` | cross_raf の cross/self 混合比 |
 | `--output-dir` | `./checkpoints` | チェックポイント / 結果の保存先 |
@@ -117,11 +118,9 @@ python3 evaluate.py --method cross_raf --dataset ETTh1 \
 
 | オプション | 既定 | 説明 |
 |---|---|---|
-| `--epochs` | `10` | 外側エポック上限（実質は `--train-steps` で制御）|
-| `--train-steps` | `10000` | 最大optimizerステップ（Cross-RAG論文 Table A.2）|
-| `--lr` | `3e-4` | 学習率（Cross-RAG論文値。raf advanced は 1e-5〜1e-4 推奨）|
+| `--train-steps` | `10000` | optimizerステップ数（Cross-RAG論文 Table A.2）。step駆動でローダをcycleして必ず到達 |
+| `--lr` | `3e-4` | **定数**学習率（Cross-RAG論文値・スケジューラなし。raf advanced は 1e-5〜1e-4 推奨）|
 | `--weight-decay` | `0.01` | AdamW weight decay |
-| `--tmax` | `20` | CosineAnnealingLR の T_max |
 | `--grad-clip` | `1.0` | 勾配クリップ |
 | `--train-stride` | `1` | 学習窓のスライド幅 |
 | `--save-freq` | `2000` | 何ステップごとに保存するか |
@@ -165,7 +164,8 @@ CLIオプション以外に、コード内で固定している主な既定値�
 | 値 | デフォルト |
 |---|---|
 | optimizer | `AdamW`（`--lr` `--weight-decay`）|
-| scheduler | `CosineAnnealingLR`（`T_max=--tmax`, `eta_min=1e-8`、`--save-freq`ごとにstep）|
+| 学習率スケジュール | **なし（定数LR）** — Cross-RAG論文 Table A.2 準拠 |
+| 学習制御 | step駆動（ローダをcycleし `--train-steps` まで）|
 | 損失 | Chronos純正の quantile regression loss |
 | 勾配クリップ | `--grad-clip`（既定1.0）|
 
@@ -263,13 +263,13 @@ Linux等でマルチスレッドにしたい場合は `OMP_NUM_THREADS` を明�
 
 | ファイル | 中身 |
 |---|---|
-| `model_step{N}.pth` / `best.pth` | `{"state_dict", "optimizer", "scheduler", "step", "args"}` の辞書（自己記述・再開可能）|
+| `model_step{N}.pth` / `best.pth` | `{"state_dict", "optimizer", "step", "args"}` の辞書（自己記述・再開可能）|
 | `args.json` | 学習時のハイパラ（人間可読の記録）|
 
 - `evaluate.py --checkpoint` でロードすると **`trained with: ...` で学習設定を表示**。
   `chronos_model / seq_len / pred_len / augment_mode / method` が評価時と食い違うと警告する。
-- **`--resume` は厳密な再開**：重み＋optimizer(Adamモーメント)＋LRスケジューラ位置＋step数を復元し、
-  途中のステップ・LRスケジュールから正確に続行する。
+- **`--resume` は厳密な再開**：重み＋optimizer(Adamモーメント)＋step数を復元して途中から正確に続行
+  （LRは定数なのでスケジューラ状態は不要）。
 - 旧形式（生の `state_dict` のみ）の `.pth` も後方互換で読める（その場合は重みのみ復元と警告）。
 - 注意：`best.pth` は検証選択ではなく最終モデル。
 
