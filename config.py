@@ -18,7 +18,7 @@ def add_common_args(p: argparse.ArgumentParser):
                    help="(--method raf) naive: frozen backbone / advanced: fine-tune backbone")
 
     # data
-    p.add_argument("--root-path", default="./datasets/ETT-small/", help="directory holding the CSV")
+    p.add_argument("--root-path", default="./Datasets/ETT-small/", help="directory holding the CSV")
     p.add_argument("--data-path", default="ETTh1.csv", help="CSV filename")
     p.add_argument("--dataset", default="ETTh1", help="dataset name (controls train/val/test borders)")
     p.add_argument("--features", default="M", choices=["M", "S"],
