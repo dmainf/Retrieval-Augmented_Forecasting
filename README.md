@@ -135,6 +135,51 @@ python3 evaluate.py --method cross_raf --dataset ETTh1 \
 | `--eval-stride` | `pred_len` | test窓のスライド幅。`1` で全窓（完全ベンチ再現・低速）|
 | `--result-file` | `result.txt` | `--output-dir` 下に追記する結果ファイル名 |
 
+### 固定パラメータ（CLIに出していないコード内デフォルト）
+
+CLIオプション以外に、コード内で固定している主な既定値：
+
+**backbone（Chronos-Bolt のモデル設定。全サイズ共通、`d_model`のみ異なる）**
+
+| 値 | デフォルト | 備考 |
+|---|---|---|
+| `context_length` | `2048` | `--seq-len` の上限 |
+| `prediction_length` | `64` | `--pred-len` の上限（cross_raf は ==64）|
+| 分位点 | `[0.1, 0.2, …, 0.9]`（9点）| 点予測は中央値(0.5)を使用 |
+| patch size / stride | `16 / 16` | |
+| `d_model` | tiny=256 / mini=384 / **small=512** / base=768 | `--chronos-model` で決まる |
+
+**cross_raf 融合ヘッド（`models/chronos/retrieval_model.py`、固定）**
+
+| 値 | デフォルト |
+|---|---|
+| attention ヘッド数（cross/self とも） | `8` |
+| dropout | `0.2` |
+| encoder MLP / FFN | `Linear→ReLU→Linear`（hidden=`d_model`）|
+| `INPUT_LEN`（encode_mlp_x の入力長） | `--seq-len` から設定 |
+| `LAMBDA`（cross/self 混合比） | `--mix-lambda`（既定0.7）から設定 |
+| 学習対象パラメータ数 | 約4M（small、backbone凍結時）|
+
+**学習・最適化（`train.py`、固定挙動）**
+
+| 値 | デフォルト |
+|---|---|
+| optimizer | `AdamW`（`--lr` `--weight-decay`）|
+| scheduler | `CosineAnnealingLR`（`T_max=--tmax`, `eta_min=1e-8`、`--save-freq`ごとにstep）|
+| 損失 | Chronos純正の quantile regression loss |
+| 勾配クリップ | `--grad-clip`（既定1.0）|
+
+**検索・前処理（固定）**
+
+| 項目 | デフォルト |
+|---|---|
+| faiss index | `IndexFlatIP`(cosine/correlation) / `IndexFlatL2`(euclidean)（厳密検索）|
+| 検索キー正規化 | min-max → metric正規化（cosine=L2 / correlation=平均除去+L2 / euclidean=なし）|
+| self-match 除外 | 距離 `<1e-6` を除外（学習クエリのみ。評価は全件保持）|
+| チャネル標準化 | train統計で z-score（eps `1e-8`、`--no-scale`で無効）|
+| 分割境界 | ETTh1/h2/m1/m2=12/4/4ヶ月、それ以外=0.7/0.1/0.2 |
+| 評価空間 | 標準化空間で MSE/MAE |
+
 ---
 
 ## ファイルの役割
@@ -212,6 +257,21 @@ CUDA環境では faiss GPU index を自動使用。検索の正規化は**検索
 faiss-cpu と torch がそれぞれ libomp を読み込み二重ロードでセグフォルトする問題を、
 `_bootstrap.py`（各エントリ先頭でimport）が `KMP_DUPLICATE_LIB_OK=TRUE` ＋ OMPスレッド数1 で回避。
 Linux等でマルチスレッドにしたい場合は `OMP_NUM_THREADS` を明示すれば上書きされる。
+
+### 学習で保存されるもの（チェックポイント）
+保存先 `{--output-dir}/{method}_{dataset}/`：
+
+| ファイル | 中身 |
+|---|---|
+| `model_step{N}.pth` / `best.pth` | `{"state_dict", "optimizer", "scheduler", "step", "args"}` の辞書（自己記述・再開可能）|
+| `args.json` | 学習時のハイパラ（人間可読の記録）|
+
+- `evaluate.py --checkpoint` でロードすると **`trained with: ...` で学習設定を表示**。
+  `chronos_model / seq_len / pred_len / augment_mode / method` が評価時と食い違うと警告する。
+- **`--resume` は厳密な再開**：重み＋optimizer(Adamモーメント)＋LRスケジューラ位置＋step数を復元し、
+  途中のステップ・LRスケジュールから正確に続行する。
+- 旧形式（生の `state_dict` のみ）の `.pth` も後方互換で読める（その場合は重みのみ復元と警告）。
+- 注意：`best.pth` は検証選択ではなく最終モデル。
 
 ### 制約
 - backbone は **Chronos-Bolt系のみ**（Moirai/TimesFM等は未対応。`models/` にラッパー追加が必要）。

@@ -8,6 +8,7 @@ script does nothing but tell you to run evaluate.py directly.
 """
 import _bootstrap  # noqa: F401  (must precede torch/faiss; sets OpenMP safety)
 
+import json
 import os
 import random
 import time
@@ -58,11 +59,34 @@ def main():
 
     save_dir = os.path.join(args.output_dir, f"{args.method}_{args.dataset}")
     os.makedirs(save_dir, exist_ok=True)
+    # human-readable record of the run's configuration
+    with open(os.path.join(save_dir, "args.json"), "w") as f:
+        json.dump(vars(args), f, indent=2)
+
+    def save_ckpt(path, step):
+        # self-describing + resumable: weights, optimizer/scheduler state, step, args
+        torch.save({
+            "state_dict": model.state_dict(),
+            "optimizer": optimizer.state_dict(),
+            "scheduler": scheduler.state_dict(),
+            "step": step,
+            "args": vars(args),
+        }, path)
 
     start_step = 0
     if args.resume:
-        model.load_state_dict(torch.load(args.resume, map_location=device))
-        print(f"Resumed from {args.resume}")
+        ckpt = torch.load(args.resume, map_location=device, weights_only=False)
+        if isinstance(ckpt, dict) and "state_dict" in ckpt:
+            model.load_state_dict(ckpt["state_dict"])
+            if "optimizer" in ckpt:
+                optimizer.load_state_dict(ckpt["optimizer"])
+            if "scheduler" in ckpt:
+                scheduler.load_state_dict(ckpt["scheduler"])
+            start_step = ckpt.get("step", 0)
+        else:  # backward-compat: a raw state_dict (weights only)
+            model.load_state_dict(ckpt)
+            print("[warning] checkpoint has no optimizer/step; resuming weights only.")
+        print(f"Resumed from {args.resume} at step {start_step}")
 
     model.train()
     step = start_step
@@ -87,16 +111,16 @@ def main():
                 print(f"  [epoch {epoch}][step {step}/{args.train_steps}] "
                       f"loss={avg:.5f} lr={optimizer.param_groups[0]['lr']:.2e}")
             if step % args.save_freq == 0:
+                scheduler.step()  # step before snapshot so resume continues the LR schedule exactly
                 path = os.path.join(save_dir, f"model_step{step}.pth")
-                torch.save(model.state_dict(), path)
-                scheduler.step()
+                save_ckpt(path, step)
                 print(f"  saved {path}")
             if step >= args.train_steps:
                 stop = True
                 break
 
     final = os.path.join(save_dir, "best.pth")
-    torch.save(model.state_dict(), final)
+    save_ckpt(final, step)
     print(f"Training done in {time.time()-t0:.1f}s. Saved {final}")
 
 

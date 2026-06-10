@@ -41,9 +41,27 @@ def main():
     model = method.build_model(device)
 
     if args.checkpoint:
-        state = torch.load(args.checkpoint, map_location=device)
+        ckpt = torch.load(args.checkpoint, map_location=device, weights_only=False)
+        if isinstance(ckpt, dict) and "state_dict" in ckpt:
+            state, train_args = ckpt["state_dict"], ckpt.get("args", {})
+        else:  # backward-compat: a raw state_dict
+            state, train_args = ckpt, {}
         model.load_state_dict(state, strict=False)
         print(f"Loaded checkpoint: {args.checkpoint}")
+        if train_args:
+            keys = ["method", "raf_mode", "chronos_model", "seq_len", "pred_len",
+                    "top_k", "retrieval_metric", "augment_mode", "mix_lambda",
+                    "dataset", "lr", "train_steps", "seed"]
+            print("  trained with: "
+                  + ", ".join(f"{k}={train_args[k]}" for k in keys if k in train_args))
+            # warn if architecture-critical eval settings differ from training
+            for k in ["chronos_model", "seq_len", "pred_len", "augment_mode", "method"]:
+                if k in train_args and getattr(args, k) != train_args[k]:
+                    print(f"  [warning] {k}: eval={getattr(args, k)} != train={train_args[k]} "
+                          "(may load incorrectly or compare unfairly)")
+        else:
+            print("  [note] checkpoint has no embedded args (old format); "
+                  "ensure eval settings match the training run.")
     elif method.needs_training:
         print("[warning] this method is normally trained; no --checkpoint given "
               "(using initial fusion weights).")
