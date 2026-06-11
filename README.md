@@ -1,4 +1,4 @@
-# RAF Playground — 3手法を1つのCLIで切り替える検索拡張時系列予測
+k# RAF Playground — 3手法を1つのCLIで切り替える検索拡張時系列予測
 
 Chronos-Bolt をバックボーンに、**素のChronos / コンテキスト拡張RAF / Cross-RAG** の3手法を
 `--method` で切り替えて学習・評価できる軽量フレームワーク。`cross-rag/` のモデル思想を引き継ぎつつ、
