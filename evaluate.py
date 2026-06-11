@@ -18,7 +18,7 @@ from config import eval_args
 from data.loaders import build_tsdata, window_loader, build_retriever
 from methods.registry import get_method
 from utils.metrics import metric
-from utils.tools import pick_device, save_results, set_seed
+from utils.tools import pick_device, save_predictions, save_results, set_seed
 
 
 def main():
@@ -82,6 +82,10 @@ def main():
     model_id = f"{tag}_{args.dataset}_sl{args.seq_len}_pl{args.pred_len}"
     save_results(result_path, model_id, mse, mae)
     print(f"Result appended to {result_path}")
+
+    pred_path = os.path.join(args.output_dir, f"{model_id}_preds.csv")
+    save_predictions(pred_path, preds, trues)
+    print(f"Predictions saved to {pred_path}")
 
 
 if __name__ == "__main__":

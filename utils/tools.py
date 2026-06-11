@@ -24,3 +24,14 @@ def save_results(file_path, model_id, mse, mae):
     with open(file_path, "a") as f:
         f.write(f"{model_id}\n")
         f.write(f"mse:{mse:.4f}, mae:{mae:.4f}\n")
+
+
+def save_predictions(file_path, preds, trues):
+    # tidy long format (one row per forecast step) for later plotting
+    os.makedirs(os.path.dirname(file_path) or ".", exist_ok=True)
+    n, length = preds.shape
+    window = np.repeat(np.arange(n), length)
+    t = np.tile(np.arange(length), n)
+    data = np.column_stack([window, t, preds.reshape(-1), trues.reshape(-1)])
+    np.savetxt(file_path, data, delimiter=",", header="window,t,pred,true",
+               comments="", fmt=["%d", "%d", "%.6f", "%.6f"])
