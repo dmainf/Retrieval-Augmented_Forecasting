@@ -26,33 +26,14 @@ def add_common_args(p: argparse.ArgumentParser):
         help="(--method raf) naive: frozen backbone / advanced: fine-tune backbone",
     )
 
-    # data
-    p.add_argument(
-        "--root-path", default="./Datasets/ETT-small/", help="directory holding the CSV"
-    )
-    p.add_argument("--data-path", default="ETTh1.csv", help="CSV filename")
-    p.add_argument(
-        "--dataset",
-        default="ETTh1",
-        help="dataset name (controls train/val/test borders)",
-    )
-    p.add_argument(
-        "--features",
-        default="M",
-        choices=["M", "S"],
-        help="M: every column as an independent series / S: only --target",
-    )
-    p.add_argument("--target", default="OT", help="target column when --features S")
+    # window geometry (shared by train corpus and eval target)
     p.add_argument("--seq-len", default=512, type=int, help="context length")
     p.add_argument("--pred-len", default=64, type=int, help="forecast horizon")
-    p.add_argument(
-        "--no-scale", action="store_true", help="disable per-channel standardization"
-    )
 
     # backbone
     p.add_argument(
         "--chronos-model",
-        default="amazon/chronos-bolt-small",
+        default="amazon/chronos-bolt-base",
         help="HF id or local path of the Chronos-Bolt backbone",
     )
 
@@ -69,18 +50,6 @@ def add_common_args(p: argparse.ArgumentParser):
         default="cosine",
         choices=["cosine", "euclidean", "correlation"],
         help="faiss similarity: cosine / euclidean (L2) / correlation (Pearson)",
-    )
-    p.add_argument(
-        "--retrieval-split",
-        default="train",
-        help="split used to build the retrieval database",
-    )
-    p.add_argument(
-        "--retrieval-stride",
-        default=1,
-        type=int,
-        help="sliding-window stride for the retrieval database "
-        "(1 = paper default / full KB; larger = fewer windows, less memory)",
     )
 
     # cross_raf fusion
@@ -102,49 +71,98 @@ def add_common_args(p: argparse.ArgumentParser):
     return p
 
 
+def add_eval_dataset_args(p: argparse.ArgumentParser):
+    """Target-dataset args. Evaluation only — Cross-RAF is trained dataset-agnostic
+    on the general corpus, so training never selects a dataset."""
+    p.add_argument(
+        "--root-path", default="./Datasets/ETT-small/", help="directory holding the CSV"
+    )
+    p.add_argument("--data-path", default="ETTh1.csv", help="CSV filename")
+    p.add_argument(
+        "--dataset",
+        default="ETTh1",
+        help="dataset name (controls train/val/test borders)",
+    )
+    p.add_argument(
+        "--features",
+        default="M",
+        choices=["M", "S"],
+        help="M: every column as an independent series / S: only --target",
+    )
+    p.add_argument("--target", default="OT", help="target column when --features S")
+    p.add_argument(
+        "--no-scale", action="store_true", help="disable per-channel standardization"
+    )
+    p.add_argument(
+        "--retrieval-split",
+        default="train",
+        help="split used to build the (target-own) retrieval database for zero-shot eval",
+    )
+    p.add_argument(
+        "--retrieval-stride",
+        default=1,
+        type=int,
+        help="sliding-window stride for the retrieval database "
+        "(1 = paper default / full KB; larger = fewer windows, less memory)",
+    )
+    return p
+
+
 def train_args():
-    p = argparse.ArgumentParser(description="RAF / Cross-RAF / Chronos — training")
+    """Training = Cross-RAF fusion pretraining on the general corpus (no dataset)."""
+    p = argparse.ArgumentParser(description="Cross-RAF fusion pretraining (general corpus)")
     add_common_args(p)
+    # general training corpus (Hugging Face nkh/TS-RAG-Data)
+    p.add_argument(
+        "--corpus-dir",
+        default="./corpus/pretrain_pairs_ctx512",
+        help="dir of precomputed pair parquets (target=[x|y], precomputed indices/distances)",
+    )
+    p.add_argument(
+        "--retrieval-db-path",
+        default="./corpus/retrieval_database_512.parquet",
+        help="retrieval knowledge base parquet (x/y columns gathered by precomputed indices)",
+    )
+    p.add_argument(
+        "--shuffle-buffer", default=10000, type=int, help="stream-shuffle reservoir size"
+    )
+    p.add_argument(
+        "--drop-prob", default=0.0, type=float, help="target NaN-masking probability (paper: 0.0)"
+    )
     p.add_argument(
         "--train-steps",
         default=10000,
         type=int,
-        help="number of optimizer steps (Cross-RAG paper Table A.2: 10,000). "
-        "Training is step-driven: the loader is cycled until this many steps.",
+        help="number of optimizer steps (Cross-RAG paper Table A.2: 10,000).",
     )
     p.add_argument(
         "--lr",
         default=3e-4,
         type=float,
-        help="constant learning rate (Cross-RAG paper Table A.2: 3e-4, no scheduler; "
-        "for raf --raf-mode advanced fine-tuning the full backbone, try 1e-5~1e-4)",
+        help="constant learning rate (Cross-RAG paper Table A.2: 3e-4, no scheduler).",
     )
     p.add_argument("--weight-decay", default=0.01, type=float)
     p.add_argument("--grad-clip", default=1.0, type=float)
     p.add_argument(
-        "--train-stride",
-        default=1,
-        type=int,
-        help="sliding-window stride for train windows",
-    )
-    p.add_argument(
-        "--save-freq", default=2000, type=int, help="checkpoint every N steps"
+        "--save-freq", default=5000, type=int, help="checkpoint every N steps"
     )
     p.add_argument("--resume", default="", type=str)
     return p.parse_args()
 
 
 def eval_args():
-    p = argparse.ArgumentParser(description="RAF / Cross-RAF / Chronos — evaluation")
+    p = argparse.ArgumentParser(description="RAF / Cross-RAF / Chronos — zero-shot evaluation")
     add_common_args(p)
+    add_eval_dataset_args(p)
     p.add_argument(
         "--checkpoint", default="", help="trained weights (cross_raf / advanced raf)"
     )
     p.add_argument(
         "--eval-stride",
-        default=None,
+        default=1,
         type=int,
-        help="test-window stride (default: pred_len for non-overlapping)",
+        help="test-window stride (1 = paper protocol / every timestep; "
+        "pred_len = non-overlapping)",
     )
     p.add_argument("--result-file", default="result.txt")
     return p.parse_args()

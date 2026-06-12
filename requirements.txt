@@ -1,6 +1,0 @@
-torch>=2.0
-transformers>=4.30
-chronos-forecasting>=2.0
-faiss-cpu>=1.8        # use faiss-gpu on CUDA hosts; a GPU index is used automatically
-numpy
-pandas

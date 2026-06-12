@@ -1,23 +1,30 @@
-"""Training entry point (step-driven, constant LR — Cross-RAG paper Table A.2).
+"""Training entry point — Cross-RAF fusion pretraining on the general corpus.
 
-  python3 train.py --method cross_raf --dataset ETTh1 --root-path ./Datasets/ETT-small/ --data-path ETTh1.csv
-  python3 train.py --method raf --raf-mode advanced --dataset weather ...
+Cross-RAF is zero-shot: the fusion modules are trained **once** on a large,
+dataset-agnostic corpus (never on the target), then applied unchanged at eval.
+So training takes no ``--dataset``; it streams precomputed pairs and gathers
+retrieved windows by their precomputed indices (no faiss search at train time).
 
-For methods that need no training (``none`` and ``raf --raf-mode naive``) this
-script does nothing but tell you to run evaluate.py directly.
+  python3 train.py --method cross_raf \
+      --corpus-dir ./corpus/pretrain_pairs_ctx512 \
+      --retrieval-db-path ./corpus/retrieval_database_512.parquet
+
+``none`` and ``raf`` are zero-shot baselines that are not trained here — run
+evaluate.py directly.
 """
 import _bootstrap  # noqa: F401  (must precede torch/faiss; sets OpenMP safety)
 
 import json
 import os
 import time
-from itertools import cycle
 
 import torch
 import torch.optim as optim
+from torch.utils.data import DataLoader
+from torch.nn.utils import clip_grad_norm_
 
 from config import train_args
-from data.loaders import build_tsdata, window_loader, build_retriever
+from data.corpus import CorpusPairs, RetrievalDB
 from methods.registry import get_method
 from utils.tools import pick_device, set_seed
 
@@ -51,37 +58,41 @@ def main():
     args = train_args()
     set_seed(args.seed)
     device = pick_device(args.gpu)
-    print(f"Device: {device} | method={args.method}"
-          + (f" ({args.raf_mode})" if args.method == "raf" else ""))
 
-    method = get_method(args)
-    if not method.needs_training:
-        print(f"[{args.method}] requires no training. Run evaluate.py directly.")
+    if args.method != "cross_raf":
+        print(f"[{args.method}] is a zero-shot baseline and is not trained here. "
+              "Run evaluate.py directly.")
         return
 
-    tsd = build_tsdata(args)
-    model = method.build_model(device)
-    if method.needs_retrieval:
-        method.set_retriever(build_retriever(tsd, args, device))
+    print(f"Device: {device} | Cross-RAF fusion pretraining on general corpus")
+    method = get_method(args)
+    model = method.build_model(device)  # builds fusion head, freezes backbone
 
-    train_loader = window_loader(tsd, args, "train", stride=args.train_stride, shuffle=True)
-    n_trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    print(f"Data: {args.dataset} | channels={len(tsd.channels)} | "
-          f"train_windows={len(train_loader.dataset)} | trainable_params={n_trainable}")
+    # retrieval KB (gathered by precomputed indices) + streamed corpus pairs
+    db = RetrievalDB(args.retrieval_db_path, seq_len=args.seq_len, pred_len=args.pred_len)
+    corpus = CorpusPairs(
+        args.corpus_dir,
+        context_length=args.seq_len,
+        prediction_length=args.pred_len,
+        retrieve_lookback_length=args.seq_len,
+        top_k=args.top_k,
+        drop_prob=args.drop_prob,
+    ).shuffle(buffer_len=args.shuffle_buffer)
+    train_loader = DataLoader(corpus, batch_size=args.batch_size, num_workers=0)
 
-    optimizer = optim.AdamW(
-        [p for p in model.parameters() if p.requires_grad],
-        lr=args.lr, weight_decay=args.weight_decay,
-    )
+    trainable = [p for p in model.parameters() if p.requires_grad]
+    n_trainable = sum(p.numel() for p in trainable)
+    print(f"KB windows={db.whole_seq.shape[0]} | trainable_params={n_trainable} "
+          f"| top_k={args.top_k} | batch_size={args.batch_size}")
 
-    save_dir = os.path.join(args.output_dir, f"{args.method}_{args.dataset}")
+    optimizer = optim.AdamW(trainable, lr=args.lr, weight_decay=args.weight_decay)
+
+    save_dir = os.path.join(args.output_dir, "cross_raf_pretrain")
     os.makedirs(save_dir, exist_ok=True)
-    # human-readable record of the run's configuration
     with open(os.path.join(save_dir, "args.json"), "w") as f:
         json.dump(vars(args), f, indent=2)
 
     def save_ckpt(path, step):
-        # self-describing + resumable: weights, optimizer state, step, args
         torch.save({
             "state_dict": model.state_dict(),
             "optimizer": optimizer.state_dict(),
@@ -97,23 +108,31 @@ def main():
             if "optimizer" in ckpt:
                 optimizer.load_state_dict(ckpt["optimizer"])
             start_step = ckpt.get("step", 0)
-        else:  # backward-compat: a raw state_dict (weights only)
+        else:
             model.load_state_dict(ckpt)
             print("[warning] checkpoint has no optimizer/step; resuming weights only.")
         print(f"Resumed from {args.resume} at step {start_step}")
 
-    # step-driven: cycle the loader until train_steps optimizer steps are taken
     model.train()
     t0 = time.time()
     steps, losses = [], []
-    data_iter = cycle(train_loader)
-    for step in range(start_step + 1, args.train_steps + 1):
-        context, target = next(data_iter)
-        loss = method.compute_loss(model, context, target, device)
+    step = start_step
+    for batch in train_loader:
+        if step >= args.train_steps:
+            break
+        step += 1
+
+        x = batch["x"].float().to(device)
+        y = batch["y"].float().to(device)
+        dist = batch["distances"].float().to(device)
+        retrieved = db.gather(batch["indices"]).float().to(device)  # (B, k, win)
+
+        out = model(context=x, target=y, retrieved_seq=retrieved, distances=dist)
+        loss = out.loss.mean()
+
         optimizer.zero_grad()
         loss.backward()
-        torch.nn.utils.clip_grad_norm_(
-            [p for p in model.parameters() if p.requires_grad], args.grad_clip)
+        clip_grad_norm_(trainable, args.grad_clip)
         optimizer.step()
 
         steps.append(step)
@@ -128,9 +147,8 @@ def main():
             print(f"  saved {path}")
 
     save_loss_curve(save_dir, steps, losses)
-
     final = os.path.join(save_dir, "best.pth")
-    save_ckpt(final, args.train_steps)
+    save_ckpt(final, step)
     print(f"Training done in {time.time()-t0:.1f}s. Saved {final}")
 
 

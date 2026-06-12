@@ -79,7 +79,8 @@ def main():
     print(f"\n[{tag}] {args.dataset}  mse={mse:.4f}  mae={mae:.4f}  rmse={rmse:.4f}")
 
     result_path = os.path.join(args.output_dir, args.result_file)
-    model_id = f"{tag}_{args.dataset}_sl{args.seq_len}_pl{args.pred_len}"
+    chronos_size = args.chronos_model.rstrip("/").split("-")[-1]
+    model_id = f"{tag}_{args.dataset}_{chronos_size}"
     save_results(result_path, model_id, mse, mae)
     print(f"Result appended to {result_path}")
 
