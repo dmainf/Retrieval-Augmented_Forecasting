@@ -59,19 +59,26 @@ def main():
         print("[warning] this method is normally trained; no --checkpoint given "
               "(using initial fusion weights).")
 
-    if method.needs_retrieval:
-        method.set_retriever(build_retriever(tsd, args, device))
-
-    test_loader = window_loader(tsd, args, "test", stride=eval_stride, shuffle=False)
-    print(f"test_windows={len(test_loader.dataset)} | eval_stride={eval_stride}")
-
     model.eval()
-    preds, trues = [], []
-    with torch.no_grad():
-        for context, target in test_loader:
-            point = method.predict(model, context, device)  # (B, pred_len)
-            preds.append(point.cpu().numpy())
-            trues.append(target.numpy())
+    # Per-channel evaluation: each channel queries a retrieval DB built only from
+    # that same channel's train windows, matching the paper's per-variable KB
+    # (retrieve_X.py uses variable_filter=[var_name]). Channels are independent
+    # univariate series, so concatenating their windows reproduces the global metric
+    # for non-retrieval methods.
+    n_ch = tsd.data.shape[1]
+    preds, trues, total = [], [], 0
+    for c in range(n_ch):
+        if method.needs_retrieval:
+            method.set_retriever(build_retriever(tsd, args, device, channel=c))
+        test_loader = window_loader(tsd, args, "test", stride=eval_stride,
+                                    shuffle=False, channel=c)
+        total += len(test_loader.dataset)
+        with torch.no_grad():
+            for context, target in test_loader:
+                point = method.predict(model, context, device)  # (B, pred_len)
+                preds.append(point.cpu().numpy())
+                trues.append(target.numpy())
+    print(f"test_windows={total} | eval_stride={eval_stride} | channels={n_ch}")
     preds = np.concatenate(preds, 0)
     trues = np.concatenate(trues, 0)
 

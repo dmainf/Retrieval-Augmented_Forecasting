@@ -20,8 +20,11 @@ def build_tsdata(args) -> TSData:
     )
 
 
-def window_loader(tsd: TSData, args, split: str, stride: int, shuffle: bool) -> DataLoader:
-    windows, _ = tsd.make_windows(split, stride=stride)
+def window_loader(tsd: TSData, args, split: str, stride: int, shuffle: bool,
+                  channel: int = None) -> DataLoader:
+    windows, meta = tsd.make_windows(split, stride=stride)
+    if channel is not None:
+        windows = windows[meta[:, 0] == channel]
     ctx = torch.from_numpy(windows[:, : args.seq_len])
     tgt = torch.from_numpy(windows[:, args.seq_len : args.seq_len + args.pred_len])
     ds = TensorDataset(ctx, tgt)
@@ -29,8 +32,10 @@ def window_loader(tsd: TSData, args, split: str, stride: int, shuffle: bool) -> 
                       num_workers=args.num_workers, drop_last=False)
 
 
-def build_retriever(tsd: TSData, args, device) -> Retriever:
-    db_windows, _ = tsd.make_windows(args.retrieval_split, stride=args.retrieval_stride)
+def build_retriever(tsd: TSData, args, device, channel: int = None) -> Retriever:
+    db_windows, meta = tsd.make_windows(args.retrieval_split, stride=args.retrieval_stride)
+    if channel is not None:
+        db_windows = db_windows[meta[:, 0] == channel]
     return Retriever(
         db_windows,
         seq_len=args.seq_len,
