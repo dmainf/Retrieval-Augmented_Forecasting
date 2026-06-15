@@ -66,7 +66,7 @@ def main():
     # univariate series, so concatenating their windows reproduces the global metric
     # for non-retrieval methods.
     n_ch = tsd.data.shape[1]
-    preds, trues, total = [], [], 0
+    preds, trues, chans, total = [], [], [], 0
     for c in range(n_ch):
         if method.needs_retrieval:
             method.set_retriever(build_retriever(tsd, args, device, channel=c))
@@ -78,9 +78,11 @@ def main():
                 point = method.predict(model, context, device)  # (B, pred_len)
                 preds.append(point.cpu().numpy())
                 trues.append(target.numpy())
+                chans.append(np.full(point.shape[0], c, dtype=int))
     print(f"test_windows={total} | eval_stride={eval_stride} | channels={n_ch}")
     preds = np.concatenate(preds, 0)
     trues = np.concatenate(trues, 0)
+    chans = np.concatenate(chans, 0)
 
     mae, mse, rmse = metric(preds, trues)
     print(f"\n[{tag}] {args.dataset}  mse={mse:.4f}  mae={mae:.4f}  rmse={rmse:.4f}")
@@ -92,7 +94,7 @@ def main():
     print(f"Result appended to {result_path}")
 
     pred_path = os.path.join(args.output_dir, f"{model_id}_preds.csv")
-    save_predictions(pred_path, preds, trues)
+    save_predictions(pred_path, preds, trues, chans)
     print(f"Predictions saved to {pred_path}")
 
 

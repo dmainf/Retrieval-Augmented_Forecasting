@@ -209,27 +209,36 @@ CLIオプション以外に、コード内で固定している主な既定値�
 
 ## 予測結果の可視化
 
-`evaluate.py` が出力する `*_preds.csv`（列: `window`, `t`, `pred`, `true`）をウィンドウごとにプロットする。
+`evaluate.py` が出力する `*_preds.csv`（列: `channel`, `window`, `t`, `pred`, `true`）を、
+**チャネルごとに連続した1本の系列**としてプロットする（`evaluate/plot_preds.py`）。
+
+各チャネルは独立した1変量系列で `window` は 0 から振り直される。CSV は `--eval-stride 1` だと
+ウィンドウが1ステップずつ重なる（隣接ウィンドウはほぼ同一）ため、`plot_preds.py` は **`pred_len` ごとの
+非重複ウィンドウだけを連結**して連続系列を再構成する。これで重複ウィンドウを全部描く無駄がなく、
+チャネル境界での線飛びも起きない。
 
 ```bash
-# 1ファイル・全ウィンドウをインタラクティブ表示
-python3 plot_preds.py checkpoints/none_ETTh1_sl512_pl64_preds.csv
+# 引数なし：cached/ の全 *_preds.csv を読み、チャネルごとに1枚ずつ保存
+python3 plot_preds.py
 
-# 複数ファイルを重ねて比較（true は1本、pred を色分け）
-python3 plot_preds.py checkpoints/none_ETTh1_sl512_pl64_preds.csv checkpoints/raf_naive_ETTh1_sl512_pl64_preds.csv
+# ファイルを明示（複数指定で重ねて比較。true は1本、pred を色分け）
+python3 plot_preds.py cached/none_ETTh1_small_preds.csv cached/cross_raf_ETTh1_small_preds.csv
 
-# 表示するウィンドウを指定
-python3 plot_preds.py checkpoints/*.csv --windows 0 5 10
+# 長いチャネルを seg 点ごとに分割（0=チャネル全体を1枚）
+python3 plot_preds.py --seg 2000
 
-# ディレクトリに保存（存在しなければ自動作成）
-python3 plot_preds.py checkpoints/*.csv --save plots/ETTh1
+# 保存先を変更（既定はスクリプト隣の plots/）
+python3 plot_preds.py --save plots/ETTh1
 ```
 
 | 引数 | 説明 |
 |---|---|
-| `csvs` (位置引数) | プロットする CSV ファイル（複数可） |
-| `--windows N ...` | 表示するウィンドウ番号（省略時は全ウィンドウ） |
-| `--save DIR` | 保存先ディレクトリ（省略時はインタラクティブ表示）。`window_0000.png` 形式で1枚ずつ保存 |
+| `csvs` (位置引数) | プロットする CSV（省略時は `cached/*_preds.csv` を全て） |
+| `--seg N` | 1図あたりの点数（既定 `0`=チャネル全体を1枚） |
+| `--save DIR` | 保存先ディレクトリ（既定はスクリプト隣の `plots/`）。`chXX_segYYY.png` 形式で保存 |
+
+`channel` 列のない旧 CSV は全行を channel 0 として扱う。複数手法の数値比較は同ディレクトリの
+`eval_metrics.py`（MAE/MSE 表 + 誤差分布図）と `plot_error_dist.py` を使う。
 
 ---
 

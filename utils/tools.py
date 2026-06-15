@@ -26,12 +26,19 @@ def save_results(file_path, model_id, mse, mae):
         f.write(f"mse:{mse:.4f}, mae:{mae:.4f}\n")
 
 
-def save_predictions(file_path, preds, trues):
+def save_predictions(file_path, preds, trues, channels):
     # tidy long format (one row per forecast step) for later plotting
     os.makedirs(os.path.dirname(file_path) or ".", exist_ok=True)
     n, length = preds.shape
-    window = np.repeat(np.arange(n), length)
+    channels = np.asarray(channels)
+    # window index restarts at 0 within each channel
+    window = np.zeros(n, dtype=int)
+    for c in np.unique(channels):
+        idx = np.flatnonzero(channels == c)
+        window[idx] = np.arange(len(idx))
+    channel = np.repeat(channels, length)
+    window = np.repeat(window, length)
     t = np.tile(np.arange(length), n)
-    data = np.column_stack([window, t, preds.reshape(-1), trues.reshape(-1)])
-    np.savetxt(file_path, data, delimiter=",", header="window,t,pred,true",
-               comments="", fmt=["%d", "%d", "%.6f", "%.6f"])
+    data = np.column_stack([channel, window, t, preds.reshape(-1), trues.reshape(-1)])
+    np.savetxt(file_path, data, delimiter=",", header="channel,window,t,pred,true",
+               comments="", fmt=["%d", "%d", "%d", "%.6f", "%.6f"])

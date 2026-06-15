@@ -1,0 +1,6 @@
+none_ETTh1_small
+mse:0.3711, mae:0.3677
+raf_naive_ETTh1_small
+mse:0.3674, mae:0.3704
+cross_raf_ETTh1_small
+mse:0.3637, mae:0.3697
