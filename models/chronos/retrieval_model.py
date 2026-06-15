@@ -14,6 +14,7 @@ Lee et al. (2026):
 vars at construction (set by the cross_raf method), mirroring the original code.
 """
 import os
+from typing import Optional, Tuple
 
 import torch
 import torch.nn as nn
@@ -21,9 +22,55 @@ import torch.nn as nn
 from chronos.chronos_bolt import ChronosBoltModelForForecasting, ChronosBoltOutput
 
 
+class InstanceNorm(nn.Module):
+    """Constant-aware instance norm — the Cross-RAG reference's version.
+
+    The chronos-bolt package's InstanceNorm replaces a zero scale with ``eps``
+    (1e-5), so a constant context divides the (moving) target by ~1e-5 and the
+    standardized value explodes to ~1e5 — which feeds the trainable fusion MLPs
+    and makes training diverge. The reference instead detects constant windows
+    and sets scale=1 / normalized=1, keeping everything bounded. For every
+    non-constant window the two are identical.
+    """
+
+    def __init__(self, eps: float = 1e-5) -> None:
+        super().__init__()
+        self.eps = eps
+
+    def forward(
+        self, x: torch.Tensor,
+        loc_scale: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
+    ) -> Tuple[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
+        if loc_scale is None:
+            loc = torch.nan_to_num(torch.nanmean(x, dim=-1, keepdim=True), nan=0.0)
+            scale = torch.nan_to_num(
+                (x - loc).square().nanmean(dim=-1, keepdim=True).sqrt(), nan=1.0
+            )
+            is_constant = torch.all(x == x[..., :1], dim=-1, keepdim=True)
+            scale = torch.where(is_constant, torch.ones_like(scale), scale)
+        else:
+            loc, scale = loc_scale
+        normalized = (x - loc) / scale
+        is_constant = (
+            torch.all(x == x[..., :1], dim=-1, keepdim=True)
+            if loc_scale is None else (scale == 1)
+        )
+        normalized = torch.where(is_constant, torch.ones_like(normalized), normalized)
+        return normalized, (loc, scale)
+
+    def inverse(self, x: torch.Tensor, loc_scale: Tuple[torch.Tensor, torch.Tensor]) -> torch.Tensor:
+        loc, scale = loc_scale
+        is_constant = scale == 1
+        return torch.where(is_constant, loc, x * scale + loc)
+
+
 class ChronosBoltModelForForecastingWithRetrieval(ChronosBoltModelForForecasting):
     def __init__(self, config, augment: str = "moe"):
         super().__init__(config)
+        # Replace the package's eps-based instance norm with the reference's
+        # constant-aware one (see InstanceNorm above) so constant windows don't
+        # blow up the target / retrieved inputs to the trainable fusion head.
+        self.instance_norm = InstanceNorm()
         self.augment = augment
         d = config.d_model
         self.mix_lambda = float(os.getenv("LAMBDA", "0.7"))

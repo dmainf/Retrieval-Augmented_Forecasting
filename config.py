@@ -124,22 +124,30 @@ def train_args():
         help="retrieval knowledge base parquet (x/y columns gathered by precomputed indices)",
     )
     p.add_argument(
-        "--shuffle-buffer", default=10000, type=int, help="stream-shuffle reservoir size"
+        "--shuffle-buffer", default=100000, type=int,
+        help="stream-shuffle reservoir size (reference code default: 100,000)",
     )
     p.add_argument(
         "--drop-prob", default=0.0, type=float, help="target NaN-masking probability (paper: 0.0)"
     )
     p.add_argument(
         "--train-steps",
-        default=10000,
+        default=30000,
         type=int,
-        help="number of optimizer steps (Cross-RAG paper Table A.2: 10,000).",
+        help="number of optimizer steps. The corpus stream interleaves all "
+        "chunks, so this is a representative ~0.27-epoch sample of the 28M-pair "
+        "corpus (reference code uses 200,000; raise for fuller coverage).",
     )
     p.add_argument(
         "--lr",
-        default=3e-4,
+        default=1e-3,
         type=float,
-        help="constant learning rate (Cross-RAG paper Table A.2: 3e-4, no scheduler).",
+        help="initial learning rate (reference code default: 1e-3, "
+        "CosineAnnealing to --eta-min).",
+    )
+    p.add_argument(
+        "--eta-min", default=1e-8, type=float,
+        help="CosineAnnealingLR floor learning rate (reference code: 1e-8).",
     )
     p.add_argument("--weight-decay", default=0.01, type=float)
     p.add_argument("--grad-clip", default=1.0, type=float)

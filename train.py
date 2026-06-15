@@ -86,16 +86,35 @@ def main():
           f"| top_k={args.top_k} | batch_size={args.batch_size}")
 
     optimizer = optim.AdamW(trainable, lr=args.lr, weight_decay=args.weight_decay)
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(
+        optimizer, T_max=args.train_steps, eta_min=args.eta_min
+    )
 
-    save_dir = os.path.join(args.output_dir, "cross_raf_pretrain")
+    # Self-describing run dir so different backbones / hyperparameters never
+    # collide (e.g. a base-trained fusion head can't load into a small model).
+    # Encodes the params that actually affect the trained head: backbone size,
+    # top_k, fusion mix lambda, lr, and steps. (retrieval_metric is excluded —
+    # training uses precomputed indices, so it has no effect here.)
+    size = args.chronos_model.rstrip("/").split("-")[-1]
+    run_name = (f"cross_raf_{size}_k{args.top_k}_lam{args.mix_lambda:g}"
+                f"_lr{args.lr:g}_s{args.train_steps}")
+    save_dir = os.path.join(args.output_dir, run_name)
     os.makedirs(save_dir, exist_ok=True)
+    print(f"Saving to {save_dir}")
     with open(os.path.join(save_dir, "args.json"), "w") as f:
         json.dump(vars(args), f, indent=2)
 
+    # Only the fusion modules are trained; the frozen backbone is reloaded by
+    # build_model, so saving it every checkpoint just duplicates ~850MB. Persist
+    # the trainable params only (~35MB) — eval/resume load with strict=False.
+    trainable_names = {n for n, p in model.named_parameters() if p.requires_grad}
+
     def save_ckpt(path, step):
         torch.save({
-            "state_dict": model.state_dict(),
+            "state_dict": {k: v for k, v in model.state_dict().items()
+                           if k in trainable_names},
             "optimizer": optimizer.state_dict(),
+            "scheduler": scheduler.state_dict(),
             "step": step,
             "args": vars(args),
         }, path)
@@ -104,18 +123,23 @@ def main():
     if args.resume:
         ckpt = torch.load(args.resume, map_location=device, weights_only=False)
         if isinstance(ckpt, dict) and "state_dict" in ckpt:
-            model.load_state_dict(ckpt["state_dict"])
+            # strict=False: the slim checkpoint holds only the fusion params;
+            # the backbone is already loaded by build_model.
+            model.load_state_dict(ckpt["state_dict"], strict=False)
             if "optimizer" in ckpt:
                 optimizer.load_state_dict(ckpt["optimizer"])
+            if "scheduler" in ckpt:
+                scheduler.load_state_dict(ckpt["scheduler"])
             start_step = ckpt.get("step", 0)
         else:
-            model.load_state_dict(ckpt)
+            model.load_state_dict(ckpt, strict=False)
             print("[warning] checkpoint has no optimizer/step; resuming weights only.")
         print(f"Resumed from {args.resume} at step {start_step}")
 
     model.train()
     t0 = time.time()
     steps, losses = [], []
+    n_skipped = 0
     step = start_step
     for batch in train_loader:
         if step >= args.train_steps:
@@ -130,13 +154,25 @@ def main():
         out = model(context=x, target=y, retrieved_seq=retrieved, distances=dist)
         loss = out.loss.mean()
 
+        # Only a non-finite loss (NaN/inf) can actually destroy training — grad
+        # clipping cannot rescue a NaN gradient — so we skip just those steps. A
+        # finite spike (degenerate instance-norm scale) has a bounded pinball
+        # gradient and is harmless to the weights, so we step on it and record
+        # its true value unchanged.
+        lv = loss.item()
+        if not torch.isfinite(loss):
+            n_skipped += 1
+            optimizer.zero_grad(set_to_none=True)
+            continue
+
         optimizer.zero_grad()
         loss.backward()
         clip_grad_norm_(trainable, args.grad_clip)
         optimizer.step()
+        scheduler.step()
 
         steps.append(step)
-        losses.append(loss.item())
+        losses.append(lv)
         if step % 50 == 0:
             avg = sum(losses[-50:]) / min(len(losses), 50)
             print(f"  [step {step}/{args.train_steps}] loss={avg:.5f} "
@@ -150,6 +186,8 @@ def main():
     final = os.path.join(save_dir, "best.pth")
     save_ckpt(final, step)
     print(f"Training done in {time.time()-t0:.1f}s. Saved {final}")
+    if n_skipped:
+        print(f"  skipped {n_skipped} non-finite (NaN/inf) steps")
 
 
 if __name__ == "__main__":

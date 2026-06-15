@@ -37,9 +37,7 @@ Cross-RAG は**ゼロショット**：融合ヘッドを**汎用コーパスで1
 融合ヘッドの学習に使う。論文と同じ前処理済みデータが HF `nkh/TS-RAG-Data` にある（検索indexは事前計算済み）。
 
 ```bash
-huggingface-cli download nkh/TS-RAG-Data --repo-type dataset \
-  --include "pretrain_pairs_ctx512/*" "retrieval_database_512.parquet" \
-  --local-dir ./corpus
+huggingface-cli download nkh/TS-RAG-Data --repo-type dataset --include "pretrain_pairs_ctx512/*" "retrieval_database_512.parquet" --local-dir ./corpus
 ```
 
 | ファイル | 用途 | サイズ |
@@ -48,7 +46,9 @@ huggingface-cli download nkh/TS-RAG-Data --repo-type dataset \
 | `corpus/retrieval_database_512.parquet` | 検索KB（`x`/`y` を `indices` で gather。`embedding` 列は未使用＝RAM節約のため読まない）| 約4.77 GB |
 
 > ⚠ 検索KBは `x`+`y` を全て RAM に載せる（約6.4 GB）。本番再現はメモリ16 GB+ 推奨。
-> 学習は **faiss検索なし**（indices事前計算済み）。LR=3e-4・10000step・定数LR（論文 Table A.2）。
+> 学習は **faiss検索なし**（indices事前計算済み）。LR=1e-3 + CosineAnnealing・30000step（参照コードは200,000step）。
+> コーパスは**全チャンクをラウンドロビンでインターリーブ**して流すので、1エポック未満でも全30チャンクを代表する（後述「データの流し方」）。
+> context が定数の窓は素朴な instance-norm（eps方式）だと正規化値が10⁵に発散し学習が壊れるため、参照と同じ **constant-aware な instance-norm**（定数→scale=1）に差し替えている（後述「学習の安定化」）。
 
 ### 評価用（全手法・ターゲットCSV）
 
@@ -75,38 +75,27 @@ Informer流の train/val/test 分割・チャネル標準化（train統計でz-s
 
 ### 1) 素の Chronos（学習不要）
 ```bash
-python3 evaluate.py --method none \
-  --dataset ETTh1 --root-path ./Datasets/ETT-small/ --data-path ETTh1.csv \
-  --seq-len 512 --pred-len 64
+python3 evaluate.py --method none --dataset ETTh1 --root-path ./Datasets/ETT-small/ --data-path ETTh1.csv --seq-len 512 --pred-len 64
 ```
 
 ### 2) RAF naive（学習不要・top-1連結）
 ```bash
-python3 evaluate.py --method raf --raf-mode naive \
-  --dataset ETTh1 --root-path ./Datasets/ETT-small/ --data-path ETTh1.csv \
-  --top-k 1
+python3 evaluate.py --method raf --raf-mode naive --dataset ETTh1 --root-path ./Datasets/ETT-small/ --data-path ETTh1.csv --top-k 1
 ```
 
 ### 2') RAF advanced（backbone微調整 → 評価）
 ```bash
-python3 train.py    --method raf --raf-mode advanced --dataset ETTh1 \
-  --root-path ./Datasets/ETT-small/ --data-path ETTh1.csv --top-k 1 --lr 1e-4
-python3 evaluate.py --method raf --raf-mode advanced --dataset ETTh1 \
-  --root-path ./Datasets/ETT-small/ --data-path ETTh1.csv --top-k 1 \
-  --checkpoint ./checkpoints/raf_ETTh1/best.pth
+python3 train.py --method raf --raf-mode advanced --dataset ETTh1 --root-path ./Datasets/ETT-small/ --data-path ETTh1.csv --top-k 1 --lr 1e-4
+python3 evaluate.py --method raf --raf-mode advanced --dataset ETTh1 --root-path ./Datasets/ETT-small/ --data-path ETTh1.csv --top-k 1 --checkpoint ./checkpoints/raf_ETTh1/best.pth
 ```
 
 ### 3) Cross-RAG（汎用コーパスで融合ヘッド学習 → ターゲットをゼロショット評価）
 ```bash
 # 学習：データセット指定なし。汎用コーパスで融合ヘッドを1回学習するだけ
-python3 train.py    --method cross_raf --top-k 15 \
-  --corpus-dir ./corpus/pretrain_pairs_ctx512 \
-  --retrieval-db-path ./corpus/retrieval_database_512.parquet
+python3 train.py --method cross_raf --top-k 15 --corpus-dir ./corpus/pretrain_pairs_ctx512 --retrieval-db-path ./corpus/retrieval_database_512.parquet
 
 # 評価：学習済み重みを ETTh1 にゼロショット適用（検索は ETTh1 train から）
-python3 evaluate.py --method cross_raf --dataset ETTh1 \
-  --root-path ./Datasets/ETT-small/ --data-path ETTh1.csv --top-k 15 \
-  --checkpoint ./checkpoints/cross_raf_pretrain/best.pth
+python3 evaluate.py --method cross_raf --dataset ETTh1 --root-path ./Datasets/ETT-small/ --data-path ETTh1.csv --top-k 15 --checkpoint ./checkpoints/cross_raf_base_k15_lam0.7_lr0.001_s30000/best.pth
 ```
 
 > `none` と `raf` は学習なしのゼロショット手法。`train.py` で学習するのは `cross_raf` だけで、
@@ -142,14 +131,14 @@ python3 evaluate.py --method cross_raf --dataset ETTh1 \
 |---|---|---|
 | `--corpus-dir` | `./corpus/pretrain_pairs_ctx512` | 検索index事前計算済みのペア parquet ディレクトリ（HF `nkh/TS-RAG-Data`）|
 | `--retrieval-db-path` | `./corpus/retrieval_database_512.parquet` | 検索KB parquet（`x`/`y` を index で gather）|
-| `--shuffle-buffer` | `10000` | ストリームシャッフルのリザーバサイズ |
+| `--shuffle-buffer` | `100000` | ストリームシャッフルのリザーバサイズ（参照コード準拠）|
 | `--drop-prob` | `0.0` | target の NaN マスク確率（論文既定 0.0）|
-| `--train-steps` | `20000` | optimizerステップ数（参照実装の release 値）|
-| `--lr` | `3e-5` | 学習率（参照実装：3e-5 + CosineAnnealing）|
+| `--train-steps` | `30000` | optimizerステップ数。コーパスは全チャンクをインターリーブするので、これは全28Mペアを代表する約0.27エポック分（参照コードは200,000）|
+| `--lr` | `1e-3` | 初期学習率（参照コード準拠。CosineAnnealing で `--eta-min` まで減衰）|
+| `--eta-min` | `1e-8` | CosineAnnealingLR の下限LR（参照コード準拠）|
 | `--weight-decay` | `0.01` | AdamW weight decay |
 | `--grad-clip` | `1.0` | 勾配クリップ |
-| `--tmax` | `20` | CosineAnnealingLR の T_max（保存ごとに `scheduler.step()`）|
-| `--save-freq` | `10000` | 何ステップごとに保存するか |
+| `--save-freq` | `5000` | 何ステップごとに保存するか |
 | `--resume` | `""` | 再開する重みのパス |
 
 ### evaluate.py 専用（ターゲットを指定してゼロショット評価）
@@ -164,7 +153,7 @@ python3 evaluate.py --method cross_raf --dataset ETTh1 \
 | `--no-scale` | off | チャネル標準化を無効化（生スケールで評価）|
 | `--retrieval-split` | `train` | 検索DBを作る分割（ターゲット自身の train から検索）|
 | `--retrieval-stride` | `1` | 検索DBの窓スライド幅（1=論文どおり全窓 / 大きくすると件数・メモリ減）|
-| `--checkpoint` | `""` | 学習済み重み（cross_raf で `./checkpoints/cross_raf_pretrain/best.pth`）|
+| `--checkpoint` | `""` | 学習済み重み。保存先は自動命名 `cross_raf_{size}_k{top_k}_lam{λ}_lr{lr}_s{steps}`（例 `cross_raf_base_k15_lam0.7_lr0.001_s30000/best.pth`）|
 | `--eval-stride` | `pred_len` | test窓のスライド幅。`1` で全窓（完全ベンチ再現・低速）|
 | `--result-file` | `result.txt` | `--output-dir` 下に追記する結果ファイル名 |
 
@@ -197,12 +186,13 @@ CLIオプション以外に、コード内で固定している主な既定値�
 
 | 値 | デフォルト |
 |---|---|
-| optimizer | `AdamW`（`--lr=3e-5` `--weight-decay`）|
-| 学習率スケジュール | `CosineAnnealingLR`（`--tmax`、保存ごとに step）|
-| 学習制御 | step駆動（ペアparquetを巡回ストリームし `--train-steps=20000` まで）|
+| optimizer | `AdamW`（`--lr=1e-3` 初期 `--weight-decay`）|
+| 学習率スケジュール | `CosineAnnealingLR`（T_max=train_steps、`--eta-min`=1e-8 まで毎step減衰）|
+| 学習制御 | step駆動（全チャンクをインターリーブしたストリームを `--train-steps=30000` まで）|
 | 検索 | **学習時はなし**（ペアに top-k indices/distances が事前計算済み）|
 | 損失 | Chronos純正の quantile regression loss |
-| 勾配クリップ | `--grad-clip`（既定1.0）|
+| 勾配クリップ | `--grad-clip`（既定1.0、標準的な保険）|
+| 非有限ガード | loss が NaN/inf のステップのみスキップ（grad clip では救えない死因を防ぐ）。データも記録も一切いじらない |
 
 **検索・前処理（固定）**
 
@@ -226,8 +216,7 @@ CLIオプション以外に、コード内で固定している主な既定値�
 python3 plot_preds.py checkpoints/none_ETTh1_sl512_pl64_preds.csv
 
 # 複数ファイルを重ねて比較（true は1本、pred を色分け）
-python3 plot_preds.py checkpoints/none_ETTh1_sl512_pl64_preds.csv \
-                      checkpoints/raf_naive_ETTh1_sl512_pl64_preds.csv
+python3 plot_preds.py checkpoints/none_ETTh1_sl512_pl64_preds.csv checkpoints/raf_naive_ETTh1_sl512_pl64_preds.csv
 
 # 表示するウィンドウを指定
 python3 plot_preds.py checkpoints/*.csv --windows 0 5 10
@@ -273,7 +262,7 @@ python3 plot_preds.py checkpoints/*.csv --save plots/ETTh1
 ├── data/
 │   ├── dataset.py      CSV読込・Informer分割・チャネル標準化・窓スライス(TSData)（評価用）
 │   ├── loaders.py      TSData→DataLoader、検索DB(Retriever)構築のグルー（評価用）
-│   └── corpus.py       汎用コーパス：ペアparquetのストリーム + 検索KBのindex gather（cross_raf学習用）
+│   └── corpus.py       汎用コーパス：ペアparquetを全チャンクinterleaveストリーム + 検索KBのindex gather（cross_raf学習用）
 │
 └── utils/
     ├── metrics.py      MAE / MSE / RMSE
@@ -282,7 +271,7 @@ python3 plot_preds.py checkpoints/*.csv --save plots/ETTh1
 
 各ファイルの要点：
 
-- **train.py** … `cross_raf` のときだけ汎用コーパス（`data/corpus.py`）をストリームして融合ヘッドを学習し、`--output-dir/cross_raf_pretrain/best.pth` を保存。`none`/`raf` は学習なしのゼロショット手法なので、渡されても「学習しない」と表示して終了。ターゲットの `--dataset` は使わない。
+- **train.py** … `cross_raf` のときだけ汎用コーパス（`data/corpus.py`）をストリームして融合ヘッドを学習し、`--output-dir/cross_raf_{size}_k{top_k}_lam{λ}_lr{lr}_s{steps}/best.pth` を保存（backbone/ハイパラごとに自動でフォルダ分離）。`none`/`raf` は学習なしのゼロショット手法なので、渡されても「学習しない」と表示して終了。ターゲットの `--dataset` は使わない。
 - **evaluate.py** … `method.predict` を test 全バッチに適用し、標準化空間で MSE/MAE を計算して `result.txt` に追記。
 - **methods/base.py** … `Method` 抽象クラス。`build_model` / `compute_loss` / `predict` と `needs_training` / `needs_retrieval` を定義。train/evaluate はこのIFしか触らない。
 - **methods/chronos_base.py** … backbone を凍結して `model(context)` の分位点中央値を点予測に。
@@ -322,19 +311,44 @@ faiss-cpu と torch がそれぞれ libomp を読み込み二重ロードでセ�
 Linux等でマルチスレッドにしたい場合は `OMP_NUM_THREADS` を明示すれば上書きされる。
 
 ### 学習で保存されるもの（チェックポイント）
-保存先 `{--output-dir}/cross_raf_pretrain/`（学習はデータセット非依存なので固定名）：
+保存先は `{--output-dir}/cross_raf_{size}_k{top_k}_lam{λ}_lr{lr}_s{steps}/`（例 `cross_raf_base_k15_lam0.7_lr0.001_s30000`）。
+backbone とハイパラから**自動命名**し、起動時に `Saving to ...` と表示する。設定が違う run は別フォルダになるので上書き衝突しない：
 
 | ファイル | 中身 |
 |---|---|
-| `model_step{N}.pth` / `best.pth` | `{"state_dict", "optimizer", "step", "args"}` の辞書（自己記述・再開可能）|
+| `model_step{N}.pth` / `best.pth` | `{"state_dict", "optimizer", "scheduler", "step", "args"}` の辞書（自己記述・再開可能）。`state_dict` は学習対象の融合ヘッドのみ（凍結バックボーンは保存せず約100MB）|
 | `args.json` | 学習時のハイパラ（人間可読の記録）|
 
 - `evaluate.py --checkpoint` でロードすると **`trained with: ...` で学習設定を表示**。
   `chronos_model / seq_len / pred_len / augment_mode / method` が評価時と食い違うと警告する。
-- **`--resume` は重み＋optimizer(Adamモーメント)＋step数を復元**して途中から続行
-  （CosineAnnealing のスケジューラ状態は保存していないので、再開時はLRが初期値から振り直しになる）。
+- **`--resume` は重み＋optimizer(Adamモーメント)＋scheduler＋step数を復元**して途中から続行
+  （CosineAnnealing の進行状態も保存・復元するので、再開後もLRスケジュールが継続する）。
 - 旧形式（生の `state_dict` のみ）の `.pth` も後方互換で読める（その場合は重みのみ復元と警告）。
 - 注意：`best.pth` は検証選択ではなく最終モデル。
+
+### データの流し方（インターリーブ）
+学習コーパスは30チャンク（各約93万行）に分かれ、**チャンクごとにドメイン/スケールが大きく異なる**
+（素の mean が -90〜1、std が 0.55〜282）。ファイルを頭から逐次読みすると、1エポック未満の学習では
+**先頭の数チャンクしか触れず**多様性が死ぬ（`train_steps × batch / 93万` ファイル分しか進まない）。
+
+そこで `data/corpus.py` は**全30ファイルからラウンドロビンで1バッチずつ取り出してインターリーブ**する。
+各ファイルのイテレータは無限（巡回）で、下流の shuffle buffer（10万）がさらに混ぜる。これにより
+**最初の学習バッチから全チャンクが代表され**、`train_steps` を 1エポック未満に絞っても偏らない。
+参照実装は逐次読みのまま 200,000step 回して全データを網羅するが、MPS では非現実的なので、
+**インターリーブ＋少ない step（既定30,000＝約0.27エポック相当）**で同等の多様性を得る。
+
+### 学習の安定化（定数窓の正規化）
+instance-norm は context を z正規化（`(y-loc)/scale`、`scale`=context の標準偏差）する。**context が定数の窓では
+`scale`=0** になり、chronos パッケージの `InstanceNorm` はそこを `eps=1e-5` で割ってしまう → 動く target が
+`(y-loc)/1e-5`≈10⁵ に発散 → それが**学習対象の融合MLPに入って勾配が爆発し学習が発散**する（実際 lr=1e-3 で発散を確認）。
+
+参照実装（Cross-RAG）は**定数窓を検出して `scale=1`／正規化値=1 にする専用 `InstanceNorm`** を持っており、これで発散しない。
+本リポジトリも `models/chronos/retrieval_model.py` で**参照と同じ constant-aware な `InstanceNorm` に差し替え**ている
+（`self.instance_norm` を上書き）。**非定数窓（99.9%）では chronos 版と完全に一致**し、定数窓だけ有界化する。
+クランプやデータ削除ではなく、**参照の正規化そのもの**である点が重要（再現性を損なわない）。
+
+安全網として、`train.py` は **非有限（NaN/inf）の loss のステップだけスキップ**する（grad-clip では NaN を救えないため。
+constant-aware 化でほぼ発生しないはずの保険）。loss は生値のまま記録。`--grad-clip`（既定1.0）も標準的な保険として据え置き。
 
 ### 制約
 - backbone は **Chronos-Bolt系のみ**（Moirai/TimesFM等は未対応。`models/` にラッパー追加が必要）。
@@ -342,7 +356,11 @@ Linux等でマルチスレッドにしたい場合は `OMP_NUM_THREADS` を明�
 - 予測・正解はともに標準化空間で比較するため、3手法を公平に比較できる。
 
 ### 既定ハイパラの根拠
-cross_raf 学習系（`lr=3e-5` + CosineAnnealing / `train_steps=20000` / `batch=256` / `weight_decay=0.01` /
-`top_k=15` / dropout=0.2）は Cross-RAG 参照実装（`script/Cross-RAG-pretrain.sh`）準拠。論文は
+cross_raf 学習系（`lr=1e-3` + CosineAnnealing(eta_min=1e-8) / `train_steps=30000`（全チャンク
+interleave で約0.27エポック相当）/ `batch=256` / `shuffle_buffer=100000` / `weight_decay=0.01` /
+`top_k=15` / dropout=0.2）は
+Cross-RAG **参照コード**（`cross-rag/pretrain.py`）準拠（参照コードは200,000step＝約1.8エポック。
+論文 Table A.2 は 10,000step/3e-4 と記載するが、これは `evaluation_steps` の取り違えと見られ、
+コードが実際の設定）。論文は
 Chronos 事前学習コーパス（50Mサンプル → 26Mペア、KBは5M部分集合 → 2.8Mペア）で融合ヘッドを学習し、
 ターゲットは未学習のままゼロショット評価する。`seq_len=512` / `pred_len=64` / `λ=0.7` も論文の実験設定。

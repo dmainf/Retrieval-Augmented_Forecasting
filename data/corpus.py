@@ -87,32 +87,46 @@ class CorpusPairs(IterableDataset):
         flat = col.values.to_numpy(zero_copy_only=False)
         return flat.reshape(n, -1)
 
+    def _file_batches(self, path):
+        """Infinite-cyclic stream of pyarrow batches from one parquet file."""
+        while True:
+            pf = pq.ParquetFile(path)
+            for batch in pf.iter_batches(
+                batch_size=self.read_batch,
+                columns=["target", "indices", "distances"],
+            ):
+                yield batch
+
+    def _rows(self, batch, x0, lb, pl, k):
+        tgt = self._mat(batch.column("target"))           # (n, lb+pl)
+        idx = self._mat(batch.column("indices"))[:, :k]    # (n, k)
+        dist = self._mat(batch.column("distances"))[:, :k]
+        X = tgt[:, x0:lb].astype(np.float32, copy=False)   # (n, ctx)
+        Y = tgt[:, lb:lb + pl].astype(np.float32, copy=False)
+        idx = np.ascontiguousarray(idx, dtype=np.int64)
+        dist = np.ascontiguousarray(dist, dtype=np.float32)
+        for i in range(len(tgt)):
+            y = Y[i]
+            if self.drop_prob > 0:
+                p = np.random.uniform(0.0, self.drop_prob)
+                mask = np.random.choice([True, False], size=pl, p=[p, 1 - p])
+                y = y.copy()
+                y[mask] = np.nan
+            yield {"x": X[i], "y": y, "distances": dist[i], "indices": idx[i]}
+
     def __iter__(self):
         lb, ctx, pl, k = (self.retrieve_lookback_length, self.context_length,
                           self.prediction_length, self.top_k)
         x0 = max(0, lb - ctx) if ctx > 0 else 0
-        while True:  # cyclic
-            for path in self.files:
-                pf = pq.ParquetFile(path)
-                for batch in pf.iter_batches(
-                    batch_size=self.read_batch,
-                    columns=["target", "indices", "distances"],
-                ):
-                    tgt = self._mat(batch.column("target"))           # (n, lb+pl)
-                    idx = self._mat(batch.column("indices"))[:, :k]    # (n, k)
-                    dist = self._mat(batch.column("distances"))[:, :k]
-                    X = tgt[:, x0:lb].astype(np.float32, copy=False)   # (n, ctx)
-                    Y = tgt[:, lb:lb + pl].astype(np.float32, copy=False)
-                    idx = np.ascontiguousarray(idx, dtype=np.int64)
-                    dist = np.ascontiguousarray(dist, dtype=np.float32)
-                    for i in range(len(tgt)):
-                        y = Y[i]
-                        if self.drop_prob > 0:
-                            p = np.random.uniform(0.0, self.drop_prob)
-                            mask = np.random.choice([True, False], size=pl, p=[p, 1 - p])
-                            y = y.copy()
-                            y[mask] = np.nan
-                        yield {"x": X[i], "y": y, "distances": dist[i], "indices": idx[i]}
+        # Round-robin one batch from each file so the stream interleaves all
+        # chunks: with sequential reading a short run (< 1 epoch) would only
+        # touch the first few of ~30 heterogeneous chunks. Each file iterator is
+        # infinite, so the stream is cyclic. The downstream shuffle buffer then
+        # de-correlates the interleaved batches.
+        batch_iters = [self._file_batches(p) for p in self.files]
+        while True:
+            for bi in batch_iters:
+                yield from self._rows(next(bi), x0, lb, pl, k)
 
 
 class RetrievalDB:
