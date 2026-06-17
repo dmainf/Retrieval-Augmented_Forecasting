@@ -67,7 +67,7 @@ def main():
     parser = argparse.ArgumentParser(description="Plot pred vs true as a continuous test series, per channel")
     parser.add_argument("csvs", nargs="*",
                         help="CSV file(s) to plot (default: all *_preds.csv in cached/)")
-    parser.add_argument("--seg", type=int, default=0,
+    parser.add_argument("--seg", type=int, default=640,
                         help="points per figure (0 = whole channel in one figure)")
     parser.add_argument("--save", type=str,
                         default=str(Path(__file__).resolve().parent / "plots"),

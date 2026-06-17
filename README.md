@@ -224,7 +224,7 @@ python3 plot_preds.py
 # ファイルを明示（複数指定で重ねて比較。true は1本、pred を色分け）
 python3 plot_preds.py cached/none_ETTh1_small_preds.csv cached/cross_raf_ETTh1_small_preds.csv
 
-# 長いチャネルを seg 点ごとに分割（0=チャネル全体を1枚）
+# 1図あたりの長さを変える（既定640点 ≒ 10ウィンドウ。0=チャネル全体を1枚）
 python3 plot_preds.py --seg 2000
 
 # 保存先を変更（既定はスクリプト隣の plots/）
@@ -234,7 +234,7 @@ python3 plot_preds.py --save plots/ETTh1
 | 引数 | 説明 |
 |---|---|
 | `csvs` (位置引数) | プロットする CSV（省略時は `cached/*_preds.csv` を全て） |
-| `--seg N` | 1図あたりの点数（既定 `0`=チャネル全体を1枚） |
+| `--seg N` | 1図あたりの点数（既定 `640` ≒ 10ウィンドウ。`0`=チャネル全体を1枚） |
 | `--save DIR` | 保存先ディレクトリ（既定はスクリプト隣の `plots/`）。`chXX_segYYY.png` 形式で保存 |
 
 `channel` 列のない旧 CSV は全行を channel 0 として扱う。複数手法の数値比較は同ディレクトリの
