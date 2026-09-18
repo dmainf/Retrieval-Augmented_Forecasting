@@ -1,8 +1,5 @@
 .claude
-cross-rag/
 Datasets/
-__pycache__
 .DS_Store
-corpus/
-checkpoints/
-*.png
+__pycache__/
+results/
