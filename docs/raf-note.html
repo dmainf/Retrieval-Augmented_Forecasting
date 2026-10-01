@@ -1,0 +1,965 @@
+<title>検索の上限を測る</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+:root {
+  --ground: #F2F5F7;
+  --surface: #FFFFFF;
+  --surface-sunk: #E9EEF2;
+  --ink: #131A21;
+  --ink-soft: #5C6873;
+  --ink-faint: #8794A1;
+  --rule: #D6DEE5;
+  --rule-soft: #E5EBF0;
+  --accent: #2F5F8F;
+  --accent-tint: #D5E3F0;
+  --accent-wash: rgba(47, 95, 143, 0.10);
+  --oracle: #B0621C;
+  --oracle-tint: #F3DFC7;
+  --oracle-wash: rgba(176, 98, 28, 0.12);
+  --warn: #A03A2E;
+
+  --f-display: "Zen Old Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --f-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --f-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0F141A;
+    --surface: #161E26;
+    --surface-sunk: #1C262F;
+    --ink: #E3EAF1;
+    --ink-soft: #97A5B3;
+    --ink-faint: #6E7D8C;
+    --rule: #2A3540;
+    --rule-soft: #222C36;
+    --accent: #7FB0DC;
+    --accent-tint: #24384B;
+    --accent-wash: rgba(127, 176, 220, 0.13);
+    --oracle: #E0A164;
+    --oracle-tint: #3A2B1B;
+    --oracle-wash: rgba(224, 161, 100, 0.14);
+    --warn: #E08476;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground: #0F141A;
+  --surface: #161E26;
+  --surface-sunk: #1C262F;
+  --ink: #E3EAF1;
+  --ink-soft: #97A5B3;
+  --ink-faint: #6E7D8C;
+  --rule: #2A3540;
+  --rule-soft: #222C36;
+  --accent: #7FB0DC;
+  --accent-tint: #24384B;
+  --accent-wash: rgba(127, 176, 220, 0.13);
+  --oracle: #E0A164;
+  --oracle-tint: #3A2B1B;
+  --oracle-wash: rgba(224, 161, 100, 0.14);
+  --warn: #E08476;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 16px;
+  line-height: 1.85;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page { padding: 0 20px 96px; }
+.prose { max-width: 40rem; margin-inline: auto; }
+.wide  { max-width: 66rem; margin-inline: auto; }
+
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+/* ---------- masthead ---------- */
+
+.masthead {
+  border-bottom: 1px solid var(--rule);
+  padding: 64px 0 40px;
+  margin-bottom: 56px;
+}
+.kicker {
+  font-family: var(--f-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0 0 18px;
+}
+h1 {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: clamp(2rem, 5.5vw, 2.9rem);
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+  margin: 0 0 20px;
+  text-wrap: balance;
+}
+.standfirst {
+  font-size: 1.03rem;
+  color: var(--ink-soft);
+  margin: 0;
+  max-width: 34rem;
+}
+
+/* ---------- section rhythm ---------- */
+
+section { margin-bottom: 72px; }
+
+.sec-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 10px;
+  margin-bottom: 28px;
+}
+.sec-num {
+  font-family: var(--f-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.06em;
+  flex: none;
+}
+h2 {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 1.42rem;
+  line-height: 1.45;
+  margin: 0;
+  text-wrap: balance;
+}
+h3 {
+  font-family: var(--f-body);
+  font-weight: 700;
+  font-size: 1.02rem;
+  margin: 38px 0 12px;
+  letter-spacing: 0.01em;
+}
+p { margin: 0 0 1.15em; }
+strong { font-weight: 700; }
+.em-blue { color: var(--accent); font-weight: 700; }
+.em-amber { color: var(--oracle); font-weight: 700; }
+
+code {
+  font-family: var(--f-mono);
+  font-size: 0.85em;
+  background: var(--surface-sunk);
+  padding: 0.12em 0.4em;
+  border-radius: 3px;
+}
+
+/* ---------- plates: figures, diagrams, tables ---------- */
+
+.plate {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  margin: 32px 0;
+  overflow: hidden;
+}
+.plate-body { padding: 22px 24px; }
+.plate-cap {
+  border-top: 1px solid var(--rule-soft);
+  padding: 12px 24px 14px;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  background: var(--surface-sunk);
+}
+.plate-cap b {
+  font-family: var(--f-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  display: block;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.shot { background: #FFFFFF; padding: 14px; }
+.shot-scroll { overflow-x: auto; }
+.shot img { display: block; width: 100%; min-width: 720px; height: auto; }
+.shot--narrow img { min-width: 420px; max-width: 560px; margin-inline: auto; }
+
+svg.diagram { display: block; width: 100%; height: auto; }
+
+/* ---------- tables ---------- */
+
+.table-scroll { overflow-x: auto; }
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 560px;
+  font-family: var(--f-mono);
+  font-size: 0.84rem;
+  font-variant-numeric: tabular-nums;
+}
+caption { display: none; }
+th, td {
+  padding: 9px 12px;
+  text-align: right;
+  border-bottom: 1px solid var(--rule-soft);
+  white-space: nowrap;
+}
+thead th {
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+  border-bottom: 1px solid var(--rule);
+}
+tbody th, td.lbl {
+  text-align: left;
+  font-family: var(--f-body);
+  font-weight: 500;
+  font-size: 0.86rem;
+  color: var(--ink);
+}
+tr.ctx td, tr.ctx th { background: var(--accent-wash); }
+tr.orc td, tr.orc th { background: var(--oracle-wash); }
+td.best { font-weight: 600; color: var(--oracle); }
+tbody tr:last-child td, tbody tr:last-child th { border-bottom: none; }
+
+/* ---------- callouts ---------- */
+
+.callout {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-wash);
+  padding: 16px 20px;
+  margin: 28px 0;
+  border-radius: 0 4px 4px 0;
+}
+.callout.amber { border-left-color: var(--oracle); background: var(--oracle-wash); }
+.callout p:last-child { margin-bottom: 0; }
+.callout .lead {
+  font-family: var(--f-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.badge {
+  display: inline-block;
+  font-family: var(--f-mono);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 3px;
+  vertical-align: 0.15em;
+  background: var(--warn);
+  color: var(--surface);
+}
+:root[data-theme="dark"] .badge,
+:root:not([data-theme="light"]) .badge { color: #12181F; }
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .badge { color: #FFFFFF; }
+}
+
+/* ---------- branch list ---------- */
+
+.branch {
+  display: grid;
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 28px 0;
+}
+.branch > div {
+  background: var(--surface);
+  padding: 16px 20px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 14px;
+  align-items: baseline;
+}
+.branch .cond {
+  font-family: var(--f-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-faint);
+  letter-spacing: 0.06em;
+}
+.branch .then { font-size: 0.94rem; line-height: 1.7; }
+.branch .then b { color: var(--accent); }
+
+/* ---------- axis cards ---------- */
+
+.axes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px;
+  margin: 28px 0;
+}
+.axis {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 18px 20px;
+}
+.axis h4 {
+  font-family: var(--f-mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 4px;
+  font-weight: 600;
+}
+.axis .q { font-size: 0.9rem; font-weight: 700; margin: 0 0 12px; }
+.axis dl { margin: 0; font-size: 0.84rem; line-height: 1.65; }
+.axis dt {
+  font-family: var(--f-mono);
+  font-size: 0.78rem;
+  color: var(--ink);
+  font-weight: 500;
+  margin-top: 8px;
+}
+.axis dt:first-child { margin-top: 0; }
+.axis dd { margin: 0; color: var(--ink-soft); font-size: 0.82rem; line-height: 1.6; }
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  margin: 0 0 16px;
+  font-family: var(--f-body);
+}
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.swatch { width: 22px; height: 10px; border-radius: 2px; flex: none; }
+
+.footnote {
+  border-top: 1px solid var(--rule);
+  padding-top: 22px;
+  font-size: 0.84rem;
+  color: var(--ink-soft);
+  line-height: 1.75;
+}
+.footnote p { margin-bottom: 0.6em; }
+
+math { font-size: 1.02em; color: var(--ink); }
+math[display="block"].eq {
+  display: block;
+  margin: 22px auto;
+  padding: 14px 18px;
+  background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 4px 4px 0;
+  overflow-x: auto;
+  font-size: 1.08em;
+}
+math mtext { font-family: var(--f-body); font-size: 0.78em; color: var(--ink-faint); }
+td math, .plate-cap math { font-size: 0.95em; }
+pre {
+  font-family: var(--f-mono);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 14px 16px;
+  margin: 0 0 1.15em;
+  overflow-x: auto;
+}
+</style>
+
+<div class="page">
+
+<header class="masthead">
+  <div class="prose">
+    <p class="kicker">RAF 研究ノート · 改訂 2026-10-01 · ETTh1 / Chronos-2</p>
+    <h1>検索の上限を測る</h1>
+    <p class="standfirst">
+      過去の似た窓（事例）を Chronos-2 に見せると予測は良くなるのか．
+      ここまでに分かったのは 3 つ．事例は「並列」に渡せば効き，「連結」では効かない．
+      ただし効くのは良い事例を渡せたときだけで，いまの検索器はそこに届いていない．
+      このノートは，やったことを順に並べて，次の方針を決めるための材料にする．
+    </p>
+  </div>
+</header>
+
+<!-- ============================== 要約 -->
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">要約</span><h2>ここまでで分かったこと</h2></div>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th class="lbl">問い</th><th>答え</th><th>根拠</th></tr></thead>
+          <tbody>
+            <tr><td class="lbl">Chronos-2 に事例の入口はあるか</td>
+              <td><b>無い</b></td>
+              <td style="text-align:left">共変量の入口を借りて，事例を別の行として並べている（1 節）</td></tr>
+            <tr class="orc"><td class="lbl">並列に渡すと参照は効くか</td>
+              <td><b>効く</b></td>
+              <td style="text-align:left">正しい事例なら誤差が半分になる（−49〜56%）（2 節）</td></tr>
+            <tr class="ctx"><td class="lbl">いまの検索器で効くか</td>
+              <td><b>ほぼ効かない</b></td>
+              <td style="text-align:left">文脈の似た窓を引くと −0.3%．参照なしとほぼ同じ（2 節）</td></tr>
+            <tr><td class="lbl">連結で渡すとどうか</td>
+              <td><b>効かない</b></td>
+              <td style="text-align:left">正解の未来を渡しても −2%．並列なら −49%（3 節）</td></tr>
+            <tr><td class="lbl">全クエリ共通の事例セットは効くか</td>
+              <td><b>未確定</b></td>
+              <td style="text-align:left">ランダムに選んだ 32 件で −1.9%（val）．CLG での選択は途中で保留（5 節）</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="plate-cap">
+        <b>ETTh1 全 7 チャネル・履歴 2032 点・予測 64 点・Chronos-2・チャネル正規化 MSE</b>
+        特記なき限り test（1 チャネル 177 窓，計 1,239 窓）．参照なしは MSE 0.5007．
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 1 -->
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">1</span><h2>事例をどうやって渡しているか</h2></div>
+    <p>
+      Chronos-2 には「事例」という入力は無い．入口は次の 4 つだけである．
+    </p>
+    <div class="branch">
+      <div><span class="cond">target</span><span class="then">予測したい系列（ここではクエリの履歴 2032 点）</span></div>
+      <div><span class="cond">past_covariates</span><span class="then">過去だけ分かっている別の系列</span></div>
+      <div><span class="cond">future_covariates</span><span class="then">未来の値まで分かっている別の系列（例：天気予報，祝日）</span></div>
+      <div><span class="cond">cat_covariate</span><span class="then">カテゴリ値の共変量</span></div>
+    </div>
+    <p>
+      そこで<strong>事例 1 件を「未来まで分かっている共変量」1 本として登録する</strong>．
+      事例の文脈 96 点を履歴の末尾にそろえて置き，その手前は NaN（欠測）で埋める．
+      事例の未来 64 点は，予測したい 64 点と同じ位置に置く．実際に渡しているのは次の辞書である
+      （<code>codes/raf_model.py</code> の <code>parallel_inputs</code>）．
+    </p>
+<pre>target            = クエリの履歴 2032 点
+past_covariates   = { "ret0": [NaN × 1936, 事例0の文脈 96 点], …, "ret7": … }
+future_covariates = { "ret0": 事例0の未来 64 点,               …, "ret7": … }</pre>
+    <h3>モデルの中で起きること</h3>
+    <p>
+      各行は 16 点ずつのトークンに切られる．1 行は「過去 127 個＋区切り（REG）1 個＋未来 4 個」の 132 トークンになる．
+      各層で 2 種類の注意が交互にかかる．
+    </p>
+    <div class="branch">
+      <div><span class="cond">横</span><span class="then"><b>time attention</b>：1 つの行の中でトークンどうしを混ぜる</span></div>
+      <div><span class="cond">縦</span><span class="then"><b>group attention</b>：同じ位置にあるトークンを，行をまたいで混ぜる</span></div>
+    </div>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th class="lbl">行</th><th>過去 1〜121</th><th>過去 122〜127</th><th>REG</th>
+            <th>未来 1〜4</th></tr></thead>
+          <tbody>
+            <tr class="ctx"><td class="lbl">target（クエリ）</td><td>履歴</td><td>履歴</td><td>—</td>
+              <td><b>空（ここを予測する）</b></td></tr>
+            <tr><td class="lbl">ret0（事例 0）</td><td>NaN（無視される）</td><td>事例の文脈</td><td>—</td>
+              <td class="best">事例の未来</td></tr>
+            <tr><td class="lbl">ret1（事例 1）</td><td>NaN（無視される）</td><td>事例の文脈</td><td>—</td>
+              <td class="best">事例の未来</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="plate-cap">
+        <b>要点</b>
+        クエリの「未来 1 個目（1〜16 ステップ先）」は，group attention で事例の「未来 1 個目」を同じ位置で直接見られる．
+        連結でも cross-attention でもない．group attention は行どうしの self-attention である．
+      </div>
+    </div>
+  </div>
+  <div class="prose">
+    <p>
+      従来の RAF は事例を<strong>時間軸に連結</strong>していた（事例を履歴の前に並べる）．下の図で両者を比べる．
+    </p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body">
+        <figure style="margin:0">
+          <svg viewBox="0 0 880 430" role="img" style="max-width:100%;height:auto"
+               aria-label="連結は事例を時間軸に割り込ませ履歴を削り，事例の未来を過去の領域に置く。並列は事例を共変量行として並べ、履歴を保ったまま事例の未来を予測区間の上に置き、group attention が同じ時刻位置の行を混ぜる。"
+               fill="none" stroke="currentColor" font-family="inherit" font-size="12">
+            <defs>
+              <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6"
+                      markerHeight="6" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" fill="currentColor" stroke="none"/>
+              </marker>
+              <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5"
+                      markerHeight="5" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" fill="var(--accent)" stroke="none"/>
+              </marker>
+            </defs>
+
+            <line x1="60" y1="404" x2="860" y2="404" marker-end="url(#ar)"/>
+            <line x1="700" y1="24" x2="700" y2="404" stroke-dasharray="3 4" opacity="0.45"/>
+            <text x="700" y="420" text-anchor="middle" fill="currentColor" stroke="none"
+                  opacity="0.7">予測の起点</text>
+            <text x="380" y="420" text-anchor="middle" fill="currentColor" stroke="none"
+                  opacity="0.7">← 観測ずみ（履歴 2032 点）</text>
+            <text x="790" y="420" text-anchor="middle" fill="currentColor" stroke="none"
+                  opacity="0.7">予測 64 点 →</text>
+
+            <text x="60" y="30" fill="currentColor" stroke="none" font-size="13"
+                  font-weight="700">連結 — 1 行</text>
+            <text x="192" y="30" fill="currentColor" stroke="none" opacity="0.7">
+              instance norm は入力全体に 1 回</text>
+
+            <rect x="60" y="44" width="118" height="34" rx="2"
+                  fill="var(--oracle-tint)" stroke="var(--oracle)"/>
+            <text x="119" y="66" text-anchor="middle" fill="currentColor" stroke="none">事例 1</text>
+            <rect x="182" y="44" width="14" height="34" rx="2" opacity="0.5"/>
+            <rect x="200" y="44" width="118" height="34" rx="2"
+                  fill="var(--oracle-tint)" stroke="var(--oracle)"/>
+            <text x="259" y="66" text-anchor="middle" fill="currentColor" stroke="none">事例 2</text>
+            <rect x="322" y="44" width="14" height="34" rx="2" opacity="0.5"/>
+            <rect x="340" y="44" width="118" height="34" rx="2"
+                  fill="var(--oracle-tint)" stroke="var(--oracle)"/>
+            <text x="399" y="66" text-anchor="middle" fill="currentColor" stroke="none">事例 3</text>
+            <rect x="462" y="44" width="14" height="34" rx="2" opacity="0.5"/>
+            <rect x="480" y="44" width="220" height="34" rx="2"
+                  fill="var(--accent-tint)" stroke="var(--accent)"/>
+            <text x="590" y="66" text-anchor="middle" fill="currentColor" stroke="none">
+              クエリ履歴 — 1328 点に縮む</text>
+            <rect x="700" y="44" width="160" height="34" rx="2" stroke-dasharray="4 3"
+                  opacity="0.6"/>
+            <text x="780" y="66" text-anchor="middle" fill="currentColor" stroke="none"
+                  opacity="0.7">予測</text>
+
+            <path d="M119 92 L119 108" stroke="var(--oracle)" marker-end="url(#ar)"/>
+            <text x="132" y="112" fill="var(--oracle)" stroke="none" font-size="11">
+              事例の未来はここ — 過去の領域に置かれ，時刻特徴は「直近履歴」と偽る</text>
+            <path d="M480 92 L480 108" stroke="var(--accent)" marker-end="url(#ar2)"/>
+            <text x="492" y="130" fill="var(--accent)" stroke="none" font-size="11">
+              事例 1 件につき履歴が 176 点消える</text>
+
+            <line x1="60" y1="152" x2="860" y2="152" opacity="0.25"/>
+
+            <text x="60" y="182" fill="currentColor" stroke="none" font-size="13"
+                  font-weight="700">並列 — K+1 行</text>
+            <text x="196" y="182" fill="currentColor" stroke="none" opacity="0.7">
+              instance norm は行ごと</text>
+
+            <rect x="60" y="196" width="640" height="30" rx="2"
+                  fill="var(--accent-tint)" stroke="var(--accent)"/>
+            <text x="380" y="216" text-anchor="middle" fill="currentColor" stroke="none">
+              クエリ履歴 2032 点 — 1 点も削らない</text>
+            <rect x="700" y="196" width="160" height="30" rx="2" stroke-dasharray="4 3"
+                  opacity="0.6"/>
+            <text x="780" y="216" text-anchor="middle" fill="currentColor" stroke="none"
+                  opacity="0.7">予測</text>
+            <text x="18" y="216" fill="currentColor" stroke="none" font-size="11">target</text>
+
+            <rect x="60" y="238" width="520" height="26" rx="2" stroke-dasharray="2 4"
+                  opacity="0.35"/>
+            <text x="320" y="256" text-anchor="middle" fill="currentColor" stroke="none"
+                  opacity="0.55" font-size="11">NaN（欠測として注意から外れる）</text>
+            <rect x="580" y="238" width="120" height="26" rx="2"
+                  fill="var(--oracle-tint)" stroke="var(--oracle)"/>
+            <text x="640" y="256" text-anchor="middle" fill="currentColor" stroke="none"
+                  font-size="11">事例1 文脈</text>
+            <rect x="700" y="238" width="160" height="26" rx="2"
+                  fill="var(--oracle-tint)" stroke="var(--oracle)" stroke-width="1.6"/>
+            <text x="780" y="256" text-anchor="middle" fill="currentColor" stroke="none"
+                  font-size="11">事例1 未来</text>
+            <text x="18" y="256" fill="currentColor" stroke="none" font-size="11">cov 1</text>
+
+            <rect x="60" y="276" width="520" height="26" rx="2" stroke-dasharray="2 4"
+                  opacity="0.35"/>
+            <rect x="580" y="276" width="120" height="26" rx="2"
+                  fill="var(--oracle-tint)" stroke="var(--oracle)"/>
+            <text x="640" y="294" text-anchor="middle" fill="currentColor" stroke="none"
+                  font-size="11">事例2 文脈</text>
+            <rect x="700" y="276" width="160" height="26" rx="2"
+                  fill="var(--oracle-tint)" stroke="var(--oracle)" stroke-width="1.6"/>
+            <text x="780" y="294" text-anchor="middle" fill="currentColor" stroke="none"
+                  font-size="11">事例2 未来</text>
+            <text x="18" y="294" fill="currentColor" stroke="none" font-size="11">cov 2</text>
+
+            <text x="18" y="322" fill="currentColor" stroke="none" font-size="11">cov K</text>
+            <text x="380" y="322" text-anchor="middle" fill="currentColor" stroke="none"
+                  opacity="0.5">⋮</text>
+            <text x="640" y="322" text-anchor="middle" fill="currentColor" stroke="none"
+                  opacity="0.5">⋮</text>
+            <text x="780" y="322" text-anchor="middle" fill="currentColor" stroke="none"
+                  opacity="0.5">⋮</text>
+
+            <path d="M640 232 L640 208" stroke="var(--accent)" marker-end="url(#ar2)"/>
+            <path d="M640 270 L640 246" stroke="var(--accent)" marker-end="url(#ar2)"/>
+            <path d="M780 270 L780 232" stroke="var(--accent)" marker-end="url(#ar2)"/>
+            <path d="M780 232 L780 208" stroke="var(--accent)" marker-end="url(#ar2)"/>
+            <text x="60" y="348" fill="var(--accent)" stroke="none" font-size="11">
+              ↑ group attention — 同じ時刻位置の行どうしを混ぜる（時間方向の注意とは別軸）</text>
+            <text x="60" y="368" fill="var(--oracle)" stroke="none" font-size="11">
+              事例の未来は，予測しようとしている 64 点の真上に載る（known future covariate）</text>
+          </svg>
+          <figcaption class="plate-cap" style="border:0;background:none;padding:14px 0 0">
+            <b>同じ事例・同じ履歴・違う置き場所</b>
+            連結は事例を時間軸に割り込ませるので履歴を削り，事例の未来は過去の領域に着地する．
+            並列は行を増やすだけなので履歴は無傷で，事例の未来は予測区間の上に着地する．
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+  <div class="prose">
+    <div class="callout amber">
+      <span class="lead">これは本来の使い方ではない</span>
+      <p>
+        共変量の行は本来「電力需要と気温」のように<strong>同じ時刻に並走する別の系列</strong>のためのものである．
+        そこに同じ系列の何ヶ月も前の窓を，いまと同じ時刻のものとして入れている．
+        Chronos-2 の論文も，こういう使い方は想定していない．
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 2 -->
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">2</span><h2>並列に渡すと参照は効く．ただし良い事例なら</h2></div>
+    <p>
+      「渡し方が悪いのか，事例の選び方が悪いのか」を分けるために，事例の質を 3 段階にした．
+      A と B は答えを使うので実際には使えない．<strong>上限を知るためだけの診断</strong>である．
+    </p>
+    <div class="branch">
+      <div><span class="cond">A</span><span class="then">クエリ自身の文脈＋<b>正解の未来</b>をそのまま事例にする．完璧な参照</span></div>
+      <div><span class="cond">B</span><span class="then">正解の未来に<b>いちばん近い過去の実在の窓</b>を引く．検索がうまくいった場合の上限</span></div>
+      <div><span class="cond">C</span><span class="then">クエリの文脈に<b>いちばん近い窓</b>を引く（生値の L2 距離）．実際に使える普通の検索</span></div>
+    </div>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th class="lbl"></th><th>事例として入れるもの</th>
+            <th>MSE</th><th>QL</th><th>参照なし比</th></tr></thead>
+          <tbody>
+            <tr class="orc"><td class="lbl">A</td><td style="text-align:left">クエリ自身＋正解（K=8）</td>
+              <td class="best">0.2227</td><td class="best">0.1268</td><td class="best">−55.5%</td></tr>
+            <tr class="orc"><td class="lbl">A</td><td style="text-align:left">同上（K=1）</td>
+              <td class="best">0.2541</td><td>0.1347</td><td class="best">−49.3%</td></tr>
+            <tr class="orc"><td class="lbl">B</td><td style="text-align:left">正解に近い実在の窓（K=8）</td>
+              <td>0.4145</td><td>0.1758</td><td>−17.2%</td></tr>
+            <tr><td class="lbl">C</td><td style="text-align:left">文脈が近い窓（K=8）</td>
+              <td>0.4991</td><td>0.1921</td><td>−0.3%</td></tr>
+            <tr><td class="lbl">対照</td><td style="text-align:left">recency：直前の窓をそのまま（K=4）</td>
+              <td>0.4978</td><td>0.1911</td><td>−0.6%</td></tr>
+            <tr class="ctx"><td class="lbl">基準</td><td style="text-align:left">参照なし</td>
+              <td>0.5007</td><td>0.1887</td><td>—</td></tr>
+            <tr><td class="lbl">対照</td><td style="text-align:left">プラセボ：クエリと同じ平均・分散の雑音（K=4）</td>
+              <td>0.5203</td><td>0.1996</td><td>+3.9%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="plate-cap">
+        <b>55.5% の伸びしろが 3 段に分かれる</b>
+        A → B の 38 ポイントは「過去に正解そのものは無い」ことによる損．
+        B → C の 17 ポイントは検索器の失敗．C と参照なしの差は 0.3 ポイントしかない．
+      </div>
+    </div>
+  </div>
+  <div class="prose">
+    <div class="callout">
+      <span class="lead">読み方</span>
+      <p>
+        <strong>渡し方（並列）には問題が無い．</strong>正しい事例なら 1 件でも誤差が半分になる．
+        効かないのは<strong>いまの検索器が良い事例を引けていない</strong>からである．
+        プラセボは悪化するので，「行を足すだけで良くなる」副作用でもない．
+      </p>
+    </div>
+    <h3>検索をどれだけ良くすれば効き始めるか</h3>
+    <p>
+      検索の鍵に正解の未来を割合 <math><mi>a</mi></math> だけ混ぜて，検索の質を少しずつ上げた．
+      <math><mrow><mi>a</mi><mo>=</mo><mn>0</mn></mrow></math> は「一度予測して，その予測を鍵に検索する」実際に使える手法で，
+      <math><mrow><mi>a</mi><mo>=</mo><mn>1</mn></mrow></math> は B と同じである．
+    </p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th class="lbl">a：鍵に混ぜた正解の割合</th><th>MSE</th><th>QL</th></tr></thead>
+          <tbody>
+            <tr><td class="lbl">0（実際に使える）</td><td>0.5092</td><td>0.1915</td></tr>
+            <tr><td class="lbl">0.125</td><td>0.4979</td><td>0.1897</td></tr>
+            <tr><td class="lbl">0.25</td><td>0.4836</td><td>0.1873</td></tr>
+            <tr><td class="lbl">0.5</td><td>0.4543</td><td>0.1823</td></tr>
+            <tr><td class="lbl">0.75</td><td>0.4277</td><td>0.1779</td></tr>
+            <tr class="orc"><td class="lbl">1.0（＝B）</td><td>0.4145</td><td>0.1758</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="plate-cap">
+        <b>ほぼ直線</b>
+        検索の質を上げた分だけ，比例して良くなる．「ほぼ正解のときだけ効く」という崖ではない．
+        参照なし（0.5007）を下回るのは a ≈ 0.09 から．−5% には a ≈ 0.31，−10% には a ≈ 0.54 が要る．
+      </div>
+    </div>
+  </div>
+  <div class="prose">
+    <p>
+      ただしこの混ぜ方は「正解へまっすぐ近づける」特定の道筋なので，実際の検索器の改良が同じ直線に乗る保証はない．
+      また a=0 の 0.5092 は C の 0.4991 より悪いので，出発点は C のほうである．
+    </p>
+    <h3>参考：事例の数 K を変える</h3>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th class="lbl">K</th><th>C：文脈が近い窓</th><th>B：正解に近い窓</th></tr></thead>
+          <tbody>
+            <tr class="ctx"><td class="lbl">0（参照なし）</td><td>0.5007</td><td>—</td></tr>
+            <tr><td class="lbl">1</td><td>0.5097</td><td>0.4617</td></tr>
+            <tr><td class="lbl">2</td><td>0.5101</td><td>0.4415</td></tr>
+            <tr><td class="lbl">4</td><td>0.5040</td><td>0.4221</td></tr>
+            <tr><td class="lbl">8</td><td>0.4991</td><td>0.4145</td></tr>
+            <tr><td class="lbl">16</td><td>0.4954</td><td>0.4113</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="plate-cap">
+        <b>B は K=8 あたりで頭打ち，C はほぼ平ら</b>
+        K は test 上で振っただけなので，主張に使うなら val で選び直す．
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 3 -->
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">3</span><h2>連結と比べる</h2></div>
+    <p>
+      同じ事例を，従来の RAF と同じく時間軸に連結して渡した．連結は 2 通り試した．
+    </p>
+    <div class="branch">
+      <div><span class="cond">そのまま</span><span class="then">履歴 2032 点を残して，その前に事例を足す</span></div>
+      <div><span class="cond">削る</span><span class="then">全体を 2032 点に収めるため，事例の分だけ履歴を削る（K=8 なら履歴は 624 点）</span></div>
+    </div>
+    <p>
+      「未来だけ正解」の行も足した．事例の文脈は検索した窓のまま，未来だけを正解に差し替える．
+      文脈が一致していなくても未来を読めるかを見るためである．
+    </p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th class="lbl">事例</th><th>並列</th><th>連結・そのまま</th><th>連結・削る</th></tr></thead>
+          <tbody>
+            <tr><td class="lbl">未来だけ正解（K=8）</td>
+              <td class="best">0.2533（−49.4%）</td><td>0.4906（−2.0%）</td><td>0.4881（−2.5%）</td></tr>
+            <tr><td class="lbl">B：正解に近い窓（K=8）</td>
+              <td class="best">0.4145（−17.2%）</td><td>0.4927（−1.6%）</td><td>0.5097（+1.8%）</td></tr>
+            <tr><td class="lbl">C：文脈が近い窓（K=8）</td>
+              <td>0.4991（−0.3%）</td><td>0.4945（−1.2%）</td><td>0.5015（+0.2%）</td></tr>
+            <tr><td class="lbl">プラセボ（K=4）</td>
+              <td>0.5203（+3.9%）</td><td>0.4986（−0.4%）</td><td>0.5061（+1.1%）</td></tr>
+            <tr class="orc"><td class="lbl">A：クエリ自身＋正解（K=1）</td>
+              <td class="best">0.2541（−49.3%）</td><td>0.4629（−7.5%）</td><td>0.4831（−3.5%）</td></tr>
+            <tr class="orc"><td class="lbl">A：クエリ自身＋正解（K=8）</td>
+              <td>0.2227（−55.5%）</td><td>0.3004（−40.0%）</td><td class="best">0.1028（−79.5%）</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="plate-cap">
+        <b>MSE（参照なし 0.5007 比）．連結の区切りは qmean，nan でも同じ結論</b>
+        正解の未来を渡しても，連結は 2% しか良くならない．並列は 49% 良くなる．
+      </div>
+    </div>
+  </div>
+  <div class="prose">
+    <p>
+      A の K=8 だけは連結が大勝ちするが，見かけである．A では事例の文脈がクエリの末尾と<strong>完全に同じ</strong>で，
+      それが 8 回並ぶ．連結はこれを周期として延ばしているだけで，K=1 だと −3.5%，
+      文脈を検索した窓に戻すと −2% まで落ちる．
+    </p>
+    <div class="callout">
+      <span class="lead">分かったこと</span>
+      <p>
+        <strong>連結は，クエリと完全に一致する事例の続きしか写せない．</strong>
+        並列は，文脈が一致していなくても予測区間の上に置かれた未来を読む．
+        検索で引けるのは「似ているが一致しない」窓なので，使えるのは並列である．
+      </p>
+      <p>
+        渡し方を比べるときの上限には，A ではなく「未来だけ正解」を使う．
+      </p>
+    </div>
+    <h3>履歴を削るから効かないのではない</h3>
+    <p>
+      参照なしで履歴だけを 1856 / 1328 / 624 点に削っても，損は +0.4% / +1.9% / +2.7% と小さい．
+      そして履歴を削らない連結でも，正解の未来を渡して −2% にとどまる．
+      <strong>連結が効かない原因は履歴の長さではなく，事例の未来の置き場所である．</strong>
+      連結では未来が「過去」の場所に置かれ，並列では予測したい 64 点の真上に置かれる．
+    </p>
+    <p>
+      なお，実際に使える C だけなら連結・そのまま（−1.2%）が並列（−0.3%）をわずかに上回る．
+      ただし連結はプラセボでも −0.4% なので，中身を読んだ結果とは言えない．
+      検索の質の差が結果に届くのは並列だけである（B と C の差：並列 17.0%，連結 0.4%）．
+    </p>
+  </div>
+</section>
+
+<!-- ============================== 4 -->
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">4</span><h2>並列に渡す方法は新しいか</h2></div>
+    <p>
+      アイデアそのものは新しくない．近いものが既にある．
+    </p>
+    <div class="branch">
+      <div><span class="cond">Chronos-2</span><span class="then">技術報告（arXiv:2510.15821）の結論で，
+        「系列を埋め込みでグループ化すれば retrieval-augmented forecasting に使えるかもしれない」と今後の課題に挙げている</span></div>
+      <div><span class="cond">TimeRAF</span><span class="then">検索した系列をチャネル方向で統合する（Channel Prompting）．ただし学習する専用モジュールを使う</span></div>
+      <div><span class="cond">RAEF など</span><span class="then">2026 年の RAF 系（RAEF，Everglades の水位予測）は今も連結．
+        KG-Chronos-2 は予測を出したあとで混ぜる事後融合</span></div>
+    </div>
+    <p>
+      こちらの違いは，<strong>同じ系列の過去の窓を末尾にそろえて置き，その未来を「未来まで分かっている共変量」として予測区間に載せる</strong>こと，
+      そしてモデルを一切学習しないことである．見つけた範囲では，この形で測った例は無かった．
+      新規性を言うなら，方法そのものより<strong>「連結は完全一致しか写せず，並列は近い事例の未来を読める」</strong>という 3 節の発見のほうである．
+      網羅的に調べたわけではないので，Chronos-2 の被引用論文は確認が要る．
+    </p>
+  </div>
+</section>
+
+<!-- ============================== 5 -->
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">5</span><h2>共通の事例セットを試し始めた（保留中）</h2></div>
+    <p>
+      ここまでは<strong>クエリごとに</strong>事例を選んでいた．別の方向として，
+      Zhang et al.「Selecting Demonstrations for Many-Shot ICL via Gradient Matching」（ACL Findings 2025）の考え方を持ち込もうとした．
+      取り入れたいのは次の 3 つである．
+    </p>
+    <div class="branch">
+      <div><span class="cond">many-shot</span><span class="then">事例を数件ではなく数十〜数百件渡す</span></div>
+      <div><span class="cond">task-level</span><span class="then">クエリごとに選ばず，<b>全クエリに同じセット</b>を渡す（チャネルごとに 1 セット）</span></div>
+      <div><span class="cond">CLG</span><span class="then">セットの選び方．下で説明する</span></div>
+    </div>
+    <h3>CLG（Curriculum Latent Gradient）を平たく言うと</h3>
+    <div class="branch">
+      <div><span class="cond">1</span><span class="then">「学習できる架空の事例」を 8 本用意し，Chronos-2 は固定したまま，
+        train で予測が良くなるように架空の事例だけを学習する</span></div>
+      <div><span class="cond">2</span><span class="then">学習の各段階で，train の窓 1 つ 1 つが架空の事例を「どちら向きに動かそうとするか」（勾配）を記録する</span></div>
+      <div><span class="cond">3</span><span class="then">train 全体の平均的な動かし方と<b>同じ動かし方をする少数の窓</b>を選ぶ．
+        「train 全体で学習したのと同じ効果を，選んだ少数の事例で出す」ことを狙う</span></div>
+    </div>
+    <p>
+      うまくいく筋書きは，事例をたくさん並べておけば，group attention がクエリに合う事例を自分で選んでくれる，というものである．
+      心配な点もある．以前，上位 K 件の中で事例の未来を入れ替えても +0.9% しか変わらず，
+      「どの文脈にどの未来が付いていたか」はあまり使われていなかった．もし本当に使われないなら，
+      共通セットは「ありうる未来の値の集まり」にしかならず，効果は小さい．
+    </p>
+    <h3>作ったもの</h3>
+    <div class="branch">
+      <div><span class="cond">sparse_rows.py</span><span class="then">事例の行のうち値のある 11 トークンだけを計算する Chronos-2 の計算．
+        元の計算と一致する（最大誤差 1.3e-4，値の規模 49）．参照なし 0.5007 も完全に再現．
+        事例 32 件で 1 チャネル 17 秒と速く，勾配も取れる</span></div>
+      <div><span class="cond">taskset.py</span><span class="then">チャネルごとの固定セットを全クエリに渡して評価する（ランダム，k-means，ファイル指定）</span></div>
+      <div><span class="cond">clg.py</span><span class="then">架空の事例の学習，CLG 勾配の記録，勾配マッチングでの選択，Best-of-N</span></div>
+    </div>
+    <h3>途中の結果</h3>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th class="lbl">val（全 7 チャネル）</th><th>MSE</th><th>参照なし比</th><th>QL</th></tr></thead>
+          <tbody>
+            <tr class="ctx"><td class="lbl">参照なし</td><td>0.3967</td><td>—</td><td>0.1656</td></tr>
+            <tr><td class="lbl">ランダムな固定セット K=8（5 seed 平均）</td><td>0.3935 ±0.0030</td><td>−0.8%</td><td>0.1673</td></tr>
+            <tr><td class="lbl">ランダムな固定セット K=32（5 seed 平均）</td><td>0.3892 ±0.0024</td><td>−1.9%</td><td>0.1668</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="plate-cap">
+        <b>ランダムに選んだ共通セットでも MSE は少し良くなる．QL はわずかに悪化</b>
+        K=128 / 256，test，CLG で選んだセットはまだ無い．
+        架空の事例の学習は OT で試しただけで，train の損失が参照なし 2.759 → 2.686（5 エポック）まで下がった．
+      </div>
+    </div>
+  </div>
+  <div class="prose">
+    <p>
+      全チャネルで走らせたところ，同時に動かしすぎてメモリ不足（16GB）で止まった．
+      設定を直して再開したが，方針を先に決めるため保留にした．
+    </p>
+  </div>
+</section>
+
+<!-- ============================== 6 -->
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">6</span><h2>現在地と，決めること</h2></div>
+    <div class="branch">
+      <div><span class="cond">確定</span><span class="then">事例は<b>並列</b>に渡す．連結は完全一致しか写せない</span></div>
+      <div><span class="cond">確定</span><span class="then">正しい事例なら誤差が半分になる．渡し方に問題は無い</span></div>
+      <div><span class="cond">確定</span><span class="then">過去に正解そのものは無いので，検索の上限は −17%（B）</span></div>
+      <div><span class="cond">確定</span><span class="then">いまの検索器（文脈が近い窓）では −0.3%．上限との差 17 ポイントが手つかず</span></div>
+      <div><span class="cond">確定</span><span class="then">検索の質を上げた分だけ比例して良くなる．
+        鍵を正解へ 1 割近づければ参照なしを下回る</span></div>
+      <div><span class="cond">途中</span><span class="then">全クエリ共通のランダムなセットで −1.9%（val，K=32）．CLG で選ぶと上積みできるかは未確認</span></div>
+    </div>
+    <h3>方針の候補</h3>
+    <div class="branch">
+      <div><span class="cond">案 1</span><span class="then"><b>クエリごとの検索器を良くする．</b>
+        B と C の差 17 ポイントを取りにいく．目標は「鍵を正解へ 1 割以上近づける」こと．
+        これまで encoder や多様性の工夫はどれも recency を超えられていない</span></div>
+      <div><span class="cond">案 2</span><span class="then"><b>全クエリ共通の many-shot セットを CLG で選ぶ．</b>
+        実装は済んでいて，残りは計算時間（全チャネルで数時間）．
+        ランダムでも −1.9% 出ているので，その上に積めるかが焦点</span></div>
+      <div><span class="cond">案 3</span><span class="then"><b>両方を同時に渡す．</b>
+        共通セットとクエリごとの数件を一緒に並べる（論文 4.8 節）．案 1 か案 2 が動いてから</span></div>
+      <div><span class="cond">共通</span><span class="then">他のデータセットで再現する．K などは val で選んでから test を出す</span></div>
+    </div>
+  </div>
+
+  <div class="prose footnote">
+    <p>
+      <b>主なコマンド</b><br>
+      並列 <code>predict.py --inject parallel</code>／完璧な参照 <code>--example-ablation self-truth</code>／
+      未来だけ正解 <code>--example-ablation truth-future</code><br>
+      正解に近い窓 <code>--encoder future</code>／検索品質のダイヤル <code>--oracle-mix</code>／
+      プラセボ <code>--example-ablation gauss-local</code>／recency <code>--retrieval-mode recent</code><br>
+      連結 <code>--inject concat --separator qmean</code>（3 節は <code>results/cmp_*</code>）<br>
+      共通セット <code>codes/taskset.py</code>／CLG <code>codes/clg.py</code>（5 節は <code>results/ts_*</code>）
+    </p>
+    <p>
+      全数値と撤回した主張は <code>README.md</code> に記録．検索 DB は特記なき限り
+      <code>--retrieval-split past --retrieval-stride 8</code>，<code>--eval-stride 16</code>．
+      ハイパーパラメータは val で固定してから test を報告すること．
+    </p>
+  </div>
+</section>
+
+</div>
