@@ -393,12 +393,12 @@ pre {
 <header class="masthead">
   <div class="prose">
     <p class="kicker">RAF 研究ノート · 改訂 2026-10-01 · ETTh1 / Chronos-2</p>
-    <h1>検索の上限を測る</h1>
+    <h1>参照を並列に渡し，共通の事例で選ぶ</h1>
     <p class="standfirst">
-      過去の似た窓（事例）を Chronos-2 に見せると予測は良くなるのか．
-      ここまでに分かったのは 3 つ．事例は「並列」に渡せば効き，「連結」では効かない．
-      ただし効くのは良い事例を渡せたときだけで，いまの検索器はそこに届いていない．
-      このノートは，やったことを順に並べて，次の方針を決めるための材料にする．
+      過去の窓（参照事例）を凍結した Chronos-2 に見せて予測を良くしたい．
+      考えることは 2 つ，<strong>どう融合するか</strong>と<strong>どう選ぶか</strong>である．
+      融合は「共変量の行として並列に渡す」に決めた．連結では事例がほとんど読まれないからである．
+      選び方は，クエリごとの検索をやめて，<strong>全クエリ共通の many-shot セット</strong>を試している．
     </p>
   </div>
 </header>
@@ -406,35 +406,26 @@ pre {
 <!-- ============================== 要約 -->
 <section>
   <div class="prose">
-    <div class="sec-head"><span class="sec-num">要約</span><h2>ここまでで分かったこと</h2></div>
+    <div class="sec-head"><span class="sec-num">要約</span><h2>主張と，その状態</h2></div>
   </div>
   <div class="wide">
     <div class="plate">
       <div class="table-scroll">
         <table>
-          <thead><tr><th class="lbl">問い</th><th>答え</th><th>根拠</th></tr></thead>
+          <thead><tr><th class="lbl">主張</th><th>状態</th><th>根拠</th></tr></thead>
           <tbody>
-            <tr><td class="lbl">Chronos-2 に事例の入口はあるか</td>
-              <td><b>無い</b></td>
-              <td style="text-align:left">共変量の入口を借りて，事例を別の行として並べている（1 節）</td></tr>
-            <tr class="orc"><td class="lbl">並列に渡すと参照は効くか</td>
-              <td><b>効く</b></td>
-              <td style="text-align:left">正しい事例なら誤差が半分になる（−49〜56%）（2 節）</td></tr>
-            <tr class="ctx"><td class="lbl">いまの検索器で効くか</td>
-              <td><b>ほぼ効かない</b></td>
-              <td style="text-align:left">文脈の似た窓を引くと −0.3%．参照なしとほぼ同じ（2 節）</td></tr>
-            <tr><td class="lbl">連結で渡すとどうか</td>
-              <td><b>効かない</b></td>
-              <td style="text-align:left">正解の未来を渡しても −2%．並列なら −49%（3 節）</td></tr>
-            <tr><td class="lbl">全クエリ共通の事例セットは効くか</td>
-              <td><b>未確定</b></td>
-              <td style="text-align:left">ランダムに選んだ 32 件で −1.9%（val）．CLG での選択は途中で保留（5 節）</td></tr>
+            <tr class="orc"><td class="lbl">融合は並列（共変量の行）にする</td><td><b>確定</b></td>
+              <td style="text-align:left">正解の未来を渡すと，並列は −49.4%，連結は −2.0%（2 節）</td></tr>
+            <tr><td class="lbl">クエリごとの検索では届かない</td><td><b>確定</b></td>
+              <td style="text-align:left">文脈が近い窓は −0.3%．正解に近い窓なら −17.2% なので，選び方の問題（3 節）</td></tr>
+            <tr class="ctx"><td class="lbl">共通の many-shot セットで選ぶ</td><td><b>検証中</b></td>
+              <td style="text-align:left">ランダムに選んだ 32 件で −1.9%（val）．K を増やす試験と選び方の比較はこれから（4 節）</td></tr>
           </tbody>
         </table>
       </div>
       <div class="plate-cap">
-        <b>ETTh1 全 7 チャネル・履歴 2032 点・予測 64 点・Chronos-2・チャネル正規化 MSE</b>
-        特記なき限り test（1 チャネル 177 窓，計 1,239 窓）．参照なしは MSE 0.5007．
+        <b>ETTh1 全 7 チャネル・履歴 2032 点・予測 64 点・Chronos-2（凍結）・チャネル正規化 MSE</b>
+        特記なき限り test（1 チャネル 177 窓，計 1,239 窓）．割合は参照なし（MSE 0.5007）との比．
       </div>
     </div>
   </div>
@@ -443,47 +434,70 @@ pre {
 <!-- ============================== 1 -->
 <section>
   <div class="prose">
-    <div class="sec-head"><span class="sec-num">1</span><h2>事例をどうやって渡しているか</h2></div>
+    <div class="sec-head"><span class="sec-num">1</span><h2>問題：どう融合し，どう選ぶか</h2></div>
     <p>
-      Chronos-2 には「事例」という入力は無い．入口は次の 4 つだけである．
+      予測したい系列の履歴（クエリ）に加えて，同じ系列の過去の窓をいくつか「参照事例」として見せる．
+      事例 1 件は「文脈 96 点＋その続き 64 点」の窓である．やり方は 2 つの軸で決まる．
     </p>
-    <div class="branch">
-      <div><span class="cond">target</span><span class="then">予測したい系列（ここではクエリの履歴 2032 点）</span></div>
-      <div><span class="cond">past_covariates</span><span class="then">過去だけ分かっている別の系列</span></div>
-      <div><span class="cond">future_covariates</span><span class="then">未来の値まで分かっている別の系列（例：天気予報，祝日）</span></div>
-      <div><span class="cond">cat_covariate</span><span class="then">カテゴリ値の共変量</span></div>
-    </div>
-    <p>
-      そこで<strong>事例 1 件を「未来まで分かっている共変量」1 本として登録する</strong>．
-      事例の文脈 96 点を履歴の末尾にそろえて置き，その手前は NaN（欠測）で埋める．
-      事例の未来 64 点は，予測したい 64 点と同じ位置に置く．実際に渡しているのは次の辞書である
-      （<code>codes/raf_model.py</code> の <code>parallel_inputs</code>）．
-    </p>
-<pre>target            = クエリの履歴 2032 点
-past_covariates   = { "ret0": [NaN × 1936, 事例0の文脈 96 点], …, "ret7": … }
-future_covariates = { "ret0": 事例0の未来 64 点,               …, "ret7": … }</pre>
-    <h3>モデルの中で起きること</h3>
-    <p>
-      各行は 16 点ずつのトークンに切られる．1 行は「過去 127 個＋区切り（REG）1 個＋未来 4 個」の 132 トークンになる．
-      各層で 2 種類の注意が交互にかかる．
-    </p>
-    <div class="branch">
-      <div><span class="cond">横</span><span class="then"><b>time attention</b>：1 つの行の中でトークンどうしを混ぜる</span></div>
-      <div><span class="cond">縦</span><span class="then"><b>group attention</b>：同じ位置にあるトークンを，行をまたいで混ぜる</span></div>
-    </div>
   </div>
   <div class="wide">
     <div class="plate">
       <div class="table-scroll">
         <table>
-          <thead><tr><th class="lbl">行</th><th>過去 1〜121</th><th>過去 122〜127</th><th>REG</th>
-            <th>未来 1〜4</th></tr></thead>
+          <thead><tr><th class="lbl"></th><th>どう融合するか</th><th>どう選ぶか</th></tr></thead>
           <tbody>
-            <tr class="ctx"><td class="lbl">target（クエリ）</td><td>履歴</td><td>履歴</td><td>—</td>
+            <tr><td class="lbl">従来の RAF</td>
+              <td style="text-align:left">事例を履歴の前に<b>連結</b>する</td>
+              <td style="text-align:left">クエリごとに，文脈が近い窓を<b>数件</b>検索する</td></tr>
+            <tr class="orc"><td class="lbl">このノートの提案</td>
+              <td style="text-align:left">事例を共変量の行として<b>並列</b>に渡す</td>
+              <td style="text-align:left">全クエリ<b>共通</b>のセットを<b>数十〜数百件</b>渡す</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="prose">
+    <p>
+      並列に渡す発想自体は新しくない．Chronos-2 の技術報告（arXiv:2510.15821）も，
+      group attention を検索拡張に使う可能性を今後の課題に挙げている．
+      新しいのは，<strong>連結では事例が読まれず並列なら読まれることを示した点</strong>（2 節）と，
+      <strong>並列だからこそ可能になる many-shot・task-level の選び方</strong>（4 節）である．
+    </p>
+  </div>
+</section>
+
+<!-- ============================== 2 -->
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">2</span><h2>融合：並列に渡す</h2></div>
+    <h3>どうやって渡すか</h3>
+    <p>
+      Chronos-2 に「事例」という入力は無い．入口は予測対象（target），過去だけ分かる共変量，
+      未来まで分かる共変量，カテゴリ共変量の 4 つだけである．
+      そこで<strong>事例 1 件を「未来まで分かっている共変量」1 本として登録する</strong>．
+      事例の文脈 96 点は履歴の末尾にそろえて置き，手前は NaN（欠測）で埋める．事例の未来 64 点は，予測したい 64 点と同じ位置に置く．
+    </p>
+<pre>target            = クエリの履歴 2032 点
+past_covariates   = { "ret0": [NaN × 1936, 事例0の文脈 96 点], …, "ret7": … }
+future_covariates = { "ret0": 事例0の未来 64 点,               …, "ret7": … }</pre>
+    <p>
+      モデルの中では，各行が 16 点ずつのトークンに切られる（1 行 132 トークン）．
+      各層で，行の中を混ぜる <b>time attention</b>（横）と，同じ位置のトークンを行をまたいで混ぜる
+      <b>group attention</b>（縦）が交互にかかる．
+    </p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th class="lbl">行</th><th>過去 1〜121</th><th>過去 122〜127</th><th>未来 1〜4</th></tr></thead>
+          <tbody>
+            <tr class="ctx"><td class="lbl">target（クエリ）</td><td>履歴</td><td>履歴</td>
               <td><b>空（ここを予測する）</b></td></tr>
-            <tr><td class="lbl">ret0（事例 0）</td><td>NaN（無視される）</td><td>事例の文脈</td><td>—</td>
+            <tr><td class="lbl">ret0（事例 0）</td><td>NaN（無視される）</td><td>事例の文脈</td>
               <td class="best">事例の未来</td></tr>
-            <tr><td class="lbl">ret1（事例 1）</td><td>NaN（無視される）</td><td>事例の文脈</td><td>—</td>
+            <tr><td class="lbl">ret1（事例 1）</td><td>NaN（無視される）</td><td>事例の文脈</td>
               <td class="best">事例の未来</td></tr>
           </tbody>
         </table>
@@ -491,21 +505,19 @@ future_covariates = { "ret0": 事例0の未来 64 点,               …, "ret7"
       <div class="plate-cap">
         <b>要点</b>
         クエリの「未来 1 個目（1〜16 ステップ先）」は，group attention で事例の「未来 1 個目」を同じ位置で直接見られる．
-        連結でも cross-attention でもない．group attention は行どうしの self-attention である．
+        事例の行で値があるのは 11 トークンだけなので，その分だけ計算すれば済む．事例を数百件並べても計算が軽い．
       </div>
     </div>
   </div>
   <div class="prose">
-    <p>
-      従来の RAF は事例を<strong>時間軸に連結</strong>していた（事例を履歴の前に並べる）．下の図で両者を比べる．
-    </p>
+    <p>従来の連結と並べると次のようになる．</p>
   </div>
   <div class="wide">
     <div class="plate">
       <div class="plate-body">
         <figure style="margin:0">
           <svg viewBox="0 0 880 430" role="img" style="max-width:100%;height:auto"
-               aria-label="連結は事例を時間軸に割り込ませ履歴を削り，事例の未来を過去の領域に置く。並列は事例を共変量行として並べ、履歴を保ったまま事例の未来を予測区間の上に置き、group attention が同じ時刻位置の行を混ぜる。"
+               aria-label="連結は事例を時間軸に割り込ませ，事例の未来を過去の領域に置く。並列は事例を共変量行として並べ、履歴を保ったまま事例の未来を予測区間の上に置き、group attention が同じ時刻位置の行を混ぜる。"
                fill="none" stroke="currentColor" font-family="inherit" font-size="12">
             <defs>
               <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6"
@@ -547,7 +559,7 @@ future_covariates = { "ret0": 事例0の未来 64 点,               …, "ret7"
             <rect x="480" y="44" width="220" height="34" rx="2"
                   fill="var(--accent-tint)" stroke="var(--accent)"/>
             <text x="590" y="66" text-anchor="middle" fill="currentColor" stroke="none">
-              クエリ履歴 — 1328 点に縮む</text>
+              クエリ履歴 2032 点</text>
             <rect x="700" y="44" width="160" height="34" rx="2" stroke-dasharray="4 3"
                   opacity="0.6"/>
             <text x="780" y="66" text-anchor="middle" fill="currentColor" stroke="none"
@@ -558,7 +570,7 @@ future_covariates = { "ret0": 事例0の未来 64 点,               …, "ret7"
               事例の未来はここ — 過去の領域に置かれ，時刻特徴は「直近履歴」と偽る</text>
             <path d="M480 92 L480 108" stroke="var(--accent)" marker-end="url(#ar2)"/>
             <text x="492" y="130" fill="var(--accent)" stroke="none" font-size="11">
-              事例 1 件につき履歴が 176 点消える</text>
+              事例 1 件で入力が 176 点伸びる（8192 点に入るのは 35 件まで）</text>
 
             <line x1="60" y1="152" x2="860" y2="152" opacity="0.25"/>
 
@@ -622,7 +634,7 @@ future_covariates = { "ret0": 事例0の未来 64 点,               …, "ret7"
           </svg>
           <figcaption class="plate-cap" style="border:0;background:none;padding:14px 0 0">
             <b>同じ事例・同じ履歴・違う置き場所</b>
-            連結は事例を時間軸に割り込ませるので履歴を削り，事例の未来は過去の領域に着地する．
+            連結は事例を時間軸に割り込ませるので入力が伸び，事例の未来は過去の領域に着地する．
             並列は行を増やすだけなので履歴は無傷で，事例の未来は予測区間の上に着地する．
           </figcaption>
         </figure>
@@ -630,126 +642,51 @@ future_covariates = { "ret0": 事例0の未来 64 点,               …, "ret7"
     </div>
   </div>
   <div class="prose">
-    <div class="callout amber">
-      <span class="lead">これは本来の使い方ではない</span>
-      <p>
-        共変量の行は本来「電力需要と気温」のように<strong>同じ時刻に並走する別の系列</strong>のためのものである．
-        そこに同じ系列の何ヶ月も前の窓を，いまと同じ時刻のものとして入れている．
-        Chronos-2 の論文も，こういう使い方は想定していない．
-      </p>
-    </div>
-  </div>
-</section>
-
-<!-- ============================== 2 -->
-<section>
-  <div class="prose">
-    <div class="sec-head"><span class="sec-num">2</span><h2>並列に渡すと参照は効く．ただし良い事例なら</h2></div>
+    <h3>連結と比べる</h3>
     <p>
-      「渡し方が悪いのか，事例の選び方が悪いのか」を分けるために，事例の質を 3 段階にした．
-      A と B は答えを使うので実際には使えない．<strong>上限を知るためだけの診断</strong>である．
+      同じ事例を両方の渡し方で比べた．「未来だけ正解」は，事例の文脈は検索した窓のまま，未来だけを正解に差し替えたもので，
+      「渡した未来をどこまで読めるか」の上限を測る診断である．
     </p>
-    <div class="branch">
-      <div><span class="cond">A</span><span class="then">クエリ自身の文脈＋<b>正解の未来</b>をそのまま事例にする．完璧な参照</span></div>
-      <div><span class="cond">B</span><span class="then">正解の未来に<b>いちばん近い過去の実在の窓</b>を引く．検索がうまくいった場合の上限</span></div>
-      <div><span class="cond">C</span><span class="then">クエリの文脈に<b>いちばん近い窓</b>を引く（生値の L2 距離）．実際に使える普通の検索</span></div>
-    </div>
   </div>
   <div class="wide">
     <div class="plate">
       <div class="table-scroll">
         <table>
-          <thead><tr><th class="lbl"></th><th>事例として入れるもの</th>
-            <th>MSE</th><th>QL</th><th>参照なし比</th></tr></thead>
+          <thead><tr><th class="lbl">事例（K=8）</th><th>並列</th><th>連結</th></tr></thead>
           <tbody>
-            <tr class="orc"><td class="lbl">A</td><td style="text-align:left">クエリ自身＋正解（K=8）</td>
-              <td class="best">0.2227</td><td class="best">0.1268</td><td class="best">−55.5%</td></tr>
-            <tr class="orc"><td class="lbl">A</td><td style="text-align:left">同上（K=1）</td>
-              <td class="best">0.2541</td><td>0.1347</td><td class="best">−49.3%</td></tr>
-            <tr class="orc"><td class="lbl">B</td><td style="text-align:left">正解に近い実在の窓（K=8）</td>
-              <td>0.4145</td><td>0.1758</td><td>−17.2%</td></tr>
-            <tr><td class="lbl">C</td><td style="text-align:left">文脈が近い窓（K=8）</td>
-              <td>0.4991</td><td>0.1921</td><td>−0.3%</td></tr>
-            <tr><td class="lbl">対照</td><td style="text-align:left">recency：直前の窓をそのまま（K=4）</td>
-              <td>0.4978</td><td>0.1911</td><td>−0.6%</td></tr>
-            <tr class="ctx"><td class="lbl">基準</td><td style="text-align:left">参照なし</td>
-              <td>0.5007</td><td>0.1887</td><td>—</td></tr>
-            <tr><td class="lbl">対照</td><td style="text-align:left">プラセボ：クエリと同じ平均・分散の雑音（K=4）</td>
-              <td>0.5203</td><td>0.1996</td><td>+3.9%</td></tr>
+            <tr><td class="lbl">未来だけ正解（診断）</td><td class="best">0.2533（−49.4%）</td><td>0.4906（−2.0%）</td></tr>
+            <tr><td class="lbl">正解に近い窓（診断）</td><td class="best">0.4145（−17.2%）</td><td>0.4927（−1.6%）</td></tr>
+            <tr><td class="lbl">文脈が近い窓</td><td>0.4991（−0.3%）</td><td>0.4945（−1.2%）</td></tr>
           </tbody>
         </table>
       </div>
       <div class="plate-cap">
-        <b>55.5% の伸びしろが 3 段に分かれる</b>
-        A → B の 38 ポイントは「過去に正解そのものは無い」ことによる損．
-        B → C の 17 ポイントは検索器の失敗．C と参照なしの差は 0.3 ポイントしかない．
+        <b>MSE（参照なし比）．連結は履歴 2032 点を残したまま前に足し，事例ごとに区切り 16 点を挟む</b>
+        正解の未来を渡しても，連結はほとんど良くならない．並列は大きく良くなる．
+        文脈が近い窓だけは連結がわずかに良いが，検索の質の差（正解に近い窓との差）が結果に届くのは並列だけである
+        （並列 17.0%，連結 0.4%）．
       </div>
     </div>
   </div>
   <div class="prose">
     <div class="callout">
-      <span class="lead">読み方</span>
+      <span class="lead">分かったこと</span>
       <p>
-        <strong>渡し方（並列）には問題が無い．</strong>正しい事例なら 1 件でも誤差が半分になる．
-        効かないのは<strong>いまの検索器が良い事例を引けていない</strong>からである．
-        プラセボは悪化するので，「行を足すだけで良くなる」副作用でもない．
+        <strong>連結では，事例の未来がほとんど読まれない．並列なら読まれる．</strong>
+        連結では事例の未来が「過去」の場所に置かれ，並列では予測したい 64 点の真上に置かれる．この置き場所の差である．
+        履歴の長さのせいではない．連結は履歴を削らずに前に足しているし，参照なしで履歴を 624 点まで削っても +2.7% しか悪くならない．
+      </p>
+      <p>
+        さらに連結には上限がある．履歴 2032 点だと，8192 点の文脈に入る事例は 35 件までである．
+        並列は行を増やすだけなので，<strong>many-shot は並列でしかできない</strong>．
       </p>
     </div>
-    <h3>検索をどれだけ良くすれば効き始めるか</h3>
-    <p>
-      検索の鍵に正解の未来を割合 <math><mi>a</mi></math> だけ混ぜて，検索の質を少しずつ上げた．
-      <math><mrow><mi>a</mi><mo>=</mo><mn>0</mn></mrow></math> は「一度予測して，その予測を鍵に検索する」実際に使える手法で，
-      <math><mrow><mi>a</mi><mo>=</mo><mn>1</mn></mrow></math> は B と同じである．
-    </p>
-  </div>
-  <div class="wide">
-    <div class="plate">
-      <div class="table-scroll">
-        <table>
-          <thead><tr><th class="lbl">a：鍵に混ぜた正解の割合</th><th>MSE</th><th>QL</th></tr></thead>
-          <tbody>
-            <tr><td class="lbl">0（実際に使える）</td><td>0.5092</td><td>0.1915</td></tr>
-            <tr><td class="lbl">0.125</td><td>0.4979</td><td>0.1897</td></tr>
-            <tr><td class="lbl">0.25</td><td>0.4836</td><td>0.1873</td></tr>
-            <tr><td class="lbl">0.5</td><td>0.4543</td><td>0.1823</td></tr>
-            <tr><td class="lbl">0.75</td><td>0.4277</td><td>0.1779</td></tr>
-            <tr class="orc"><td class="lbl">1.0（＝B）</td><td>0.4145</td><td>0.1758</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="plate-cap">
-        <b>ほぼ直線</b>
-        検索の質を上げた分だけ，比例して良くなる．「ほぼ正解のときだけ効く」という崖ではない．
-        参照なし（0.5007）を下回るのは a ≈ 0.09 から．−5% には a ≈ 0.31，−10% には a ≈ 0.54 が要る．
-      </div>
-    </div>
-  </div>
-  <div class="prose">
-    <p>
-      ただしこの混ぜ方は「正解へまっすぐ近づける」特定の道筋なので，実際の検索器の改良が同じ直線に乗る保証はない．
-      また a=0 の 0.5092 は C の 0.4991 より悪いので，出発点は C のほうである．
-    </p>
-    <h3>参考：事例の数 K を変える</h3>
-  </div>
-  <div class="wide">
-    <div class="plate">
-      <div class="table-scroll">
-        <table>
-          <thead><tr><th class="lbl">K</th><th>C：文脈が近い窓</th><th>B：正解に近い窓</th></tr></thead>
-          <tbody>
-            <tr class="ctx"><td class="lbl">0（参照なし）</td><td>0.5007</td><td>—</td></tr>
-            <tr><td class="lbl">1</td><td>0.5097</td><td>0.4617</td></tr>
-            <tr><td class="lbl">2</td><td>0.5101</td><td>0.4415</td></tr>
-            <tr><td class="lbl">4</td><td>0.5040</td><td>0.4221</td></tr>
-            <tr><td class="lbl">8</td><td>0.4991</td><td>0.4145</td></tr>
-            <tr><td class="lbl">16</td><td>0.4954</td><td>0.4113</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="plate-cap">
-        <b>B は K=8 あたりで頭打ち，C はほぼ平ら</b>
-        K は test 上で振っただけなので，主張に使うなら val で選び直す．
-      </div>
+    <div class="callout amber">
+      <span class="lead">注意：本来の使い方ではない</span>
+      <p>
+        共変量の行は本来「電力需要と気温」のように同じ時刻に並走する別の系列のためのものである．
+        同じ系列の何ヶ月も前の窓を，いまと同じ時刻のものとして入れている．
+      </p>
     </div>
   </div>
 </section>
@@ -757,74 +694,38 @@ future_covariates = { "ret0": 事例0の未来 64 点,               …, "ret7"
 <!-- ============================== 3 -->
 <section>
   <div class="prose">
-    <div class="sec-head"><span class="sec-num">3</span><h2>連結と比べる</h2></div>
+    <div class="sec-head"><span class="sec-num">3</span><h2>クエリごとの検索では届かない</h2></div>
     <p>
-      同じ事例を，従来の RAF と同じく時間軸に連結して渡した．連結は 2 通り試した．
-    </p>
-    <div class="branch">
-      <div><span class="cond">そのまま</span><span class="then">履歴 2032 点を残して，その前に事例を足す</span></div>
-      <div><span class="cond">削る</span><span class="then">全体を 2032 点に収めるため，事例の分だけ履歴を削る（K=8 なら履歴は 624 点）</span></div>
-    </div>
-    <p>
-      「未来だけ正解」の行も足した．事例の文脈は検索した窓のまま，未来だけを正解に差し替える．
-      文脈が一致していなくても未来を読めるかを見るためである．
+      並列なら事例は読まれる．では従来どおりクエリごとに検索すればよいか．
+      同じ並列の容れ物で，選び方だけを変えた．
     </p>
   </div>
   <div class="wide">
     <div class="plate">
       <div class="table-scroll">
         <table>
-          <thead><tr><th class="lbl">事例</th><th>並列</th><th>連結・そのまま</th><th>連結・削る</th></tr></thead>
+          <thead><tr><th class="lbl">選び方（並列）</th><th>MSE</th><th>QL</th><th>参照なし比</th></tr></thead>
           <tbody>
-            <tr><td class="lbl">未来だけ正解（K=8）</td>
-              <td class="best">0.2533（−49.4%）</td><td>0.4906（−2.0%）</td><td>0.4881（−2.5%）</td></tr>
-            <tr><td class="lbl">B：正解に近い窓（K=8）</td>
-              <td class="best">0.4145（−17.2%）</td><td>0.4927（−1.6%）</td><td>0.5097（+1.8%）</td></tr>
-            <tr><td class="lbl">C：文脈が近い窓（K=8）</td>
-              <td>0.4991（−0.3%）</td><td>0.4945（−1.2%）</td><td>0.5015（+0.2%）</td></tr>
-            <tr><td class="lbl">プラセボ（K=4）</td>
-              <td>0.5203（+3.9%）</td><td>0.4986（−0.4%）</td><td>0.5061（+1.1%）</td></tr>
-            <tr class="orc"><td class="lbl">A：クエリ自身＋正解（K=1）</td>
-              <td class="best">0.2541（−49.3%）</td><td>0.4629（−7.5%）</td><td>0.4831（−3.5%）</td></tr>
-            <tr class="orc"><td class="lbl">A：クエリ自身＋正解（K=8）</td>
-              <td>0.2227（−55.5%）</td><td>0.3004（−40.0%）</td><td class="best">0.1028（−79.5%）</td></tr>
+            <tr class="orc"><td class="lbl">正解に近い窓 K=8（診断．実際には使えない）</td>
+              <td class="best">0.4145</td><td>0.1758</td><td class="best">−17.2%</td></tr>
+            <tr><td class="lbl">文脈が近い窓 K=8（従来の RAF の検索）</td><td>0.4991</td><td>0.1921</td><td>−0.3%</td></tr>
+            <tr><td class="lbl">直前の窓 K=4（recency）</td><td>0.4978</td><td>0.1911</td><td>−0.6%</td></tr>
+            <tr class="ctx"><td class="lbl">参照なし</td><td>0.5007</td><td>0.1887</td><td>—</td></tr>
+            <tr><td class="lbl">プラセボ K=4（クエリと同じ平均・分散の雑音）</td><td>0.5232</td><td>0.1999</td><td>+4.5%</td></tr>
           </tbody>
         </table>
       </div>
       <div class="plate-cap">
-        <b>MSE（参照なし 0.5007 比）．連結の区切りは qmean，nan でも同じ結論</b>
-        正解の未来を渡しても，連結は 2% しか良くならない．並列は 49% 良くなる．
+        <b>正解に近い窓を引ければ大きく効くが，実際に使える検索はほぼ効かない</b>
+        プラセボは悪化するので，「行を足すだけで良くなる」副作用ではない．
       </div>
     </div>
   </div>
   <div class="prose">
     <p>
-      A の K=8 だけは連結が大勝ちするが，見かけである．A では事例の文脈がクエリの末尾と<strong>完全に同じ</strong>で，
-      それが 8 回並ぶ．連結はこれを周期として延ばしているだけで，K=1 だと −3.5%，
-      文脈を検索した窓に戻すと −2% まで落ちる．
-    </p>
-    <div class="callout">
-      <span class="lead">分かったこと</span>
-      <p>
-        <strong>連結は，クエリと完全に一致する事例の続きしか写せない．</strong>
-        並列は，文脈が一致していなくても予測区間の上に置かれた未来を読む．
-        検索で引けるのは「似ているが一致しない」窓なので，使えるのは並列である．
-      </p>
-      <p>
-        渡し方を比べるときの上限には，A ではなく「未来だけ正解」を使う．
-      </p>
-    </div>
-    <h3>履歴を削るから効かないのではない</h3>
-    <p>
-      参照なしで履歴だけを 1856 / 1328 / 624 点に削っても，損は +0.4% / +1.9% / +2.7% と小さい．
-      そして履歴を削らない連結でも，正解の未来を渡して −2% にとどまる．
-      <strong>連結が効かない原因は履歴の長さではなく，事例の未来の置き場所である．</strong>
-      連結では未来が「過去」の場所に置かれ，並列では予測したい 64 点の真上に置かれる．
-    </p>
-    <p>
-      なお，実際に使える C だけなら連結・そのまま（−1.2%）が並列（−0.3%）をわずかに上回る．
-      ただし連結はプラセボでも −0.4% なので，中身を読んだ結果とは言えない．
-      検索の質の差が結果に届くのは並列だけである（B と C の差：並列 17.0%，連結 0.4%）．
+      文脈が似ている窓の未来は，クエリの未来とあまり似ていない（OT チャネルで順位相関 +0.12）．
+      クエリごとに「正解に近い未来を持つ窓」を当てるのは，未来を予測するのと同じくらい難しい．
+      これまで encoder や多様性の工夫を試したが，どれも recency を超えられなかった．
     </p>
   </div>
 </section>
@@ -832,61 +733,17 @@ future_covariates = { "ret0": 事例0の未来 64 点,               …, "ret7"
 <!-- ============================== 4 -->
 <section>
   <div class="prose">
-    <div class="sec-head"><span class="sec-num">4</span><h2>並列に渡す方法は新しいか</h2></div>
+    <div class="sec-head"><span class="sec-num">4</span><h2>選択：全クエリ共通の many-shot セット</h2></div>
     <p>
-      アイデアそのものは新しくない．近いものが既にある．
+      そこで問題の置き方を変える．クエリごとに正しい事例を当てるのをやめて，
+      <strong>よく選んだ事例のライブラリを全クエリに渡し，どれを使うかは group attention に任せる</strong>．
+      many-shot ICL の LLM 研究（Zhang et al., ACL Findings 2025）の考え方を取り入れている．
     </p>
     <div class="branch">
-      <div><span class="cond">Chronos-2</span><span class="then">技術報告（arXiv:2510.15821）の結論で，
-        「系列を埋め込みでグループ化すれば retrieval-augmented forecasting に使えるかもしれない」と今後の課題に挙げている</span></div>
-      <div><span class="cond">TimeRAF</span><span class="then">検索した系列をチャネル方向で統合する（Channel Prompting）．ただし学習する専用モジュールを使う</span></div>
-      <div><span class="cond">RAEF など</span><span class="then">2026 年の RAF 系（RAEF，Everglades の水位予測）は今も連結．
-        KG-Chronos-2 は予測を出したあとで混ぜる事後融合</span></div>
-    </div>
-    <p>
-      こちらの違いは，<strong>同じ系列の過去の窓を末尾にそろえて置き，その未来を「未来まで分かっている共変量」として予測区間に載せる</strong>こと，
-      そしてモデルを一切学習しないことである．見つけた範囲では，この形で測った例は無かった．
-      新規性を言うなら，方法そのものより<strong>「連結は完全一致しか写せず，並列は近い事例の未来を読める」</strong>という 3 節の発見のほうである．
-      網羅的に調べたわけではないので，Chronos-2 の被引用論文は確認が要る．
-    </p>
-  </div>
-</section>
-
-<!-- ============================== 5 -->
-<section>
-  <div class="prose">
-    <div class="sec-head"><span class="sec-num">5</span><h2>共通の事例セットを試し始めた（保留中）</h2></div>
-    <p>
-      ここまでは<strong>クエリごとに</strong>事例を選んでいた．別の方向として，
-      Zhang et al.「Selecting Demonstrations for Many-Shot ICL via Gradient Matching」（ACL Findings 2025）の考え方を持ち込もうとした．
-      取り入れたいのは次の 3 つである．
-    </p>
-    <div class="branch">
-      <div><span class="cond">many-shot</span><span class="then">事例を数件ではなく数十〜数百件渡す</span></div>
-      <div><span class="cond">task-level</span><span class="then">クエリごとに選ばず，<b>全クエリに同じセット</b>を渡す（チャネルごとに 1 セット）</span></div>
-      <div><span class="cond">CLG</span><span class="then">セットの選び方．下で説明する</span></div>
-    </div>
-    <h3>CLG（Curriculum Latent Gradient）を平たく言うと</h3>
-    <div class="branch">
-      <div><span class="cond">1</span><span class="then">「学習できる架空の事例」を 8 本用意し，Chronos-2 は固定したまま，
-        train で予測が良くなるように架空の事例だけを学習する</span></div>
-      <div><span class="cond">2</span><span class="then">学習の各段階で，train の窓 1 つ 1 つが架空の事例を「どちら向きに動かそうとするか」（勾配）を記録する</span></div>
-      <div><span class="cond">3</span><span class="then">train 全体の平均的な動かし方と<b>同じ動かし方をする少数の窓</b>を選ぶ．
-        「train 全体で学習したのと同じ効果を，選んだ少数の事例で出す」ことを狙う</span></div>
-    </div>
-    <p>
-      うまくいく筋書きは，事例をたくさん並べておけば，group attention がクエリに合う事例を自分で選んでくれる，というものである．
-      心配な点もある．以前，上位 K 件の中で事例の未来を入れ替えても +0.9% しか変わらず，
-      「どの文脈にどの未来が付いていたか」はあまり使われていなかった．もし本当に使われないなら，
-      共通セットは「ありうる未来の値の集まり」にしかならず，効果は小さい．
-    </p>
-    <h3>作ったもの</h3>
-    <div class="branch">
-      <div><span class="cond">sparse_rows.py</span><span class="then">事例の行のうち値のある 11 トークンだけを計算する Chronos-2 の計算．
-        元の計算と一致する（最大誤差 1.3e-4，値の規模 49）．参照なし 0.5007 も完全に再現．
-        事例 32 件で 1 チャネル 17 秒と速く，勾配も取れる</span></div>
-      <div><span class="cond">taskset.py</span><span class="then">チャネルごとの固定セットを全クエリに渡して評価する（ランダム，k-means，ファイル指定）</span></div>
-      <div><span class="cond">clg.py</span><span class="then">架空の事例の学習，CLG 勾配の記録，勾配マッチングでの選択，Best-of-N</span></div>
+      <div><span class="cond">many-shot</span><span class="then">事例を数件ではなく数十〜数百件渡す．並列なら計算が軽い</span></div>
+      <div><span class="cond">task-level</span><span class="then">チャネルごとに train の窓から 1 セットを選び，test の全クエリに同じセットを渡す．クエリごとの検索はしない</span></div>
+      <div><span class="cond">選び方</span><span class="then">ランダム，k-means の代表，Best-of-N（ランダムな 5 セットを train で試して最良を取る）．
+        勾配に基づく選び方（CLG）は後回し</span></div>
     </div>
     <h3>途中の結果</h3>
   </div>
@@ -897,67 +754,54 @@ future_covariates = { "ret0": 事例0の未来 64 点,               …, "ret7"
           <thead><tr><th class="lbl">val（全 7 チャネル）</th><th>MSE</th><th>参照なし比</th><th>QL</th></tr></thead>
           <tbody>
             <tr class="ctx"><td class="lbl">参照なし</td><td>0.3967</td><td>—</td><td>0.1656</td></tr>
-            <tr><td class="lbl">ランダムな固定セット K=8（5 seed 平均）</td><td>0.3935 ±0.0030</td><td>−0.8%</td><td>0.1673</td></tr>
-            <tr><td class="lbl">ランダムな固定セット K=32（5 seed 平均）</td><td>0.3892 ±0.0024</td><td>−1.9%</td><td>0.1668</td></tr>
+            <tr><td class="lbl">ランダムな共通セット K=8（5 seed 平均）</td><td>0.3935 ±0.0030</td><td>−0.8%</td><td>0.1673</td></tr>
+            <tr><td class="lbl">ランダムな共通セット K=32（5 seed 平均）</td><td>0.3892 ±0.0024</td><td>−1.9%</td><td>0.1668</td></tr>
           </tbody>
         </table>
       </div>
       <div class="plate-cap">
-        <b>ランダムに選んだ共通セットでも MSE は少し良くなる．QL はわずかに悪化</b>
-        K=128 / 256，test，CLG で選んだセットはまだ無い．
-        架空の事例の学習は OT で試しただけで，train の損失が参照なし 2.759 → 2.686（5 エポック）まで下がった．
+        <b>ランダムに選んでも，件数を増やすと MSE が下がる．QL はわずかに悪化</b>
+        整理前のコードでの結果．K=128 / 256，test，選び方の比較はこれから．
       </div>
     </div>
   </div>
   <div class="prose">
-    <p>
-      全チャネルで走らせたところ，同時に動かしすぎてメモリ不足（16GB）で止まった．
-      設定を直して再開したが，方針を先に決めるため保留にした．
-    </p>
+    <div class="callout amber">
+      <span class="lead">確かめるべきこと</span>
+      <p>
+        共通セットが効く理由が「事例の中から合うものを選んで読んでいる」のか，
+        「ありうる未来の値の分布を渡しているだけ」なのかで，主張の強さが変わる．
+        セット内で事例どうしの未来を入れ替えて（文脈と未来の対応を壊して）悪化するかで見分ける．
+      </p>
+    </div>
   </div>
 </section>
 
-<!-- ============================== 6 -->
+<!-- ============================== 5 -->
 <section>
   <div class="prose">
-    <div class="sec-head"><span class="sec-num">6</span><h2>現在地と，決めること</h2></div>
+    <div class="sec-head"><span class="sec-num">5</span><h2>実験計画と現在地</h2></div>
     <div class="branch">
-      <div><span class="cond">確定</span><span class="then">事例は<b>並列</b>に渡す．連結は完全一致しか写せない</span></div>
-      <div><span class="cond">確定</span><span class="then">正しい事例なら誤差が半分になる．渡し方に問題は無い</span></div>
-      <div><span class="cond">確定</span><span class="then">過去に正解そのものは無いので，検索の上限は −17%（B）</span></div>
-      <div><span class="cond">確定</span><span class="then">いまの検索器（文脈が近い窓）では −0.3%．上限との差 17 ポイントが手つかず</span></div>
-      <div><span class="cond">確定</span><span class="then">検索の質を上げた分だけ比例して良くなる．
-        鍵を正解へ 1 割近づければ参照なしを下回る</span></div>
-      <div><span class="cond">途中</span><span class="then">全クエリ共通のランダムなセットで −1.9%（val，K=32）．CLG で選ぶと上積みできるかは未確認</span></div>
+      <div><span class="cond">済</span><span class="then"><b>E1 融合</b>：並列と連結を同じ事例で比べる（2 節）</span></div>
+      <div><span class="cond">済</span><span class="then"><b>E2 クエリごとの検索の限界</b>：正解に近い窓・文脈が近い窓・recency・プラセボ（3 節）</span></div>
+      <div><span class="cond">一部</span><span class="then"><b>E3 many-shot</b>：ランダムな共通セットで K = 8 / 32 / 128 / 256．val の K=8 / 32 のみ済</span></div>
+      <div><span class="cond">未</span><span class="then"><b>E4 選び方</b>：同じ K で，ランダム・k-means・Best-of-N を比べる．クエリごとの検索（文脈が近い窓）とも比べる</span></div>
+      <div><span class="cond">未</span><span class="then"><b>E5 何が読まれているか</b>：共通セット内で未来を入れ替える</span></div>
+      <div><span class="cond">未</span><span class="then"><b>E6 再現</b>：ETTh1 以外のデータセット</span></div>
     </div>
-    <h3>方針の候補</h3>
-    <div class="branch">
-      <div><span class="cond">案 1</span><span class="then"><b>クエリごとの検索器を良くする．</b>
-        B と C の差 17 ポイントを取りにいく．目標は「鍵を正解へ 1 割以上近づける」こと．
-        これまで encoder や多様性の工夫はどれも recency を超えられていない</span></div>
-      <div><span class="cond">案 2</span><span class="then"><b>全クエリ共通の many-shot セットを CLG で選ぶ．</b>
-        実装は済んでいて，残りは計算時間（全チャネルで数時間）．
-        ランダムでも −1.9% 出ているので，その上に積めるかが焦点</span></div>
-      <div><span class="cond">案 3</span><span class="then"><b>両方を同時に渡す．</b>
-        共通セットとクエリごとの数件を一緒に並べる（論文 4.8 節）．案 1 か案 2 が動いてから</span></div>
-      <div><span class="cond">共通</span><span class="then">他のデータセットで再現する．K などは val で選んでから test を出す</span></div>
-    </div>
+    <p>K などのハイパーパラメータは val で決め，その値で test を出す．</p>
   </div>
 
   <div class="prose footnote">
     <p>
-      <b>主なコマンド</b><br>
-      並列 <code>predict.py --inject parallel</code>／完璧な参照 <code>--example-ablation self-truth</code>／
-      未来だけ正解 <code>--example-ablation truth-future</code><br>
-      正解に近い窓 <code>--encoder future</code>／検索品質のダイヤル <code>--oracle-mix</code>／
-      プラセボ <code>--example-ablation gauss-local</code>／recency <code>--retrieval-mode recent</code><br>
-      連結 <code>--inject concat --separator qmean</code>（3 節は <code>results/cmp_*</code>）<br>
-      共通セット <code>codes/taskset.py</code>／CLG <code>codes/clg.py</code>（5 節は <code>results/ts_*</code>）
+      <b>コマンド</b>（<code>codes/run.py</code>，評価は <code>codes/evaluate.py</code>）<br>
+      参照なし <code>--select none</code>／共通セット <code>--select random|kmeans|bestofn --top-k 128</code><br>
+      クエリごとの検索 <code>--select l2|oracle|recent|placebo</code>／連結 <code>--fusion concat</code><br>
+      未来の入れ替え <code>--ablation shuffle-future</code>／未来だけ正解 <code>--ablation truth-future</code>
     </p>
     <p>
-      全数値と撤回した主張は <code>README.md</code> に記録．検索 DB は特記なき限り
-      <code>--retrieval-split past --retrieval-stride 8</code>，<code>--eval-stride 16</code>．
-      ハイパーパラメータは val で固定してから test を報告すること．
+      事例の候補は 8 点間隔の窓．共通セットは train の窓から，クエリごとの検索はクエリの文脈より前に終わる窓から選ぶ．
+      整理前の実験の記録は git 履歴（<code>c66158c</code> 以前）と <code>results/_archive/</code> にある．
     </p>
   </div>
 </section>

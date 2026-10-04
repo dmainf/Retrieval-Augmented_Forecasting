@@ -62,6 +62,8 @@ def main():
         raise SystemExit(__doc__)
     print(f"{'MSE':>8s}{'QL':>8s}  path")
     for path in paths:
+        if path.endswith("_selected.parquet"):
+            continue
         t = pd.read_parquet(path)
         print(f"{channel_normalized_mse(t):8.4f}{channel_normalized_wql(t):8.4f}  {path}")
 
