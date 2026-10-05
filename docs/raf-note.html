@@ -1,4 +1,4 @@
-<title>検索の上限を測る</title>
+<title>RAF 研究ノート</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
@@ -392,13 +392,14 @@ pre {
 
 <header class="masthead">
   <div class="prose">
-    <p class="kicker">RAF 研究ノート · 改訂 2026-10-01 · ETTh1 / Chronos-2</p>
-    <h1>参照を並列に渡し，共通の事例で選ぶ</h1>
+    <p class="kicker">RAF 研究ノート · 改訂 2026-10-05 · ETTh1 / Chronos-2</p>
+    <h1>参照を並列に渡し，many-shot にする</h1>
     <p class="standfirst">
       過去の窓（参照事例）を凍結した Chronos-2 に見せて予測を良くしたい．
       考えることは 2 つ，<strong>どう融合するか</strong>と<strong>どう選ぶか</strong>である．
-      融合は「共変量の行として並列に渡す」に決めた．連結では事例がほとんど読まれないからである．
-      選び方は，クエリごとの検索をやめて，<strong>全クエリ共通の many-shot セット</strong>を試している．
+      融合は「共変量の行として並列に渡す」に決めた．連結では，実在の過去の窓の未来がほとんど読まれないからである．
+      並列なら事例を数百件まで渡せて，<strong>件数を増やすほど予測が良くなる</strong>（many-shot）．
+      全クエリ共通のセットを勾配で選ぶ試み（CLG・Parallel-CLG）は，同じ件数ではクエリごとの検索に届かなかったので，<a href="clg-note.html">別冊</a>に分けた．
     </p>
   </div>
 </header>
@@ -415,17 +416,19 @@ pre {
           <thead><tr><th class="lbl">主張</th><th>状態</th><th>根拠</th></tr></thead>
           <tbody>
             <tr class="orc"><td class="lbl">融合は並列（共変量の行）にする</td><td><b>確定</b></td>
-              <td style="text-align:left">正解の未来を渡すと，並列は −49.4%，連結は −2.0%（2 節）</td></tr>
-            <tr><td class="lbl">クエリごとの検索では届かない</td><td><b>確定</b></td>
-              <td style="text-align:left">文脈が近い窓は −0.3%．正解に近い窓なら −17.2% なので，選び方の問題（3 節）</td></tr>
-            <tr class="ctx"><td class="lbl">共通の many-shot セットで選ぶ</td><td><b>検証中</b></td>
-              <td style="text-align:left">ランダムに選んだ 32 件で −1.9%（val）．K を増やす試験と選び方の比較はこれから（4 節）</td></tr>
+              <td style="text-align:left;white-space:normal">未来照合（oracle）の事例を渡すと，並列は −18.7%，連結は −2.4%．自己＋正解（truth）なら連結も −32.7% まで読む（2 節）</td></tr>
+            <tr><td class="lbl">数件の検索では届かない</td><td><b>確定</b></td>
+              <td style="text-align:left;white-space:normal">K=8 の文脈照合（l2）は MSE −4.5% だが MAE・QL は約 1% 悪化．未来照合（oracle）なら −18.7%（3 節）</td></tr>
+            <tr class="ctx"><td class="lbl">many-shot にすると良くなる</td><td><b>検証中</b></td>
+              <td style="text-align:left;white-space:normal">文脈照合 128 件で MSE −3.0%（val，これまでの最良）．ランダムな共通セットでも 128 件で −2.2%．事例の中身は読まれている（未来を入れ替えると悪化）．MAE・QL は参照なしに届かない（4 節）</td></tr>
+            <tr><td class="lbl">共通セットを勾配で選ぶ（CLG・Parallel-CLG）</td><td><b>取り下げ</b></td>
+              <td style="text-align:left;white-space:normal">同じ件数では文脈照合に届かず，ランダムとの差も ±0.5% 程度（<a href="clg-note.html">別冊</a>）</td></tr>
           </tbody>
         </table>
       </div>
       <div class="plate-cap">
-        <b>ETTh1 全 7 チャネル・履歴 2032 点・予測 64 点・Chronos-2（凍結）・チャネル正規化 MSE</b>
-        特記なき限り test（1 チャネル 177 窓，計 1,239 窓）．割合は参照なし（MSE 0.5007）との比．
+        <b>ETTh1 全 7 チャネル・履歴 2032 点・予測 64 点・Chronos-2（凍結）・train の標準偏差で標準化した MSE</b>
+        割合は参照なし（test MSE 0.3512，val MSE 0.5254）との比．条件の詳細は 4 節の後の「実験条件」．
       </div>
     </div>
   </div>
@@ -448,10 +451,10 @@ pre {
           <tbody>
             <tr><td class="lbl">従来の RAF</td>
               <td style="text-align:left">事例を履歴の前に<b>連結</b>する</td>
-              <td style="text-align:left">クエリごとに，文脈が近い窓を<b>数件</b>検索する</td></tr>
+              <td style="text-align:left">クエリごとに，文脈が近い窓を<b>数件</b>検索する（文脈照合）</td></tr>
             <tr class="orc"><td class="lbl">このノートの提案</td>
               <td style="text-align:left">事例を共変量の行として<b>並列</b>に渡す</td>
-              <td style="text-align:left">全クエリ<b>共通</b>のセットを<b>数十〜数百件</b>渡す</td></tr>
+              <td style="text-align:left">事例を<b>数十〜数百件</b>渡す（many-shot）．クエリごとの文脈照合でよい</td></tr>
           </tbody>
         </table>
       </div>
@@ -461,8 +464,8 @@ pre {
     <p>
       並列に渡す発想自体は新しくない．Chronos-2 の技術報告（arXiv:2510.15821）も，
       group attention を検索拡張に使う可能性を今後の課題に挙げている．
-      新しいのは，<strong>連結では事例が読まれず並列なら読まれることを示した点</strong>（2 節）と，
-      <strong>並列だからこそ可能になる many-shot・task-level の選び方</strong>（4 節）である．
+      新しいのは，<strong>連結では実在の窓の未来が読まれず並列なら読まれることを示した点</strong>（2 節）と，
+      <strong>並列だからこそ可能になる many-shot と，件数を増やすと予測が良くなること</strong>（4 節）である．
     </p>
   </div>
 </section>
@@ -644,27 +647,27 @@ future_covariates = { "ret0": 事例0の未来 64 点,               …, "ret7"
   <div class="prose">
     <h3>連結と比べる</h3>
     <p>
-      同じ事例を両方の渡し方で比べた．「未来だけ正解」は，事例の文脈は検索した窓のまま，未来だけを正解に差し替えたもので，
-      「渡した未来をどこまで読めるか」の上限を測る診断である．
+      同じ事例を両方の渡し方で比べた（K=8）．選び方の定義は 4 節の後の「実験条件」の表のとおり．
+      自己＋正解は「渡した未来をどこまで使えるか」，未来照合は「実在の窓で検索が完璧ならどこまで効くか」の上限を測る診断である．
     </p>
   </div>
   <div class="wide">
     <div class="plate">
       <div class="table-scroll">
         <table>
-          <thead><tr><th class="lbl">事例（K=8）</th><th>並列</th><th>連結</th></tr></thead>
+          <thead><tr><th class="lbl">事例（K=8）</th><th>並列（test）</th><th>連結（test）</th><th>並列（val）</th><th>連結（val）</th></tr></thead>
           <tbody>
-            <tr><td class="lbl">未来だけ正解（診断）</td><td class="best">0.2533（−49.4%）</td><td>0.4906（−2.0%）</td></tr>
-            <tr><td class="lbl">正解に近い窓（診断）</td><td class="best">0.4145（−17.2%）</td><td>0.4927（−1.6%）</td></tr>
-            <tr><td class="lbl">文脈が近い窓</td><td>0.4991（−0.3%）</td><td>0.4945（−1.2%）</td></tr>
+            <tr><td class="lbl">自己＋正解（truth，診断）</td><td class="best">0.1360（−61.3%）</td><td>0.2363（−32.7%）</td><td class="best">0.2655（−49.5%）</td><td>0.3748（−28.7%）</td></tr>
+            <tr><td class="lbl">未来照合（oracle，診断）</td><td class="best">0.2855（−18.7%）</td><td>0.3429（−2.4%）</td><td class="best">0.4672（−11.1%）</td><td>0.5163（−1.7%）</td></tr>
+            <tr><td class="lbl">文脈照合（l2）</td><td>0.3353（−4.5%）</td><td>0.3459（−1.5%）</td><td>0.5186（−1.3%）</td><td>0.5268（+0.3%）</td></tr>
           </tbody>
         </table>
       </div>
       <div class="plate-cap">
         <b>MSE（参照なし比）．連結は履歴 2032 点を残したまま前に足し，事例ごとに区切り 16 点を挟む</b>
-        正解の未来を渡しても，連結はほとんど良くならない．並列は大きく良くなる．
-        文脈が近い窓だけは連結がわずかに良いが，検索の質の差（正解に近い窓との差）が結果に届くのは並列だけである
-        （並列 17.0%，連結 0.4%）．
+        自己＋正解では連結も大きく良くなるが，並列はそれ以上に良くなる．
+        実在の窓（未来照合・文脈照合）になると連結はほとんど良くならない．検索の質の差（未来照合と文脈照合の差）が結果に届くのは並列だけである
+        （test で並列 14.2 ポイント，連結 0.9 ポイント）．
       </div>
     </div>
   </div>
@@ -672,9 +675,11 @@ future_covariates = { "ret0": 事例0の未来 64 点,               …, "ret7"
     <div class="callout">
       <span class="lead">分かったこと</span>
       <p>
-        <strong>連結では，事例の未来がほとんど読まれない．並列なら読まれる．</strong>
-        連結では事例の未来が「過去」の場所に置かれ，並列では予測したい 64 点の真上に置かれる．この置き場所の差である．
-        履歴の長さのせいではない．連結は履歴を削らずに前に足しているし，参照なしで履歴を 624 点まで削っても +2.7% しか悪くならない．
+        <strong>連結では，実在の過去の窓の未来はほとんど読まれない．並列なら読まれる．</strong>
+        連結でも，事例の文脈がクエリの直近 96 点と完全に一致すると（自己＋正解），同じ並びを見つけてその続きを写せる．
+        しかし文脈が少しでも違う実在の窓では写せない．並列では事例の未来が予測したい 64 点の真上に置かれ，
+        group attention が同じ位置で直接参照できるので，文脈が完全一致しなくても未来を使える．
+        連結は履歴を削らずに前に足しているので，履歴が短くなったせいではない．
       </p>
       <p>
         さらに連結には上限がある．履歴 2032 点だと，8192 点の文脈に入る事例は 35 件までである．
@@ -694,38 +699,40 @@ future_covariates = { "ret0": 事例0の未来 64 点,               …, "ret7"
 <!-- ============================== 3 -->
 <section>
   <div class="prose">
-    <div class="sec-head"><span class="sec-num">3</span><h2>クエリごとの検索では届かない</h2></div>
+    <div class="sec-head"><span class="sec-num">3</span><h2>数件の検索では届かない</h2></div>
     <p>
       並列なら事例は読まれる．では従来どおりクエリごとに検索すればよいか．
-      同じ並列の容れ物で，選び方だけを変えた．
+      同じ並列の容れ物で，選び方だけを変えた（K=8）．
     </p>
   </div>
   <div class="wide">
     <div class="plate">
       <div class="table-scroll">
         <table>
-          <thead><tr><th class="lbl">選び方（並列）</th><th>MSE</th><th>QL</th><th>参照なし比</th></tr></thead>
+          <thead><tr><th class="lbl">選び方（並列，test）</th><th>MSE</th><th>MAE</th><th>QL</th><th>MSE（val）</th></tr></thead>
           <tbody>
-            <tr class="orc"><td class="lbl">正解に近い窓 K=8（診断．実際には使えない）</td>
-              <td class="best">0.4145</td><td>0.1758</td><td class="best">−17.2%</td></tr>
-            <tr><td class="lbl">文脈が近い窓 K=8（従来の RAF の検索）</td><td>0.4991</td><td>0.1921</td><td>−0.3%</td></tr>
-            <tr><td class="lbl">直前の窓 K=4（recency）</td><td>0.4978</td><td>0.1911</td><td>−0.6%</td></tr>
-            <tr class="ctx"><td class="lbl">参照なし</td><td>0.5007</td><td>0.1887</td><td>—</td></tr>
-            <tr><td class="lbl">プラセボ K=4（クエリと同じ平均・分散の雑音）</td><td>0.5232</td><td>0.1999</td><td>+4.5%</td></tr>
+            <tr class="orc"><td class="lbl">未来照合（oracle，診断．実際には使えない）</td>
+              <td class="best">0.2855（−18.7%）</td><td class="best">0.3370（−5.9%）</td><td class="best">0.1309（−5.7%）</td><td class="best">0.4672（−11.1%）</td></tr>
+            <tr><td class="lbl">文脈照合（l2，従来の RAF の検索）</td><td>0.3353（−4.5%）</td><td>0.3611（+0.9%）</td><td>0.1402（+1.0%）</td><td>0.5186（−1.3%）</td></tr>
+            <tr class="ctx"><td class="lbl">参照なし</td><td>0.3512</td><td>0.3580</td><td>0.1388</td><td>0.5254</td></tr>
           </tbody>
         </table>
       </div>
       <div class="plate-cap">
-        <b>正解に近い窓を引ければ大きく効くが，実際に使える検索はほぼ効かない</b>
-        プラセボは悪化するので，「行を足すだけで良くなる」副作用ではない．
+        <b>未来照合なら大きく効くが，実際に使える文脈照合はほぼ効かない</b>
+        文脈照合は MSE だけわずかに良くなり，MAE と QL（分布の当たり具合）はむしろ悪くなる．
+        test の MSE −4.5% は HUFL・MUFL の 2 チャネル（それぞれ −6%，−7%）がほぼすべてで，OT では +12% 悪化する．
       </div>
     </div>
   </div>
   <div class="prose">
     <p>
-      文脈が似ている窓の未来は，クエリの未来とあまり似ていない（OT チャネルで順位相関 +0.12）．
-      クエリごとに「正解に近い未来を持つ窓」を当てるのは，未来を予測するのと同じくらい難しい．
-      これまで encoder や多様性の工夫を試したが，どれも recency を超えられなかった．
+      文脈が似ている窓の未来は，クエリの未来とあまり似ていない（整理前の測定で，OT チャネルの順位相関 +0.12）．
+      クエリごとに未来照合の窓を当てるのは，未来を予測するのと同じくらい難しい．
+      整理前には encoder や多様性の工夫も試したが，どれも直前の窓（recency）を超えられなかった．
+    </p>
+    <p>
+      ただしこれは K=8 の結果である．並列なら文脈照合も数百件まで増やせて，件数を増やすと効くようになる（4 節）．
     </p>
   </div>
 </section>
@@ -733,46 +740,273 @@ future_covariates = { "ret0": 事例0の未来 64 点,               …, "ret7"
 <!-- ============================== 4 -->
 <section>
   <div class="prose">
-    <div class="sec-head"><span class="sec-num">4</span><h2>選択：全クエリ共通の many-shot セット</h2></div>
+    <div class="sec-head"><span class="sec-num">4</span><h2>many-shot：件数を増やす</h2></div>
     <p>
-      そこで問題の置き方を変える．クエリごとに正しい事例を当てるのをやめて，
-      <strong>よく選んだ事例のライブラリを全クエリに渡し，どれを使うかは group attention に任せる</strong>．
-      many-shot ICL の LLM 研究（Zhang et al., ACL Findings 2025）の考え方を取り入れている．
+      3 節で見たとおり，クエリごとに未来照合の窓を当てるのは，未来を予測するのと同じくらい難しい．
+      そこで問題の置き方を変える．<strong>選ぶ側が 1 件ずつ当てるのをやめ，十分に多い事例のライブラリを全クエリに渡し，
+      どの事例を使うかは読む側（group attention）に任せる</strong>．many-shot ICL の LLM 研究
+      （Agarwal et al., 2024；Bertsch et al., 2024；Zhang et al., ACL Findings 2025）と同じ考え方である．
     </p>
-    <div class="branch">
-      <div><span class="cond">many-shot</span><span class="then">事例を数件ではなく数十〜数百件渡す．並列なら計算が軽い</span></div>
-      <div><span class="cond">task-level</span><span class="then">チャネルごとに train の窓から 1 セットを選び，test の全クエリに同じセットを渡す．クエリごとの検索はしない</span></div>
-      <div><span class="cond">選び方</span><span class="then">ランダム，k-means の代表，Best-of-N（ランダムな 5 セットを train で試して最良を取る）．
-        勾配に基づく選び方（CLG）は後回し</span></div>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body">
+        <figure style="margin:0">
+          <svg viewBox="0 0 880 300" role="img" style="max-width:100%;height:auto"
+               aria-label="左：クエリごとの検索は，クエリごとに 8 件を当てる必要がある．右：全クエリ共通の many-shot セットは，同じ数百件のライブラリを全クエリに渡し，どれを使うかは group attention が決める．"
+               fill="none" stroke="currentColor" font-family="inherit" font-size="12">
+            <text x="30" y="28" fill="currentColor" stroke="none" font-size="13" font-weight="700">クエリごとの検索（instance-level）</text>
+            <text x="470" y="28" fill="currentColor" stroke="none" font-size="13" font-weight="700">全クエリ共通の many-shot（task-level）</text>
+            <line x1="440" y1="16" x2="440" y2="290" opacity="0.25"/>
+
+            <!-- left: three queries each with own 8 examples -->
+            <g>
+              <rect x="30" y="56" width="70" height="30" rx="2" fill="var(--accent-tint)" stroke="var(--accent)"/>
+              <text x="65" y="76" text-anchor="middle" fill="currentColor" stroke="none">クエリ 1</text>
+              <rect x="30" y="126" width="70" height="30" rx="2" fill="var(--accent-tint)" stroke="var(--accent)"/>
+              <text x="65" y="146" text-anchor="middle" fill="currentColor" stroke="none">クエリ 2</text>
+              <rect x="30" y="196" width="70" height="30" rx="2" fill="var(--accent-tint)" stroke="var(--accent)"/>
+              <text x="65" y="216" text-anchor="middle" fill="currentColor" stroke="none">クエリ 3</text>
+              <path d="M104 71 L136 71" marker-end="url(#ar4)"/>
+              <path d="M104 141 L136 141" marker-end="url(#ar4)"/>
+              <path d="M104 211 L136 211" marker-end="url(#ar4)"/>
+              <g fill="var(--oracle-tint)" stroke="var(--oracle)">
+                <rect x="142" y="60" width="26" height="22" rx="2"/><rect x="172" y="60" width="26" height="22" rx="2"/>
+                <rect x="202" y="60" width="26" height="22" rx="2"/><rect x="232" y="60" width="26" height="22" rx="2"/>
+                <rect x="262" y="60" width="26" height="22" rx="2"/><rect x="292" y="60" width="26" height="22" rx="2"/>
+                <rect x="322" y="60" width="26" height="22" rx="2"/><rect x="352" y="60" width="26" height="22" rx="2"/>
+                <rect x="142" y="130" width="26" height="22" rx="2"/><rect x="172" y="130" width="26" height="22" rx="2"/>
+                <rect x="202" y="130" width="26" height="22" rx="2"/><rect x="232" y="130" width="26" height="22" rx="2"/>
+                <rect x="262" y="130" width="26" height="22" rx="2"/><rect x="292" y="130" width="26" height="22" rx="2"/>
+                <rect x="322" y="130" width="26" height="22" rx="2"/><rect x="352" y="130" width="26" height="22" rx="2"/>
+                <rect x="142" y="200" width="26" height="22" rx="2"/><rect x="172" y="200" width="26" height="22" rx="2"/>
+                <rect x="202" y="200" width="26" height="22" rx="2"/><rect x="232" y="200" width="26" height="22" rx="2"/>
+                <rect x="262" y="200" width="26" height="22" rx="2"/><rect x="292" y="200" width="26" height="22" rx="2"/>
+                <rect x="322" y="200" width="26" height="22" rx="2"/><rect x="352" y="200" width="26" height="22" rx="2"/>
+              </g>
+              <text x="260" y="104" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.7" font-size="11">クエリ 1 のために検索した 8 件</text>
+              <text x="210" y="258" text-anchor="middle" fill="var(--warn)" stroke="none" font-size="11.5">選ぶ側が，クエリごとに「合う 8 件」を当てなければならない</text>
+              <text x="210" y="276" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.7" font-size="11">文脈が近くても未来は似ない（3 節）ので，当たりにくい</text>
+            </g>
+
+            <!-- right: shared library -->
+            <g>
+              <g fill="var(--oracle-tint)" stroke="var(--oracle)" opacity="0.95">
+                <rect x="470" y="56" width="380" height="96" rx="3" fill="var(--oracle-wash)"/>
+              </g>
+              <g fill="var(--oracle-tint)" stroke="var(--oracle)">
+                <rect x="480" y="64" width="20" height="16" rx="2"/><rect x="504" y="64" width="20" height="16" rx="2"/><rect x="528" y="64" width="20" height="16" rx="2"/><rect x="552" y="64" width="20" height="16" rx="2"/><rect x="576" y="64" width="20" height="16" rx="2"/><rect x="600" y="64" width="20" height="16" rx="2"/><rect x="624" y="64" width="20" height="16" rx="2"/><rect x="648" y="64" width="20" height="16" rx="2"/><rect x="672" y="64" width="20" height="16" rx="2"/><rect x="696" y="64" width="20" height="16" rx="2"/><rect x="720" y="64" width="20" height="16" rx="2"/><rect x="744" y="64" width="20" height="16" rx="2"/><rect x="768" y="64" width="20" height="16" rx="2"/><rect x="792" y="64" width="20" height="16" rx="2"/><rect x="816" y="64" width="20" height="16" rx="2"/>
+                <rect x="480" y="86" width="20" height="16" rx="2"/><rect x="504" y="86" width="20" height="16" rx="2"/><rect x="528" y="86" width="20" height="16" rx="2"/><rect x="552" y="86" width="20" height="16" rx="2"/><rect x="576" y="86" width="20" height="16" rx="2"/><rect x="600" y="86" width="20" height="16" rx="2"/><rect x="624" y="86" width="20" height="16" rx="2"/><rect x="648" y="86" width="20" height="16" rx="2"/><rect x="672" y="86" width="20" height="16" rx="2"/><rect x="696" y="86" width="20" height="16" rx="2"/><rect x="720" y="86" width="20" height="16" rx="2"/><rect x="744" y="86" width="20" height="16" rx="2"/><rect x="768" y="86" width="20" height="16" rx="2"/><rect x="792" y="86" width="20" height="16" rx="2"/><rect x="816" y="86" width="20" height="16" rx="2"/>
+                <rect x="480" y="108" width="20" height="16" rx="2"/><rect x="504" y="108" width="20" height="16" rx="2"/><rect x="528" y="108" width="20" height="16" rx="2"/><rect x="552" y="108" width="20" height="16" rx="2"/><rect x="576" y="108" width="20" height="16" rx="2"/><rect x="600" y="108" width="20" height="16" rx="2"/><rect x="624" y="108" width="20" height="16" rx="2"/><rect x="648" y="108" width="20" height="16" rx="2"/><rect x="672" y="108" width="20" height="16" rx="2"/><rect x="696" y="108" width="20" height="16" rx="2"/><rect x="720" y="108" width="20" height="16" rx="2"/><rect x="744" y="108" width="20" height="16" rx="2"/><rect x="768" y="108" width="20" height="16" rx="2"/><rect x="792" y="108" width="20" height="16" rx="2"/><rect x="816" y="108" width="20" height="16" rx="2"/>
+              </g>
+              <text x="660" y="143" text-anchor="middle" fill="currentColor" stroke="none" font-size="11">チャネルごとに 1 セット（数十〜数百件）</text>
+              <rect x="500" y="196" width="80" height="30" rx="2" fill="var(--accent-tint)" stroke="var(--accent)"/>
+              <text x="540" y="216" text-anchor="middle" fill="currentColor" stroke="none">クエリ 1</text>
+              <rect x="620" y="196" width="80" height="30" rx="2" fill="var(--accent-tint)" stroke="var(--accent)"/>
+              <text x="660" y="216" text-anchor="middle" fill="currentColor" stroke="none">クエリ 2</text>
+              <rect x="740" y="196" width="80" height="30" rx="2" fill="var(--accent-tint)" stroke="var(--accent)"/>
+              <text x="780" y="216" text-anchor="middle" fill="currentColor" stroke="none">クエリ 3</text>
+              <path d="M540 156 L540 190" stroke="var(--accent)" marker-end="url(#ar5)"/>
+              <path d="M660 156 L660 190" stroke="var(--accent)" marker-end="url(#ar5)"/>
+              <path d="M780 156 L780 190" stroke="var(--accent)" marker-end="url(#ar5)"/>
+              <text x="600" y="177" text-anchor="middle" fill="var(--accent)" stroke="none" font-size="11">同じセットを渡す</text>
+              <text x="660" y="258" text-anchor="middle" fill="var(--accent)" stroke="none" font-size="11.5">どの事例を使うかは，読む側の group attention がクエリごとに決める</text>
+              <text x="660" y="276" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.7" font-size="11">選ぶ側の仕事は「良いライブラリを作ること」に変わる</text>
+            </g>
+            <defs>
+              <marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" fill="currentColor" stroke="none"/>
+              </marker>
+              <marker id="ar5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" fill="var(--accent)" stroke="none"/>
+              </marker>
+            </defs>
+          </svg>
+          <figcaption class="plate-cap" style="border:0;background:none;padding:14px 0 0">
+            <b>当てる問題から，揃える問題へ</b>
+            クエリごとの検索は「どの 8 件か」を選ぶ側が当てる．共通セットは，選ぶ側が良いライブラリを作り，使い分けは読む側に任せる．
+          </figcaption>
+        </figure>
+      </div>
     </div>
-    <h3>途中の結果</h3>
+  </div>
+  <div class="prose">
+    <h3>many-shot を使う理由</h3>
+    <div class="branch">
+      <div><span class="cond">当てなくてよい</span><span class="then">クエリごとに合う事例を当てるのは難しい（3 節）．共通セットなら，合う事例を拾うのは読む側である．
+        読む側が本当に事例を使い分けているかは，未来の入れ替え（下の E5）で確かめた</span></div>
+      <div><span class="cond">並列でしかできない</span><span class="then">並列では事例 1 件が 11 トークンで，計算は件数に比例して増えるだけである．
+        連結は 8192 点の文脈に 35 件しか入らない（2 節）．数百件を渡せるのは並列だけである</span></div>
+      <div><span class="cond">件数で安定する</span><span class="then">ランダムに選んでも，件数を増やすほど seed によるばらつきが小さくなる（K=8 で ±0.0048，K=256 で ±0.0009）．
+        どのクエリにも合う事例が含まれる確率が上がるためと考えられる</span></div>
+      <div><span class="cond">LLM の知見</span><span class="then">LLM の many-shot ICL では，件数が増えるとクエリごとの検索の利点は薄れ，固定のセットを使い回すのが主流になっている
+        （Agarwal et al., 2024；Bertsch et al., 2024）</span></div>
+    </div>
+    <h3>ランダムな共通セットの結果</h3>
   </div>
   <div class="wide">
     <div class="plate">
       <div class="table-scroll">
         <table>
-          <thead><tr><th class="lbl">val（全 7 チャネル）</th><th>MSE</th><th>参照なし比</th><th>QL</th></tr></thead>
+          <thead><tr><th class="lbl">val（全 7 チャネル，並列）</th><th>MSE</th><th>参照なし比</th><th>MAE</th><th>QL</th></tr></thead>
           <tbody>
-            <tr class="ctx"><td class="lbl">参照なし</td><td>0.3967</td><td>—</td><td>0.1656</td></tr>
-            <tr><td class="lbl">ランダムな共通セット K=8（5 seed 平均）</td><td>0.3935 ±0.0030</td><td>−0.8%</td><td>0.1673</td></tr>
-            <tr><td class="lbl">ランダムな共通セット K=32（5 seed 平均）</td><td>0.3892 ±0.0024</td><td>−1.9%</td><td>0.1668</td></tr>
+            <tr class="ctx"><td class="lbl">参照なし</td><td>0.5254</td><td>—</td><td>0.4634</td><td>0.1852</td></tr>
+            <tr><td class="lbl">ランダム共通セット K=8</td><td>0.5190 ±0.0048</td><td>−1.2%</td><td>0.4682（+1.0%）</td><td>0.1864（+0.7%）</td></tr>
+            <tr><td class="lbl">ランダム共通セット K=32</td><td>0.5195 ±0.0024</td><td>−1.1%</td><td>0.4710（+1.6%）</td><td>0.1874（+1.2%）</td></tr>
+            <tr><td class="lbl">ランダム共通セット K=128</td><td>0.5138 ±0.0013</td><td>−2.2%</td><td>0.4687（+1.2%）</td><td>0.1867（+0.9%）</td></tr>
+            <tr><td class="lbl">ランダム共通セット K=256</td><td>0.5146 ±0.0009</td><td>−2.1%</td><td>0.4693（+1.3%）</td><td>0.1871（+1.1%）</td></tr>
+            <tr><td class="lbl">（参考）文脈照合 K=8</td><td>0.5186</td><td>−1.3%</td><td>0.4674（+0.9%）</td><td>0.1856（+0.2%）</td></tr>
           </tbody>
         </table>
       </div>
       <div class="plate-cap">
-        <b>ランダムに選んでも，件数を増やすと MSE が下がる．QL はわずかに悪化</b>
-        整理前のコードでの結果．K=128 / 256，test，選び方の比較はこれから．
+        <b>件数を増やすと MSE は K=128 まで下がって頭打ち．MAE と QL はどの K でも約 1% 悪化</b>
+        ランダム共通セットは 5 seed の平均 ± 標準偏差．ランダムに選ぶだけでは，文脈照合と同程度にとどまる．
+        K は val で決めてから test を出す（test はまだ）．
       </div>
     </div>
   </div>
   <div class="prose">
-    <div class="callout amber">
-      <span class="lead">確かめるべきこと</span>
+    <h3>共通セットの中身は読まれているか（E5）</h3>
+    <p>
+      共通セットが効くのは「事例の文脈と未来の対応を読んで使い分けている」からか，
+      「ありうる未来の値の分布を渡しているだけ」なのか．同じセットのまま，事例どうしで未来だけを入れ替えて比べた．
+    </p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th class="lbl">val，K=32，5 seed</th><th>MSE</th><th>MAE</th><th>QL</th></tr></thead>
+          <tbody>
+            <tr><td class="lbl">ランダム共通セット</td><td>0.5195（−1.1%）</td><td>0.4710（+1.6%）</td><td>0.1874（+1.2%）</td></tr>
+            <tr><td class="lbl">同じセットで未来を入れ替え</td><td>0.5451（+3.7%）</td><td>0.4938（+6.6%）</td><td>0.2023（+9.3%）</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="plate-cap">
+        <b>未来を入れ替えると，5 seed すべてで MSE が 3.9〜6.1% 悪化する</b>
+        割合は参照なし比．未来の値の集合は同じなので，分布だけが使われているなら変わらないはずである．
+        モデルは事例ごとの「この文脈の後にこの未来が来た」という対応を使っている．
+      </div>
+    </div>
+  </div>
+  <div class="prose">
+    <h3>クエリごとの検索も many-shot にできる</h3>
+    <p>
+      並列なら，クエリごとの文脈照合も数百件まで増やせる．同じ件数で，ランダムな共通セットと文脈照合を比べた．
+    </p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th class="lbl" rowspan="2">val（全 7 チャネル，並列）</th>
+              <th colspan="2" style="text-align:center">MSE（参照なし 0.5254）</th><th colspan="2" style="text-align:center">MAE（参照なし 0.4634）</th><th colspan="2" style="text-align:center">QL（参照なし 0.1852）</th></tr>
+            <tr><th>ランダム（平均）</th><th>文脈照合</th><th>ランダム（平均）</th><th>文脈照合</th><th>ランダム（平均）</th><th>文脈照合</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="lbl">K=8</td><td>0.5190</td><td>0.5186（−0.1%）</td><td>0.4682</td><td>0.4674（−0.2%）</td><td>0.1864</td><td>0.1856（−0.5%）</td></tr>
+            <tr><td class="lbl">K=32</td><td>0.5170</td><td>0.5120（−1.0%）</td><td>0.4699</td><td>0.4693（−0.1%）</td><td>0.1870</td><td>0.1859（−0.6%）</td></tr>
+            <tr><td class="lbl">K=128</td><td>0.5138</td><td>0.5095（−0.8%）</td><td>0.4687</td><td>0.4684（−0.1%）</td><td>0.1867</td><td>0.1863（−0.2%）</td></tr>
+            <tr><td class="lbl">K=256</td><td>0.5146</td><td>0.5107（−0.7%）</td><td>0.4693</td><td>0.4687（−0.1%）</td><td>0.1871</td><td>0.1869（−0.2%）</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="plate-cap">
+        <b>どの件数でも文脈照合の方が良く，MSE は文脈照合 128 件（参照なし比 −3.0%）が最良</b>
+        括弧内はランダム共通セット（K=32 は 25 本，ほかは 5 本の平均）との比で，マイナスなら良い．
+        文脈照合は件数を増やすほど良くなり，K=128 で頭打ちになる．MAE と QL は，どちらも参照なしに届かない（事例を増やすと 80% 区間が広がりすぎる）．
+        共通セットに文脈照合を足すハイブリッドは，文脈照合が少ないときだけ効いた（<a href="clg-note.html">別冊</a>）．
+      </div>
+    </div>
+  </div>
+  <div class="prose">
+    <div class="callout">
+      <span class="lead">分かったこと</span>
       <p>
-        共通セットが効く理由が「事例の中から合うものを選んで読んでいる」のか，
-        「ありうる未来の値の分布を渡しているだけ」なのかで，主張の強さが変わる．
-        セット内で事例どうしの未来を入れ替えて（文脈と未来の対応を壊して）悪化するかで見分ける．
+        <strong>並列なら many-shot にでき，件数を増やすほど MSE が下がる．同じ件数なら，クエリごとの文脈照合の方が共通セットより良い．</strong>
+        事例の中身（文脈と未来の対応）は読まれている．共通セットの中身を勾配で選ぶ試み（CLG・Parallel-CLG）は，
+        ランダムとの差が小さく文脈照合に届かなかったので，<a href="clg-note.html">別冊</a>に分けた．
+        残る課題は，事例を増やすと予測の区間が広がりすぎ，MAE と QL が参照なしに届かないことである．
       </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 条件 -->
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">条件</span><h2>実験条件</h2></div>
+    <p>以下の表の数字はすべてこの条件で，2026-10-04 に <code>codes/</code> の今のコードで取ったものである．</p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th class="lbl">項目</th><th style="text-align:left">設定</th></tr></thead>
+          <tbody>
+            <tr><td class="lbl">データ</td><td style="text-align:left">ETTh1（1 時間ごと，7 チャネル）．各チャネルを独立な 1 変量系列として扱う．値は生のスケールのまま入力する</td></tr>
+            <tr><td class="lbl">分割</td><td style="text-align:left">train 2016-07-01〜2017-06-25（12 か月）／val 2017-06-26〜2017-10-23（4 か月）／test 2017-10-24〜2018-02-20（4 か月）</td></tr>
+            <tr><td class="lbl">クエリ</td><td style="text-align:left">予測の起点を val・test の中に 17 時間おきに置く（1 チャネル 166 本，7 チャネルで 1,162 本）．
+              起点までの履歴 2032 点を入力し，直後の 64 点を予測する．履歴は前の区間にさかのぼってよい</td></tr>
+            <tr><td class="lbl">モデル</td><td style="text-align:left">Chronos-2（<code>amazon/chronos-2</code>，chronos-forecasting 2.2.2）．重みは凍結し，学習は一切しない．Apple M4・16 GB の CPU で推論</td></tr>
+            <tr><td class="lbl">事例</td><td style="text-align:left">1 件は 160 点の窓（文脈 96 点＋未来 64 点）</td></tr>
+            <tr><td class="lbl">事例の候補</td><td style="text-align:left">そのチャネルの train の窓を 11 点おきに切ったもの（1 チャネル 771 本）．どの選び方も同じ候補から選ぶ．
+              クエリごとに選ぶ方法は，そのうちクエリの文脈が始まる前に終わる窓に限る</td></tr>
+            <tr><td class="lbl">並列</td><td style="text-align:left">事例 1 件を既知の未来共変量の行 1 本にする．文脈は履歴の末尾 96 点の位置，未来は予測する 64 点の位置に置く（2 節）</td></tr>
+            <tr><td class="lbl">連結</td><td style="text-align:left">[事例 K｜区切り] … [事例 1｜区切り] [履歴 2032 点] の 1 本につなぐ．事例 1 が最も近いもの．
+              区切りは 16 点で，値はクエリ履歴の平均．8192 点に入るのは 35 件まで</td></tr>
+            <tr><td class="lbl">件数 K</td><td style="text-align:left">2・3 節は 8．4 節は 8 / 32 / 128 / 256</td></tr>
+            <tr><td class="lbl">乱数</td><td style="text-align:left">ランダム共通セットは seed 0〜4 の 5 本．乱数はチャネルごとに seed とチャネル名から作る</td></tr>
+            <tr><td class="lbl">指標</td><td style="text-align:left">MSE・MAE は中央値（0.5 分位）の誤差，QL は 0.1〜0.9 の 9 分位の分位点損失の平均．
+              どれもチャネルごとに train の標準偏差（ddof 0）で割り，7 チャネルで平均する．
+              改善率は平均どうしの比（誤差の総量の減り方）</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="prose">
+    <h3>事例の選び方</h3>
+    <p>表では次の名前で呼ぶ．括弧内は <code>run.py</code> の <code>--select</code> の値である．</p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th class="lbl">名前</th><th style="text-align:left">事例の文脈</th><th style="text-align:left">事例の未来</th><th style="text-align:left">位置づけ</th></tr></thead>
+          <tbody>
+            <tr><td class="lbl">文脈照合（l2）</td>
+              <td style="text-align:left">候補のうち，文脈 96 点がクエリの直近 96 点に L2 距離で近い順に K 本の窓の文脈</td>
+              <td style="text-align:left">その窓の実際の続き</td>
+              <td style="text-align:left">従来の RAF の検索．実際に使える</td></tr>
+            <tr class="orc"><td class="lbl">未来照合（oracle）</td>
+              <td style="text-align:left">候補のうち，未来 64 点がクエリの正解 64 点に L2 距離で近い順に K 本の窓の文脈</td>
+              <td style="text-align:left">その窓の実際の続き</td>
+              <td style="text-align:left">診断．中身は実在の過去だが，選ぶのに正解を使う．検索の上限</td></tr>
+            <tr class="orc"><td class="lbl">自己＋正解（truth）</td>
+              <td style="text-align:left">クエリ自身の直近 96 点（K 件とも同じ）</td>
+              <td style="text-align:left">クエリの正解 64 点</td>
+              <td style="text-align:left">診断．候補から選ばない．渡した未来をどこまで使えるかの上限</td></tr>
+            <tr><td class="lbl">ランダム共通セット（random）</td>
+              <td style="text-align:left">候補から無作為に K 本選んだ窓の文脈．チャネルごとに 1 セットで，全クエリに同じものを渡す</td>
+              <td style="text-align:left">その窓の実際の続き</td>
+              <td style="text-align:left">全クエリ共通の many-shot の基準</td></tr>
+            <tr><td class="lbl">CLG（clg）</td>
+              <td style="text-align:left" colspan="2">候補から，勾配の軌跡の平均が全候補の平均に最も近い K 本の窓（潜在は履歴の前に連結して学習）．全クエリに同じものを渡す</td>
+              <td style="text-align:left">比較対象（<a href="clg-note.html">別冊</a>）</td></tr>
+            <tr class="orc"><td class="lbl">Parallel-CLG（pclg）</td>
+              <td style="text-align:left" colspan="2">同上．ただし潜在は並列の共変量の行として学習</td>
+              <td style="text-align:left">勾配で選ぶ共通セット（<a href="clg-note.html">別冊</a>）</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="plate-cap">
+        <b>文脈照合・未来照合・自己＋正解はクエリごとに選ぶ．ランダム共通セット・CLG・Parallel-CLG は全クエリ共通</b>
+        参照なし（<code>--select none</code>）は事例を渡さない基準．
+      </div>
     </div>
   </div>
 </section>
@@ -783,10 +1017,13 @@ future_covariates = { "ret0": 事例0の未来 64 点,               …, "ret7"
     <div class="sec-head"><span class="sec-num">5</span><h2>実験計画と現在地</h2></div>
     <div class="branch">
       <div><span class="cond">済</span><span class="then"><b>E1 融合</b>：並列と連結を同じ事例で比べる（2 節）</span></div>
-      <div><span class="cond">済</span><span class="then"><b>E2 クエリごとの検索の限界</b>：正解に近い窓・文脈が近い窓・recency・プラセボ（3 節）</span></div>
-      <div><span class="cond">一部</span><span class="then"><b>E3 many-shot</b>：ランダムな共通セットで K = 8 / 32 / 128 / 256．val の K=8 / 32 のみ済</span></div>
-      <div><span class="cond">未</span><span class="then"><b>E4 選び方</b>：同じ K で，ランダム・k-means・Best-of-N を比べる．クエリごとの検索（文脈が近い窓）とも比べる</span></div>
-      <div><span class="cond">未</span><span class="then"><b>E5 何が読まれているか</b>：共通セット内で未来を入れ替える</span></div>
+      <div><span class="cond">済</span><span class="then"><b>E2 クエリごとの検索の限界</b>：未来照合・文脈照合（3 節）</span></div>
+      <div><span class="cond">済</span><span class="then"><b>E3 many-shot</b>：ランダム共通セットで K = 8 / 32 / 128 / 256（val，各 5 seed）．MSE は K=128 で頭打ち（4 節）</span></div>
+      <div><span class="cond">済</span><span class="then"><b>E4 選び方</b>：同じ K で，ランダム共通セットと文脈照合を比べる．K=32〜256 で文脈照合が MSE 0.7〜1.0% 良い（4 節）</span></div>
+      <div><span class="cond">済</span><span class="then"><b>E5 何が読まれているか</b>：共通セット内で未来を入れ替えると，5 seed すべてで MSE が 3.9〜6.1% 悪化．文脈と未来の対応が読まれている（4 節）</span></div>
+      <div><span class="cond">済</span><span class="then"><b>E7 CLG と Parallel-CLG</b>：ランダムとの差は ±0.5% 程度で，文脈照合に届かず取り下げ（<a href="clg-note.html">別冊</a>）</span></div>
+      <div><span class="cond">済</span><span class="then"><b>E8 CLG 系の工夫</b>：コサインで選ぶ（少し良い），直近の窓に合わせる（悪化），文脈照合と組み合わせる（文脈照合が少ないときだけ効く）（<a href="clg-note.html">別冊</a>）</span></div>
+      <div><span class="cond">未</span><span class="then"><b>E9 test で確かめる</b>：val で決めた文脈照合 K=128 を test で出す</span></div>
       <div><span class="cond">未</span><span class="then"><b>E6 再現</b>：ETTh1 以外のデータセット</span></div>
     </div>
     <p>K などのハイパーパラメータは val で決め，その値で test を出す．</p>
@@ -795,12 +1032,18 @@ future_covariates = { "ret0": 事例0の未来 64 点,               …, "ret7"
   <div class="prose footnote">
     <p>
       <b>コマンド</b>（<code>codes/run.py</code>，評価は <code>codes/evaluate.py</code>）<br>
-      参照なし <code>--select none</code>／共通セット <code>--select random|kmeans|bestofn --top-k 128</code><br>
-      クエリごとの検索 <code>--select l2|oracle|recent|placebo</code>／連結 <code>--fusion concat</code><br>
-      未来の入れ替え <code>--ablation shuffle-future</code>／未来だけ正解 <code>--ablation truth-future</code>
+      参照なし <code>--select none</code>／ランダム共通セット <code>--select random --top-k 128</code><br>
+      文脈照合 <code>--select l2</code>／未来照合 <code>--select oracle</code>／自己＋正解 <code>--select truth</code>／連結 <code>--fusion concat</code><br>
+      CLG <code>--select clg</code>（L2）／Parallel-CLG <code>--select pclg</code>（既定はコサイン，<code>--match mean</code> で L2）．先に <code>python3 codes/clg.py --method clg|pclg</code> で勾配を計算<br>
+      ハイブリッド <code>--select random|pclg --top-k 共通セットの件数 --inst-k 文脈照合の件数</code><br>
+      未来の入れ替え <code>--ablation shuffle-future</code>（選び方によらずかかる）
     </p>
     <p>
-      事例の候補は 8 点間隔の窓．共通セットは train の窓から，クエリごとの検索はクエリの文脈より前に終わる窓から選ぶ．
+      整理前の診断「未来だけ正解」（文脈は文脈照合の窓のまま未来だけ正解）では連結が −2.0% だったが，文脈もクエリ自身にした今の自己＋正解では −32.7% になる．
+      整理前に試したプラセボと直前の窓（recency）は実装から外した．
+      評価は既定で val，test は <code>--eval-split test</code> で出す．
+      連結の区切り（qmean）は整理前に test 上で選んだ値を引き継いでいる（val での確認はまだ）．
+      予測の起点の間隔 17 点と候補の間隔 11 点は，1 日と 1 週間の周期に偏らない値で，候補の間隔は val で決めた．
       整理前の実験の記録は git 履歴（<code>c66158c</code> 以前）と <code>results/_archive/</code> にある．
     </p>
   </div>

@@ -20,25 +20,23 @@ import numpy as np
 import torch
 from einops import rearrange
 
-MODEL_QUANTILES = [0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5,
-                   0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 0.99]
-REPORT_QUANTILES = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-REPORT_INDEX = [MODEL_QUANTILES.index(q) for q in REPORT_QUANTILES]
-CONTEXT_LIMIT = 8192
-TOKEN_BUDGET = 24576
 
 
-def load_chronos2(name: str = "amazon/chronos-2", threads: int = 0):
+def load_chronos2(name: str, device: str = "cpu", threads: int = 0):
+    """device "mps" (Apple GPU) falls back to "cpu" where it is unavailable."""
     from chronos import Chronos2Pipeline
     if threads > 0:
         torch.set_num_threads(threads)
-    model = Chronos2Pipeline.from_pretrained(name, device_map="cpu").model
+    if device == "mps" and not torch.backends.mps.is_available():
+        device = "cpu"
+    model = Chronos2Pipeline.from_pretrained(name, device_map=device).model
     model.eval()
     model.requires_grad_(False)
     return model
 
 
-def concat_context(history: np.ndarray, examples: np.ndarray, sep_len: int = 16) -> np.ndarray:
+def concat_context(history: np.ndarray, examples: np.ndarray, sep_len: int,
+                   limit: int) -> np.ndarray:
     """history (B, H), examples (B or 1, K, W), column 0 nearest ->
     (B, K * (W + sep_len) + H) laid out as [x_K | sep] ... [x_1 | sep] [history].
 
@@ -52,9 +50,9 @@ def concat_context(history: np.ndarray, examples: np.ndarray, sep_len: int = 16)
     for j in range(k):
         parts += [ex[:, j], sep]
     out = np.concatenate(parts + [history], axis=1).astype(np.float32)
-    if out.shape[1] > CONTEXT_LIMIT:
-        raise ValueError(f"concatenated input {out.shape[1]} exceeds the {CONTEXT_LIMIT}-point "
-                         f"context; at most {(CONTEXT_LIMIT - history.shape[1]) // (w + sep_len)} "
+    if out.shape[1] > limit:
+        raise ValueError(f"concatenated input {out.shape[1]} exceeds the {limit}-point "
+                         f"context; at most {(limit - history.shape[1]) // (w + sep_len)} "
                          "examples fit")
     return out
 
@@ -62,15 +60,22 @@ def concat_context(history: np.ndarray, examples: np.ndarray, sep_len: int = 16)
 class Chronos2Rows:
     """Query rows of length H, each grouped with K example rows of seq_len + pred_len."""
 
-    def __init__(self, model, seq_len: int, pred_len: int):
+    def __init__(self, model, seq_len: int, pred_len: int, quantiles, token_budget: int):
         cfg = model.chronos_config
+        missing = [q for q in quantiles if q not in cfg.quantiles]
+        if missing:
+            raise ValueError(f"quantiles {missing} are not among the model's {cfg.quantiles}")
         self.patch = cfg.input_patch_size
         if seq_len % self.patch or pred_len % cfg.output_patch_size:
             raise ValueError("seq_len and pred_len must be multiples of the patch size")
         self.m = model
+        self.device = next(model.parameters()).device
         self.seq_len, self.pred_len = seq_len, pred_len
         self.n_out = pred_len // cfg.output_patch_size
         self.s = seq_len // self.patch + 1 + self.n_out
+        self.quantile_index = [cfg.quantiles.index(q) for q in quantiles]
+        self.token_budget = token_budget
+        self.context_length = cfg.context_length
 
     def _embed(self, context, future=None):
         """(N, L) context with NaN for missing, (N, pred_len) future or None ->
@@ -80,12 +85,12 @@ class Chronos2Rows:
         n = len(context)
         tokens = torch.cat([
             m.input_patch_embedding(patched),
-            m.shared(torch.full((n, 1), m.config.reg_token_id)),
+            m.shared(torch.full((n, 1), m.config.reg_token_id, device=self.device)),
             m.input_patch_embedding(m._prepare_patched_future(
                 future_covariates=future, future_covariates_mask=None, loc_scale=loc_scale,
                 num_output_patches=self.n_out, batch_size=n)[0]),
         ], dim=1)
-        mask = torch.cat([mask.to(tokens.dtype), torch.ones(n, 1 + self.n_out)], dim=1)
+        mask = torch.cat([mask.to(tokens.dtype), torch.ones(n, 1 + self.n_out, device=self.device)], dim=1)
         return tokens, mask, loc_scale
 
     @staticmethod
@@ -113,10 +118,10 @@ class Chronos2Rows:
             tmask_e = self._invert(emask)[:, None, None, :]
             gvalid = torch.cat([qmask[:, -self.s:].unsqueeze(1), emask.reshape(b, k, self.s)], dim=1)
             gmask = self._invert(rearrange(gvalid, "b r s -> (b s) r"))[:, None, None, :]
-        pos_q = torch.arange(t).unsqueeze(0)
-        pos_e = torch.arange(t - self.s, t).unsqueeze(0)
+        pos_q = torch.arange(t, device=self.device).unsqueeze(0)
+        pos_e = torch.arange(t - self.s, t, device=self.device).unsqueeze(0)
         tmask_q = self._invert(qmask)[:, None, None, :]
-        alone = torch.zeros(1, 1, 1, 1)
+        alone = torch.zeros(1, 1, 1, 1, device=self.device)
 
         for block in m.encoder.block:
             tsa, gsa, ffn = block.layer
@@ -146,56 +151,70 @@ class Chronos2Rows:
         b, nq, h = preds.shape
         return self.m.instance_norm.inverse(preds.reshape(b, nq * h), loc_scale).reshape(b, nq, h)
 
+    def loss(self, preds, loc_scale, future):
+        """Pinball loss in the query's normalized space, one value per query
+        (mean over the horizon, summed over the model's quantiles, as Chronos-2 trains)."""
+        y, _ = self.m.instance_norm(future, loc_scale)
+        levels = torch.tensor(self.m.chronos_config.quantiles, device=preds.device).view(1, -1, 1)
+        diff = y.unsqueeze(1) - preds
+        return torch.maximum(levels * diff, (levels - 1) * diff).mean(-1).sum(-1)
+
     def _chunk(self, length: int, k: int) -> int:
         tokens = length // self.patch + 1 + self.n_out + k * self.s
-        return max(1, TOKEN_BUDGET // tokens)
+        return max(1, self.token_budget // tokens)
 
     @torch.no_grad()
     def predict(self, context, ex_ctx=None, ex_fut=None) -> np.ndarray:
-        """Raw-scale forecasts at REPORT_QUANTILES, (B, 9, pred_len), in batches
-        that fit the token budget."""
+        """Raw-scale forecasts at the chosen quantiles, (B, n_quantiles, pred_len),
+        in batches that fit the token budget."""
         k = 0 if ex_ctx is None else ex_ctx.shape[1]
         chunk = self._chunk(context.shape[1], k)
         shared = ex_ctx is not None and ex_ctx.shape[0] == 1
         out = []
         for lo in range(0, len(context), chunk):
-            c = torch.as_tensor(context[lo:lo + chunk], dtype=torch.float32)
+            c = torch.as_tensor(context[lo:lo + chunk], dtype=torch.float32, device=self.device)
             ec = ef = None
             if k:
                 sl = slice(None) if shared else slice(lo, lo + chunk)
-                ec = torch.as_tensor(ex_ctx[sl], dtype=torch.float32)
-                ef = torch.as_tensor(ex_fut[sl], dtype=torch.float32)
+                ec = torch.as_tensor(ex_ctx[sl], dtype=torch.float32, device=self.device)
+                ef = torch.as_tensor(ex_fut[sl], dtype=torch.float32, device=self.device)
             preds, ls = self.forward(c, ec, ef)
-            out.append(self.unscale(preds, ls)[:, REPORT_INDEX].numpy())
+            out.append(self.unscale(preds, ls)[:, self.quantile_index].cpu().numpy())
         return np.concatenate(out)
 
-def check(seed: int = 0, b: int = 3, k: int = 5, history: int = 2032):
-    """Compare the parallel forward against Chronos2Model.forward on the padded batch."""
+
+def check(seed: int = 0, b: int = 3, k: int = 5):
+    """Compare the parallel forward against Chronos2Model.forward on the padded batch,
+    at the seq_len / pred_len / history set in run.py."""
+    from run import DEVICE, HISTORY, MODEL_NAME, PRED_LEN, SEQ_LEN, TOKEN_BUDGET
+    s, p, history = SEQ_LEN, PRED_LEN, HISTORY
     torch.manual_seed(seed)
-    model = load_chronos2()
-    rows = Chronos2Rows(model, 96, 64)
-    ctx = torch.randn(b, history).cumsum(-1)
-    ctx[0, :500] = float("nan")
-    ex_ctx = torch.randn(b, k, 96).cumsum(-1) + 3
-    ex_fut = torch.randn(b, k, 64).cumsum(-1) + 3
+    model = load_chronos2(MODEL_NAME, DEVICE)
+    rows = Chronos2Rows(model, s, p, [0.5], TOKEN_BUDGET)
+    dev = rows.device
+    ctx = torch.randn(b, history).cumsum(-1).to(dev)
+    ctx[0, :history // 4] = float("nan")
+    ex_ctx = (torch.randn(b, k, s).cumsum(-1) + 3).to(dev)
+    ex_fut = (torch.randn(b, k, p).cumsum(-1) + 3).to(dev)
     with torch.no_grad():
         mine = rows.unscale(*rows.forward(ctx, ex_ctx, ex_fut))
         padded, futs, gids = [], [], []
         for i in range(b):
             padded.append(ctx[i])
-            futs.append(torch.full((64,), float("nan")))
+            futs.append(torch.full((p,), float("nan"), device=dev))
             gids.append(i)
             for j in range(k):
-                r = torch.full((history,), float("nan"))
-                r[-96:] = ex_ctx[i, j]
+                r = torch.full((history,), float("nan"), device=dev)
+                r[-s:] = ex_ctx[i, j]
                 padded.append(r)
                 futs.append(ex_fut[i, j])
                 gids.append(i)
-        ref = model(context=torch.stack(padded), group_ids=torch.tensor(gids),
-                    future_covariates=torch.stack(futs), num_output_patches=4).quantile_preds
-        ref = ref[torch.arange(b) * (k + 1)]
+        ref = model(context=torch.stack(padded), group_ids=torch.tensor(gids, device=dev),
+                    future_covariates=torch.stack(futs), num_output_patches=rows.n_out).quantile_preds
+        ref = ref[torch.arange(b, device=dev) * (k + 1)]
         alone = rows.unscale(*rows.forward(ctx))
-        ref0 = model(context=ctx, num_output_patches=4).quantile_preds
+        ref0 = model(context=ctx, num_output_patches=rows.n_out).quantile_preds
+    print(f"device {dev}  seq_len {s}  pred_len {p}  history {history}")
     print(f"with examples  max |diff| {float((mine - ref).abs().max()):.2e}"
           f"  (mean |value| {float(ref.abs().mean()):.1f})")
     print(f"no examples    max |diff| {float((alone - ref0).abs().max()):.2e}")
