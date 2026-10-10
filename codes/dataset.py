@@ -94,17 +94,19 @@ class TimeSeriesData:
         first = base + starts.astype(np.int64) + self.seq_len
         return self.dates[first[:, None] + np.arange(self.pred_len)[None, :]]
 
-    def past_limit(self, split: str, starts: np.ndarray, stride: int) -> np.ndarray:
+    def past_limit(self, split: str, starts: np.ndarray, stride: int, gap: int = None) -> np.ndarray:
         """Highest index into windows("train", channel, stride) each query may use.
 
-        A window may be used only if it ends at or before the query context
-        begins. Ending before the forecast origin would already rule out leaking
-        the answer, but a window whose future falls inside the query context would
-        only echo the query's own history back as an example's outcome; the
-        stricter cutoff keeps every example a past episode disjoint from the query.
+        A window may be used only if it ends at least `gap` points before the
+        forecast origin (default seq_len: before the query context begins). Ending
+        before the origin would already rule out leaking the answer, but a window
+        whose future falls inside the last points of the query would only echo the
+        query's own history back as an example's outcome. A fixed gap keeps the
+        usable windows the same when seq_len changes.
         """
         base = self.borders[0][SPLITS[split]]
-        cutoff = base + starts.astype(np.int64)
+        gap = self.seq_len if gap is None else gap
+        cutoff = base + starts.astype(np.int64) + self.seq_len - gap
         return (cutoff - self.win_len - self.borders[0][SPLITS["train"]]) // stride
 
     def windows(self, split: str, channel: int, stride: int = 1) -> np.ndarray:

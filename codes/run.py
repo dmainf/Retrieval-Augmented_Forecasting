@@ -38,6 +38,10 @@ TOP_K = 8
 # coprime with 24 and 168 like EVAL_STRIDE, so examples exist at every hour-of-week phase;
 # on val (l2, K=8) 5 / 7 / 8 / 11 were within noise, and 7 divides 168
 DB_STRIDE = 11
+# an example must end this many points before the forecast origin (the default seq_len), so the
+# usable windows stay the same when --seq-len changes
+GAP = 96
+ATTN_LAYERS = "0-11"
 SEED = 0
 SEP_LEN = 16
 ETT_MONTHS = (12, 4, 4)
@@ -92,6 +96,10 @@ def parse_args():
                         "(default: cosine for pclg, mean for clg)")
     p.add_argument("--reverse-match", action="store_true",
                    help="clg / pclg: pick the set farthest from the mean gradient (diagnostic)")
+    p.add_argument("--proxy-lambda", default=1.0, type=float,
+                   help="proxy: match futures on y + lambda * (no-reference forecast - y)")
+    p.add_argument("--attn-layers", default=ATTN_LAYERS,
+                   help="attn: encoder layers (first-last) whose group attention is averaged")
     p.add_argument("--overwrite", action="store_true", help="replace an existing result")
     a = p.parse_args()
     if a.select == "none" and a.ablation != "none":
@@ -120,6 +128,10 @@ def run_name(a) -> str:
             stem += f"_s{a.seed}"
         if a.reverse_match:
             stem += "_reverse"
+        if a.select == "proxy":
+            stem += f"_lam{a.proxy_lambda:g}"
+        if a.select == "attn" and a.attn_layers != ATTN_LAYERS:
+            stem += f"_L{a.attn_layers}"
         if a.select in DEFAULT_MATCH and not a.reverse_match and a.match != DEFAULT_MATCH[a.select]:
             stem += f"_{a.match}"
         if a.recent:
@@ -134,6 +146,25 @@ def run_name(a) -> str:
     if a.channels:
         stem += "_ch" + "+".join(re.sub(r"[^0-9A-Za-z]", "", c) for c in a.channels.split(","))
     return stem
+
+
+def attn_cache(a, channel: str) -> str:
+    """Group attention of every query on every usable pool window, which depends on
+    neither K nor the layers averaged, so attn runs share it."""
+    b = argparse.Namespace(**{**vars(a), "top_k": 0, "attn_layers": ATTN_LAYERS,
+                              "run_name": "", "channels": ""})
+    return os.path.join(a.output_dir, "attn", f"{run_name(b)}_{re.sub(r'[^0-9A-Za-z]', '', channel)}.npy")
+
+
+def base_forecast(a, channel: str, n: int) -> np.ndarray:
+    """(n, pred_len) no-reference median forecast of one channel, from the --select none run."""
+    b = argparse.Namespace(**{**vars(a), "select": "none", "run_name": "", "channels": ""})
+    path = os.path.join(a.output_dir, f"{run_name(b)}.parquet")
+    if not os.path.exists(path):
+        raise SystemExit(f"{path} missing; run --select none first")
+    t = pd.read_parquet(path, columns=["channel", "window", "h", "q0.5"])
+    t = t[t["channel"] == channel].sort_values(["window", "h"])
+    return t["q0.5"].to_numpy(np.float64).reshape(n, a.pred_len)
 
 
 def channel_rng(seed: int, channel: str):
@@ -164,6 +195,7 @@ def main():
     stem = os.path.join(args.output_dir, run_name(args))
     if os.path.exists(f"{stem}.parquet") and not args.overwrite:
         raise SystemExit(f"{stem}.parquet exists; pass --overwrite or --run-name")
+    os.makedirs(args.output_dir, exist_ok=True)
     data = TimeSeriesData(args.root_path, args.dataset, args.seq_len, args.pred_len, args.channels,
                           ett_months=ETT_MONTHS, train_frac=TRAIN_FRAC, test_frac=TEST_FRAC)
     rows = Chronos2Rows(load_chronos2(MODEL_NAME, DEVICE, args.threads), args.seq_len,
@@ -194,16 +226,39 @@ def main():
                                  -(-data.win_len // args.db_stride), target_idx)
             sets[name] = idx.tolist()
             if args.inst_k:
-                limit = data.past_limit(args.eval_split, starts, args.db_stride)
+                limit = data.past_limit(args.eval_split, starts, args.db_stride, GAP)
                 inst, iidx = instance_level("l2", pool, query, limit, args.inst_k, s, exclude=idx)
                 ex = np.concatenate([np.broadcast_to(ex, (len(query),) + ex.shape[1:]), inst], 1)
                 logs.append(pd.DataFrame({"channel": name,
                                           "window": np.repeat(np.arange(len(query)), args.inst_k),
                                           "rank": np.tile(np.arange(args.inst_k), len(query)),
                                           "db_index": iidx.reshape(-1)}))
+        elif args.select == "attn":
+            limit = data.past_limit(args.eval_split, starts, args.db_stride, GAP)
+            valid = np.arange(len(pool))[None, :] <= limit[:, None]
+            cache = attn_cache(args, name)
+            if os.path.exists(cache):
+                att = np.load(cache).astype(np.float32)
+            else:
+                att = rows.row_attention(history, pool[None, :, :s], pool[None, :, s:], valid)
+                os.makedirs(os.path.dirname(cache), exist_ok=True)
+                np.save(cache, att.astype(np.float16))
+            lo, hi = map(int, args.attn_layers.split("-"))
+            score = np.where(valid, att[:, lo:hi + 1].mean(1), -np.inf)
+            idx = np.argsort(-score, axis=1)[:, :args.top_k]
+            ex = pool[idx].copy()
+            logs.append(pd.DataFrame({"channel": name,
+                                      "window": np.repeat(np.arange(len(query)), args.top_k),
+                                      "rank": np.tile(np.arange(args.top_k), len(query)),
+                                      "db_index": idx.reshape(-1)}))
         elif args.select in INSTANCE_LEVEL:
-            limit = data.past_limit(args.eval_split, starts, args.db_stride)
-            ex, idx = instance_level(args.select, pool, query, limit, args.top_k, s)
+            limit = data.past_limit(args.eval_split, starts, args.db_stride, GAP)
+            target = None
+            if args.select == "proxy":
+                f = base_forecast(args, name, len(query))
+                target = futures + args.proxy_lambda * (f - futures)
+            ex, idx = instance_level(args.select, pool, query, limit, args.top_k, s,
+                                     history=history, target=target)
             if idx is not None:
                 logs.append(pd.DataFrame({"channel": name,
                                           "window": np.repeat(np.arange(len(query)), args.top_k),
@@ -232,10 +287,9 @@ def main():
         tables.append(table)
         print(f"  [{ch + 1}/{data.n_channels}] {name}: {len(query)} queries", flush=True)
 
-    os.makedirs(args.output_dir, exist_ok=True)
     pd.concat(tables, ignore_index=True).to_parquet(f"{stem}.parquet", compression="zstd", index=False)
     with open(f"{stem}_args.json", "w") as f:
-        json.dump({**vars(args), "sep_len": SEP_LEN, "ett_months": ETT_MONTHS,
+        json.dump({**vars(args), "sep_len": SEP_LEN, "gap": GAP, "ett_months": ETT_MONTHS,
                    "train_frac": TRAIN_FRAC, "test_frac": TEST_FRAC, "model": MODEL_NAME,
                    "quantiles": REPORT_QUANTILES, "task_sets": sets,
                    "channels_used": data.channels}, f, indent=1)

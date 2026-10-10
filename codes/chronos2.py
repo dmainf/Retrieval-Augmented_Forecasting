@@ -97,13 +97,16 @@ class Chronos2Rows:
     def _invert(mask):
         return (1.0 - mask) * torch.finfo(torch.float32).min
 
-    def forward(self, context, ex_ctx=None, ex_fut=None):
+    def forward(self, context, ex_ctx=None, ex_fut=None, row_valid=None, attn=None):
         """context (B, L); ex_ctx (B or 1, K, seq_len); ex_fut (B or 1, K, pred_len).
 
         A leading 1 on the examples shares one set across every query. Returns
         normalized quantile predictions (B, 21, pred_len) and the query loc/scale.
         Example contexts are embedded at their own length: the time encoding of
         the last seq_len points does not depend on the padding in front.
+        row_valid (B, K) bool drops example rows from a query's group.
+        attn: a list that receives, per layer, the group attention (B, K) the query
+        row pays to each example row, averaged over heads and the forecast patches.
         """
         m = self.m
         b = context.shape[0]
@@ -116,7 +119,10 @@ class Chronos2Rows:
             e = e.reshape(-1, k, self.s, e.shape[-1]).expand(b, -1, -1, -1).reshape(b * k, self.s, -1)
             emask = emask.reshape(-1, k, self.s).expand(b, -1, -1).reshape(b * k, self.s)
             tmask_e = self._invert(emask)[:, None, None, :]
-            gvalid = torch.cat([qmask[:, -self.s:].unsqueeze(1), emask.reshape(b, k, self.s)], dim=1)
+            evalid = emask.reshape(b, k, self.s)
+            if row_valid is not None:
+                evalid = evalid * row_valid.to(evalid.dtype).unsqueeze(-1)
+            gvalid = torch.cat([qmask[:, -self.s:].unsqueeze(1), evalid], dim=1)
             gmask = self._invert(rearrange(gvalid, "b r s -> (b s) r"))[:, None, None, :]
         pos_q = torch.arange(t, device=self.device).unsqueeze(0)
         pos_e = torch.arange(t - self.s, t, device=self.device).unsqueeze(0)
@@ -135,7 +141,10 @@ class Chronos2Rows:
                 e = tsa(e, attention_mask=tmask_e, position_ids=pos_e)[0]
                 rows = torch.cat([q[:, split:].unsqueeze(1), e.reshape(b, k, self.s, -1)], dim=1)
                 rows = rearrange(rows, "b r s d -> (b s) r d")
-                rows = rows + gsa.self_attention(gsa.layer_norm(rows), mask=gmask)[0]
+                normed = gsa.layer_norm(rows)
+                if attn is not None:
+                    attn.append(self._query_attention(gsa.self_attention, normed, gmask, b))
+                rows = rows + gsa.self_attention(normed, mask=gmask)[0]
                 rows = rearrange(rows, "(b s) r d -> b r s d", b=b, s=self.s)
                 q = ffn(torch.cat([head, rows[:, 0]], dim=1))
                 e = ffn(rows[:, 1:].reshape(b * k, self.s, -1))
@@ -146,6 +155,34 @@ class Chronos2Rows:
         preds = rearrange(m.output_patch_embedding(h), "b n (q p) -> b q (n p)", n=self.n_out,
                           q=m.num_quantiles, p=m.chronos_config.output_patch_size)
         return preds, loc_scale
+
+    def _query_attention(self, mha, normed, gmask, b):
+        """Group attention weights of the query row (row 0) over the example rows at the
+        forecast patches, mean over heads and patches -> (b, K)."""
+        h = mha.n_heads
+        q = rearrange(mha.q(normed[:, :1]), "n 1 (h d) -> n h d", h=h)
+        k = rearrange(mha.k(normed), "n r (h d) -> n h r d", h=h)
+        w = torch.softmax(torch.einsum("nhd,nhrd->nhr", q, k).float() + gmask[:, 0], dim=-1)
+        w = rearrange(w, "(b s) h r -> b s h r", b=b)[:, -self.n_out:]
+        return w.mean((1, 2))[:, 1:]
+
+    @torch.no_grad()
+    def row_attention(self, context, ex_ctx, ex_fut, row_valid) -> np.ndarray:
+        """(B, n_layers, K) group attention of each query row on each example row (see
+        forward), with one example set shared by every query (leading 1) and row_valid
+        (B, K) bool choosing the rows each query may see."""
+        k = ex_ctx.shape[1]
+        chunk = self._chunk(context.shape[1], k)
+        ec = torch.as_tensor(ex_ctx, dtype=torch.float32, device=self.device)
+        ef = torch.as_tensor(ex_fut, dtype=torch.float32, device=self.device)
+        out = []
+        for lo in range(0, len(context), chunk):
+            c = torch.as_tensor(context[lo:lo + chunk], dtype=torch.float32, device=self.device)
+            v = torch.as_tensor(row_valid[lo:lo + chunk], device=self.device)
+            attn = []
+            self.forward(c, ec, ef, v, attn)
+            out.append(torch.stack(attn, 1).cpu().numpy())
+        return np.concatenate(out)
 
     def unscale(self, preds, loc_scale):
         b, nq, h = preds.shape

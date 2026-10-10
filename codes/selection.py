@@ -13,7 +13,16 @@ task-level (one set per channel)
 
 instance-level (chosen per query among the pool windows that end before its context)
   l2        nearest contexts by raw L2 -- the RAF baseline
+  l2rv      nearest contexts in the reader's view: each window instance-normed on its own
+            context and the query on its history, as the rows reach Chronos-2
   oracle    nearest futures to the TRUE future; a diagnostic bound, not a method
+  oraclerv  the same in the reader's view; a diagnostic bound, not a method
+  proxy     nearest futures to y + lambda * (f - y), f the no-reference median forecast:
+            lambda 0 is the oracle, 1 retrieves by the model's own forecast (realizable);
+            in between measures how good a guess of the future must be (diagnostic)
+  attn      the windows the model itself attends to: every usable pool window goes in as a
+            parallel row, and the K rows with the most group attention from the query's
+            forecast patches (mean over heads and the --attn-layers) are kept (run.py)
   truth     K copies of the query itself, its context and its TRUE future; not from the
             pool. A diagnostic of how far a given future is read, not a method
 
@@ -35,7 +44,7 @@ hybrid (--inst-k)
 import numpy as np
 
 TASK_LEVEL = ("random", "clg", "pclg")
-INSTANCE_LEVEL = ("l2", "oracle", "truth")
+INSTANCE_LEVEL = ("l2", "l2rv", "oracle", "oraclerv", "proxy", "truth", "attn")
 
 
 def nearest(keys_db: np.ndarray, keys_q: np.ndarray, k: int, limit: np.ndarray,
@@ -56,18 +65,39 @@ def nearest(keys_db: np.ndarray, keys_q: np.ndarray, k: int, limit: np.ndarray,
     return np.take_along_axis(idx, order, 1)
 
 
+def reader_view(x: np.ndarray, ref: np.ndarray) -> np.ndarray:
+    """x as Chronos-2 sees it in a row instance-normed on ref: arcsinh((x - mean) / std)."""
+    loc = np.nanmean(ref, axis=1, keepdims=True)
+    scale = np.sqrt(np.nanmean((ref - loc) ** 2, axis=1, keepdims=True))
+    return np.arcsinh((x - loc) / np.where(scale == 0, 1e-5, scale))
+
+
 def instance_level(method: str, pool: np.ndarray, query: np.ndarray, limit: np.ndarray,
-                   k: int, s: int, exclude=None):
+                   k: int, s: int, exclude=None, history: np.ndarray = None,
+                   target: np.ndarray = None):
     """limit[i] is the highest pool index query i may use (see TimeSeriesData.past_limit);
     exclude: pool indices never to pick (a shared set the examples are added to).
-    Returns indices None for truth, whose examples do not come from the pool."""
+    target (n, pred_len): the future each query is matched on, for proxy.
+    history: the query rows fed to the model, for the reader-view methods (l2rv / oraclerv),
+    which compare windows as the model sees them: each example normed on its own context,
+    the query on its history. Returns indices None for truth, whose examples do not come
+    from the pool."""
     if method == "truth":
         return np.repeat(query[:, None, :], k, axis=1), None
-    if method == "l2":
-        idx = nearest(pool[:, :s].astype(np.float64), query[:, :s].astype(np.float64), k, limit,
-                      exclude)
-    elif method == "oracle":
-        idx = nearest(pool[:, s:].astype(np.float64), query[:, s:].astype(np.float64), k, limit)
+    p64, q64 = pool.astype(np.float64), query.astype(np.float64)
+    if method in ("l2rv", "oraclerv"):
+        if history is None:
+            raise ValueError(f"{method} needs the query history")
+        h64 = history.astype(np.float64)
+        p64, q64 = reader_view(p64, p64[:, :s]), reader_view(q64, h64)
+    if method in ("l2", "l2rv"):
+        idx = nearest(p64[:, :s], q64[:, :s], k, limit, exclude)
+    elif method in ("oracle", "oraclerv"):
+        idx = nearest(p64[:, s:], q64[:, s:], k, limit)
+    elif method == "proxy":
+        if target is None:
+            raise ValueError("proxy needs a target future per query")
+        idx = nearest(p64[:, s:], target.astype(np.float64), k, limit)
     else:
         raise ValueError(method)
     return pool[idx].copy(), idx
