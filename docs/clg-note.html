@@ -1,4 +1,4 @@
-<title>CLG 系の記録</title>
+<title>CLG 系の記録（詳細）</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
@@ -20,6 +20,8 @@
   --oracle-tint: #F3DFC7;
   --oracle-wash: rgba(176, 98, 28, 0.12);
   --warn: #A03A2E;
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
 
   --f-display: "Zen Old Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
   --f-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
@@ -43,6 +45,8 @@
     --oracle-tint: #3A2B1B;
     --oracle-wash: rgba(224, 161, 100, 0.14);
     --warn: #E08476;
+    --series-1: #3987e5;
+    --series-2: #d95926;
   }
 }
 
@@ -62,6 +66,8 @@
   --oracle-tint: #3A2B1B;
   --oracle-wash: rgba(224, 161, 100, 0.14);
   --warn: #E08476;
+  --series-1: #3987e5;
+  --series-2: #d95926;
 }
 
 * { box-sizing: border-box; }
@@ -392,13 +398,12 @@ pre {
 
 <header class="masthead">
   <div class="prose">
-    <p class="kicker">RAF 研究ノート（別冊） · 2026-10-05 · ETTh1 / Chronos-2</p>
-    <h1>共通セットを勾配で選ぶ：CLG と Parallel-CLG の記録</h1>
+    <p class="kicker">RAF 研究ノート（別冊） · 2026-10-09 · ETTh1 / Chronos-2</p>
+    <h1>共通セットを勾配で選ぶ試み：CLG と Parallel-CLG</h1>
     <p class="standfirst">
-      全クエリ共通の many-shot セットの中身を，勾配マッチング（CLG；Zhang et al., ACL Findings 2025）と，
-      その潜在を並列の行に置いた Parallel-CLG で選ぶ試みの記録である．
-      同じ件数ではクエリごとの文脈照合に届かず，論文の筋は<a href="raf-note.html">本ノート</a>の「並列による many-shot」に移した．
-      手法，結果，うまくいかなかった理由を残す．
+      全クエリに同じ事例セットを渡すとき，その中身を勾配で選べば良くなるかを試した．
+      結論は「ランダムに選ぶのとほぼ変わらず，クエリごとの文脈照合にも届かない」．
+      論文の筋は<a href="raf-note.html">本ノート</a>に移した．ここには手法と結果を残す．
     </p>
   </div>
 </header>
@@ -406,17 +411,13 @@ pre {
 <!-- ============================== 1 -->
 <section>
   <div class="prose">
-    <div class="sec-head"><span class="sec-num">1</span><h2>手法と結果</h2></div>
+    <div class="sec-head"><span class="sec-num">1</span><h2>何をしたか</h2></div>
+    <h3>CLG</h3>
     <p>
-      共通セットの中身を原理的に選ぶ方法として，LLM の many-shot ICL のために提案された CLG（Curriculum Latent Gradient；Zhang et al., ACL Findings 2025）を出発点にする．
-      ただし CLG は，事例を時間方向に連結する容れ物を前提にしている．並列の容れ物に合わせて作り直したものが，当初の提案手法だった <strong>Parallel-CLG</strong> である．
-    </p>
-
-    <h3>CLG とは</h3>
-    <p>
-      CLG の前提は「ICL に必要なデータと，ファインチューニングに必要なデータは似ている」という仮説である．
-      全訓練データで学習したときと同じ学習の動きを生む少数の例を選べば，それは事例としても良いはず，と考える．
-      手順は 3 段である．
+      CLG（Zhang et al., ACL Findings 2025）は，LLM の many-shot のために作られた事例の選び方である．
+      学習できる「潜在の事例」を入力に置いて学習し，各時点の勾配を例ごとに記録する．
+      そして，勾配の平均が全データの平均に近くなる例を選ぶ．
+      「全データで学習したのと同じ動きを生む例は，事例としても良い」という考え方である．
     </p>
   </div>
   <div class="wide">
@@ -443,47 +444,47 @@ pre {
             <rect x="40" y="58" width="212" height="40" rx="3" fill="var(--surface-sunk)"/>
             <text x="146" y="83" text-anchor="middle" fill="currentColor" stroke="none">モデル（凍結）</text>
             <rect x="40" y="122" width="56" height="26" rx="2" fill="var(--oracle-tint)" stroke="var(--oracle)"/>
-            <text x="68" y="140" text-anchor="middle" fill="currentColor" stroke="none">潜在 Z</text>
+            <text x="68" y="140" text-anchor="middle" fill="currentColor" stroke="none">潜在 z</text>
             <rect x="100" y="122" width="100" height="26" rx="2" fill="var(--accent-tint)" stroke="var(--accent)"/>
             <text x="150" y="140" text-anchor="middle" fill="currentColor" stroke="none">入力 x</text>
             <path d="M120 118 L120 102" marker-end="url(#ar6)"/>
             <text x="216" y="140" fill="currentColor" stroke="none" font-size="11">→ 正解 y</text>
-            <text x="146" y="174" text-anchor="middle" fill="currentColor" stroke="none" font-size="11">損失が下がるように Z だけを更新</text>
-            <text x="146" y="190" text-anchor="middle" fill="currentColor" stroke="none" font-size="11">（全訓練データで E エポック）</text>
+            <text x="146" y="174" text-anchor="middle" fill="currentColor" stroke="none" font-size="12.5">max<tspan font-size="9" baseline-shift="sub">z</tspan> <tspan font-style="italic">p</tspan><tspan font-size="9" baseline-shift="sub" font-style="italic">θ</tspan>(<tspan font-style="italic">y</tspan> | <tspan font-style="italic">z</tspan>, <tspan font-style="italic">x</tspan>)</text>
+            <text x="146" y="192" text-anchor="middle" fill="currentColor" stroke="none" font-size="11">θ は凍結，z だけ更新（E エポック）</text>
             <g fill="var(--oracle-tint)" stroke="var(--oracle)">
               <rect x="52" y="208" width="30" height="20" rx="2"/><rect x="92" y="208" width="30" height="20" rx="2" opacity="0.85"/>
               <rect x="132" y="208" width="30" height="20" rx="2" opacity="0.7"/><rect x="200" y="208" width="30" height="20" rx="2" opacity="0.55"/>
             </g>
-            <text x="67" y="222" text-anchor="middle" fill="currentColor" stroke="none" font-size="10">Z₀</text>
-            <text x="107" y="222" text-anchor="middle" fill="currentColor" stroke="none" font-size="10">Z₁</text>
-            <text x="147" y="222" text-anchor="middle" fill="currentColor" stroke="none" font-size="10">Z₂</text>
+            <text x="67" y="222" text-anchor="middle" fill="currentColor" stroke="none" font-size="10">z₀</text>
+            <text x="107" y="222" text-anchor="middle" fill="currentColor" stroke="none" font-size="10">z₁</text>
+            <text x="147" y="222" text-anchor="middle" fill="currentColor" stroke="none" font-size="10">z₂</text>
             <text x="181" y="222" text-anchor="middle" fill="currentColor" stroke="none" font-size="10">…</text>
-            <text x="215" y="222" text-anchor="middle" fill="currentColor" stroke="none" font-size="10">Z<tspan baseline-shift="sub" font-size="8">E</tspan></text>
-            <text x="146" y="250" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.7" font-size="11">各エポックの Z を保存（学習の軌跡）</text>
+            <text x="215" y="222" text-anchor="middle" fill="currentColor" stroke="none" font-size="10">z<tspan baseline-shift="sub" font-size="8">E</tspan></text>
+            <text x="146" y="250" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.7" font-size="11">各エポックの z を保存（学習の軌跡）</text>
 
             <path d="M282 140 L302 140" marker-end="url(#ar6)"/>
 
             <!-- stage 2 -->
             <text x="440" y="66" text-anchor="middle" fill="currentColor" stroke="none" font-size="11">訓練データの各例 q について</text>
-            <text x="440" y="84" text-anchor="middle" fill="currentColor" stroke="none" font-size="11">各時点の Z での「q の損失の Z に対する勾配」</text>
+            <text x="440" y="84" text-anchor="middle" fill="currentColor" stroke="none" font-size="11">各時点の z での「q の損失の z に対する勾配」</text>
             <g stroke="var(--accent)">
               <rect x="330" y="104" width="48" height="22" rx="2" fill="var(--accent-tint)"/>
               <rect x="382" y="104" width="48" height="22" rx="2" fill="var(--accent-tint)" opacity="0.85"/>
               <rect x="434" y="104" width="48" height="22" rx="2" fill="var(--accent-tint)" opacity="0.7"/>
               <rect x="502" y="104" width="48" height="22" rx="2" fill="var(--accent-tint)" opacity="0.55"/>
             </g>
-            <text x="354" y="119" text-anchor="middle" fill="currentColor" stroke="none" font-size="10">∇ at Z₀</text>
-            <text x="406" y="119" text-anchor="middle" fill="currentColor" stroke="none" font-size="10">∇ at Z₁</text>
-            <text x="458" y="119" text-anchor="middle" fill="currentColor" stroke="none" font-size="10">∇ at Z₂</text>
+            <text x="354" y="119" text-anchor="middle" fill="currentColor" stroke="none" font-size="10">∇ at z₀</text>
+            <text x="406" y="119" text-anchor="middle" fill="currentColor" stroke="none" font-size="10">∇ at z₁</text>
+            <text x="458" y="119" text-anchor="middle" fill="currentColor" stroke="none" font-size="10">∇ at z₂</text>
             <text x="491" y="119" text-anchor="middle" fill="currentColor" stroke="none" font-size="10">…</text>
-            <text x="526" y="119" text-anchor="middle" fill="currentColor" stroke="none" font-size="10">∇ at Z<tspan baseline-shift="sub" font-size="8">E</tspan></text>
+            <text x="526" y="119" text-anchor="middle" fill="currentColor" stroke="none" font-size="10">∇ at z<tspan baseline-shift="sub" font-size="8">E</tspan></text>
             <text x="440" y="150" text-anchor="middle" fill="currentColor" stroke="none" font-size="11">つなげたものが例 q の勾配の軌跡 G(q)</text>
             <g stroke="currentColor" opacity="0.55">
               <rect x="350" y="168" width="180" height="12" rx="2"/><rect x="350" y="186" width="180" height="12" rx="2"/>
               <rect x="350" y="204" width="180" height="12" rx="2"/>
             </g>
             <text x="440" y="236" text-anchor="middle" fill="currentColor" stroke="none" font-size="11">G(q₁), G(q₂), …, G(q<tspan dy="3" font-size="8">N</tspan><tspan dy="-3">)</tspan></text>
-            <text x="440" y="252" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.7" font-size="11">「この例で学習すると Z がどう動くか」の要約</text>
+            <text x="440" y="252" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.7" font-size="11">「この例で学習すると z がどう動くか」の要約</text>
 
             <path d="M576 140 L596 140" marker-end="url(#ar6)"/>
 
@@ -507,17 +508,39 @@ pre {
         </figure>
       </div>
     </div>
-  </div>
-  <div class="prose">
-    <p>例 <math><mi>q</mi></math> の勾配の軌跡と，選ぶ集合は次のとおりである（<math><msub><mi>D</mi><mi>N</mi></msub></math> は全候補，<math><msub><mi>D</mi><mi>n</mi></msub></math> は選ぶ <math><mi>n</mi></math> 件）．</p>
+  </div>  <div class="prose">
+    <p>
+      式で書く．凍結したモデル <math><msub><mi>p</mi><mi>θ</mi></msub></math> の入力に潜在 <math><mi>z</mi></math> を足し，例 <math><mi>q</mi><mo>=</mo><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math> の正解の尤度が上がるように <math><mi>z</mi></math> だけを学習する．
+      <math><msub><mi>z</mi><mn>0</mn></msub><mo>,</mo><mo>…</mo><mo>,</mo><msub><mi>z</mi><mi>E</mi></msub></math> は各エポック後の潜在である．
+    </p>
+    <math display="block" class="eq">
+      <mrow>
+        <mi mathvariant="script">L</mi><mo>(</mo><mi>z</mi><mo>;</mo><mi>q</mi><mo>)</mo>
+        <mo>=</mo>
+        <mo>−</mo><mi>log</mi><mo>&#x2061;</mo><msub><mi>p</mi><mi>θ</mi></msub><mo>(</mo><mi>y</mi><mo>∣</mo><mi>z</mi><mo>,</mo><mi>x</mi><mo>)</mo>
+        <mo>,</mo><mspace width="1.2em"/>
+        <msub><mi>z</mi><mrow><mi>e</mi><mo>+</mo><mn>1</mn></mrow></msub>
+        <mo>=</mo>
+        <msub><mi>z</mi><mi>e</mi></msub>
+        <mo>−</mo>
+        <mi>η</mi><mspace width="0.15em"/>
+        <msub><mo>∇</mo><mi>z</mi></msub>
+        <munder><mi mathvariant="double-struck">E</mi><mrow><mi>q</mi><mo>∈</mo><msub><mi>D</mi><mi>N</mi></msub></mrow></munder>
+        <mo>[</mo><mi mathvariant="script">L</mi><mo>(</mo><msub><mi>z</mi><mi>e</mi></msub><mo>;</mo><mi>q</mi><mo>)</mo><mo>]</mo>
+      </mrow>
+    </math>
+    <p>
+      Chronos-2 は尤度ではなく分位点を出すので，ここでは <math><mo>−</mo><mi>log</mi><mo>&#x2061;</mo><msub><mi>p</mi><mi>θ</mi></msub></math> の代わりに分位点損失（学習時と同じ）を使う．
+      この損失を使って，例 <math><mi>q</mi></math> の勾配の軌跡と，選ぶ集合を次のように定める．
+    </p>
     <math display="block" class="eq">
       <mrow>
         <msub><mi>G</mi><mrow><mn>0</mn><mo>:</mo><mi>E</mi></mrow></msub><mo>(</mo><mi>q</mi><mo>)</mo>
         <mo>=</mo>
         <mo>[</mo>
-        <msub><mo>∇</mo><mi>Z</mi></msub><mi mathvariant="script">L</mi><mo>(</mo><mi>Z</mi><mo>;</mo><mi>q</mi><mo>)</mo><msub><mo>|</mo><mrow><mi>Z</mi><mo>=</mo><msub><mi>Z</mi><mn>0</mn></msub></mrow></msub>
+        <msub><mo>∇</mo><mi>z</mi></msub><mi mathvariant="script">L</mi><mo>(</mo><mi>z</mi><mo>;</mo><mi>q</mi><mo>)</mo><msub><mo>|</mo><mrow><mi>z</mi><mo>=</mo><msub><mi>z</mi><mn>0</mn></msub></mrow></msub>
         <mo>;</mo><mo>…</mo><mo>;</mo>
-        <msub><mo>∇</mo><mi>Z</mi></msub><mi mathvariant="script">L</mi><mo>(</mo><mi>Z</mi><mo>;</mo><mi>q</mi><mo>)</mo><msub><mo>|</mo><mrow><mi>Z</mi><mo>=</mo><msub><mi>Z</mi><mi>E</mi></msub></mrow></msub>
+        <msub><mo>∇</mo><mi>z</mi></msub><mi mathvariant="script">L</mi><mo>(</mo><mi>z</mi><mo>;</mo><mi>q</mi><mo>)</mo><msub><mo>|</mo><mrow><mi>z</mi><mo>=</mo><msub><mi>z</mi><mi>E</mi></msub></mrow></msub>
         <mo>]</mo>
       </mrow>
     </math>
@@ -540,43 +563,15 @@ pre {
         </msub>
       </mrow>
     </math>
-
-    <h3>なぜ CLG を使うか</h3>
-    <div class="branch">
-      <div><span class="cond">共通セット向け</span><span class="then">全クエリに使い回す 1 つのセットを選ぶための手法で，4〜128 件（一部 1024 件）の many-shot で評価されている．
-        既存の task-level の選び方（強化学習やベイズ的な選択）は数件の規模でしか試されていない</span></div>
-      <div><span class="cond">集合として選ぶ</span><span class="then">1 件ずつ点数をつけて上位を取るのではなく，選んだ集合の平均を全体に合わせる．
-        似た事例ばかりが重なる冗長さを自然に避けられる</span></div>
-      <div><span class="cond">モデルが使う信号</span><span class="then">似ているかどうかといった外から決めた指標ではなく，モデル自身の損失の勾配で選ぶ．
-        本ノートの 3 節で見たとおり，外から決めた類似度（文脈の近さ）は未来の近さとほとんど関係しない</span></div>
-      <div><span class="cond">LLM での実績</span><span class="then">128-shot で，ランダムな共通セットを平均約 4% 上回る（Llama3-70B，Qwen2.5-72B，9 データセット）．
-        選択そのものは数分で終わる</span></div>
-    </div>
-
-    <h3>CLG の足りない点</h3>
     <p>
-      CLG は潜在を<strong>入力の先頭に連結</strong>して学習する．元論文は注意の経路を論じていないが，
-      先頭の潜在が後ろのトークンに届く経路はトークン列に沿った自己注意だけであり，Chronos-2 でこれに当たるのは時間方向の注意（time attention）である，
-      というのがこのノートの解釈である．LLM ではこれが事例の読まれ方そのものなので問題ない．しかしこのノートの容れ物では，事例は<strong>並列の行</strong>として渡され，
-      系列間の注意（group attention）を通して読まれる．
+      選んだ理由は，全クエリ共通のセットを many-shot で選ぶために作られていること，集合として選ぶので似た例が重なりにくいこと，
+      LLM の 128-shot でランダムより約 4% 良かったことである．
     </p>
-    <div class="branch">
-      <div><span class="cond">通り道がずれる</span><span class="then">CLG の勾配は「先頭に連結した事例から何を受け取りたいか」を表す．
-        ところが推論では，事例は並列の行から読まれる．選ぶときの信号と，推論で事例が読まれる経路が一致しない</span></div>
-      <div><span class="cond">連結の経路は事例を読まない</span><span class="then">本ノートの 2 節で見たとおり，連結では実在の窓の未来はほとんど使われない（未来照合で並列 −18.7%，連結 −2.4%）．
-        CLG は，推論では使わない経路の信号で選んでいることになる</span></div>
-      <div><span class="cond">1 本の系列に見える</span><span class="then">連結では潜在と履歴が 1 本につながり，正規化も時刻の扱いも共有される．
-        潜在が「参照する事例」なのか「履歴の続き」なのかが区別されないまま勾配が取られる</span></div>
-    </div>
-
     <h3>Parallel-CLG</h3>
     <p>
-      そこで<strong>潜在を，実在の事例が入るのと同じ場所に置く</strong>．潜在 <math><mi>Z</mi></math> を K 本の「仮想の事例」とし，
-      それぞれを並列の共変量の行として入力する．文脈部分は履歴の末尾 96 点の位置に，未来部分は予測する 64 点の位置に載る．
-      勾配は group attention を通ってクエリから潜在に戻るので，
-      <math><msub><mi>G</mi><mrow><mn>0</mn><mo>:</mo><mi>E</mi></mrow></msub><mo>(</mo><mi>q</mi><mo>)</mo></math> は
-      「クエリ <math><mi>q</mi></math> が，並列の行から何を受け取りたいか」を表す．勾配の軌跡の作り方と選び方（上の 2 式）は CLG と同じで，
-      <strong>違うのは潜在の置き場所だけ</strong>である．
+      元の CLG は潜在を入力の前に<strong>連結</strong>する．しかしこのノートでは事例を<strong>並列</strong>の行として渡すので，
+      連結の潜在から取った勾配は，推論で事例が読まれる経路と合わない．
+      そこで潜在を，実在の事例と同じ並列の行に置いた（<strong>Parallel-CLG</strong>）．違いは潜在の置き場所だけである．
     </p>
   </div>
   <div class="wide">
@@ -584,7 +579,7 @@ pre {
       <div class="plate-body">
         <figure style="margin:0">
           <svg viewBox="0 0 880 400" role="img" style="max-width:100%;height:auto"
-               aria-label="上：CLG のように潜在 Z を履歴の前に連結すると，1 本の系列として time attention で読まれる．下：Parallel-CLG は潜在 Z を並列の行として置き，文脈を履歴の末尾，未来を予測区間の上にそろえ，group attention で同じ位置から読ませる．これは推論で実在の事例を渡すのと同じ置き方である．"
+               aria-label="上：CLG のように潜在 z を履歴の前に連結すると，1 本の系列として time attention で読まれる．下：Parallel-CLG は潜在 z を並列の行として置き，文脈を履歴の末尾，未来を予測区間の上にそろえ，group attention で同じ位置から読ませる．これは推論で実在の事例を渡すのと同じ置き方である．"
                fill="none" stroke="currentColor" font-family="inherit" font-size="12">
             <defs>
               <marker id="ar7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -599,10 +594,10 @@ pre {
 
             <text x="30" y="32" fill="currentColor" stroke="none" font-size="13" font-weight="700">CLG — 潜在を連結（1 行）</text>
             <rect x="60" y="48" width="100" height="32" rx="2" fill="var(--oracle-tint)" stroke="var(--oracle)" stroke-dasharray="5 3"/>
-            <text x="110" y="69" text-anchor="middle" fill="currentColor" stroke="none">潜在 Z₂</text>
+            <text x="110" y="69" text-anchor="middle" fill="currentColor" stroke="none">潜在 z₂</text>
             <rect x="164" y="48" width="12" height="32" rx="2" opacity="0.5"/>
             <rect x="180" y="48" width="100" height="32" rx="2" fill="var(--oracle-tint)" stroke="var(--oracle)" stroke-dasharray="5 3"/>
-            <text x="230" y="69" text-anchor="middle" fill="currentColor" stroke="none">潜在 Z₁</text>
+            <text x="230" y="69" text-anchor="middle" fill="currentColor" stroke="none">潜在 z₁</text>
             <rect x="284" y="48" width="12" height="32" rx="2" opacity="0.5"/>
             <rect x="300" y="48" width="400" height="32" rx="2" fill="var(--accent-tint)" stroke="var(--accent)"/>
             <text x="500" y="69" text-anchor="middle" fill="currentColor" stroke="none">クエリの履歴</text>
@@ -622,15 +617,15 @@ pre {
             <rect x="60" y="252" width="520" height="26" rx="2" stroke-dasharray="2 4" opacity="0.35"/>
             <text x="320" y="270" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.55" font-size="11">（値なし）</text>
             <rect x="580" y="252" width="120" height="26" rx="2" fill="var(--oracle-tint)" stroke="var(--oracle)" stroke-dasharray="5 3"/>
-            <text x="640" y="270" text-anchor="middle" fill="currentColor" stroke="none" font-size="11">潜在 Z₁ 文脈</text>
+            <text x="640" y="270" text-anchor="middle" fill="currentColor" stroke="none" font-size="11">潜在 z₁ 文脈</text>
             <rect x="700" y="252" width="150" height="26" rx="2" fill="var(--oracle-tint)" stroke="var(--oracle)" stroke-dasharray="5 3"/>
-            <text x="775" y="270" text-anchor="middle" fill="currentColor" stroke="none" font-size="11">潜在 Z₁ 未来</text>
+            <text x="775" y="270" text-anchor="middle" fill="currentColor" stroke="none" font-size="11">潜在 z₁ 未来</text>
 
             <rect x="60" y="290" width="520" height="26" rx="2" stroke-dasharray="2 4" opacity="0.35"/>
             <rect x="580" y="290" width="120" height="26" rx="2" fill="var(--oracle-tint)" stroke="var(--oracle)" stroke-dasharray="5 3"/>
-            <text x="640" y="308" text-anchor="middle" fill="currentColor" stroke="none" font-size="11">潜在 Z₂ 文脈</text>
+            <text x="640" y="308" text-anchor="middle" fill="currentColor" stroke="none" font-size="11">潜在 z₂ 文脈</text>
             <rect x="700" y="290" width="150" height="26" rx="2" fill="var(--oracle-tint)" stroke="var(--oracle)" stroke-dasharray="5 3"/>
-            <text x="775" y="308" text-anchor="middle" fill="currentColor" stroke="none" font-size="11">潜在 Z₂ 未来</text>
+            <text x="775" y="308" text-anchor="middle" fill="currentColor" stroke="none" font-size="11">潜在 z₂ 未来</text>
             <text x="640" y="334" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.5">⋮</text>
             <text x="775" y="334" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.5">⋮</text>
 
@@ -646,19 +641,8 @@ pre {
         </figure>
       </div>
     </div>
-  </div>
-  <div class="prose">
-    <h3>Parallel-CLG を使う理由</h3>
-    <div class="branch">
-      <div><span class="cond">通り道を揃える</span><span class="then">選ぶときの信号が，推論で事例が読まれるのと同じ経路（group attention）を通る．
-        「このクエリが並列の事例から何を受け取りたいか」をそのまま測れる</span></div>
-      <div><span class="cond">扱いを揃える</span><span class="then">潜在の行は，実在の事例と同じく行ごとに正規化され，文脈は履歴の末尾，未来は予測区間の上に置かれる．
-        潜在が履歴の続きと混ざらない</span></div>
-      <div><span class="cond">中身が読まれる経路</span><span class="then">本ノート 4 節の未来の入れ替え（E5）で，並列ではモデルが事例の文脈と未来の対応を使っていることを確かめた．
-        その対応を読む経路の勾配で選ぶので，選んだ事例の中身が推論で活きることが期待できる</span></div>
-      <div><span class="cond">比較がきれい</span><span class="then">CLG との違いは潜在の置き場所だけである．CLG と Parallel-CLG を比べれば，
-        「信号の通り道を推論に揃えること」の効果だけを取り出せる</span></div>
-    </div>
+  </div>  <div class="prose">
+    <p>設定は次のとおり．CLG と Parallel-CLG は，潜在の置き場所以外をそろえた．</p>
   </div>
   <div class="wide">
     <div class="plate">
@@ -667,7 +651,7 @@ pre {
           <thead><tr><th class="lbl">項目</th><th style="text-align:left">元の CLG（論文）</th><th style="text-align:left">このノートの CLG</th><th style="text-align:left">Parallel-CLG（提案）</th></tr></thead>
           <tbody>
             <tr><td class="lbl">潜在</td><td style="text-align:left">埋め込み空間のトークン 4 個</td>
-              <td style="text-align:left" colspan="2">値の空間の窓 K=8 本（1 本 160 点，実在の事例と同じ形）．Z = 平均 + 標準偏差 × U で，U を学習する</td></tr>
+              <td style="text-align:left" colspan="2">値の空間の窓 K=8 本（1 本 160 点，実在の事例と同じ形）．z = 平均 + 標準偏差 × U で，U を学習する</td></tr>
             <tr><td class="lbl">潜在の置き場所</td><td style="text-align:left">入力の先頭</td><td style="text-align:left">履歴の前に連結（区切り 16 点）</td><td style="text-align:left">並列の共変量の行</td></tr>
             <tr><td class="lbl">初期値</td><td style="text-align:left" colspan="3">ランダム（U ~ N(0, 1)）．CLG と Parallel-CLG は同じ初期値</td></tr>
             <tr><td class="lbl">損失</td><td style="text-align:left">正解トークンの負の対数尤度</td><td style="text-align:left" colspan="2">Chronos-2 の分位点損失（学習時と同じ）</td></tr>
@@ -682,26 +666,89 @@ pre {
         値の空間の窓を潜在にしたのは，選ぶ対象（実在の窓）と同じ形にするためである．実装は <code>codes/clg.py</code>（潜在の学習と勾配）と <code>codes/selection.py</code>（選択）．
       </div>
     </div>
-  </div>
+  </div></section>
+
+<!-- ============================== 2 -->
+<section>
   <div class="prose">
-    <div class="callout amber">
-      <span class="lead">確かめること・主張しないこと</span>
-      <p>
-        確かめること：Parallel-CLG がランダム共通セットを seed のばらつき（K=32 で ±0.5%）を明確に超えて上回るか．CLG を上回るか．
-        MSE だけでなく MAE と QL も改善するか．val で K を決めてから test を出す．
-      </p>
-      <p>
-        主張しないこと：CLG の「ICL とファインチューニングに必要なデータは似ている」は元論文でも仮説であり，理論的な保証ではない．
-        また Chronos-2 の並列では事例の中間表現がクエリごとに変わるため，共通セットでも LLM のような計算の使い回しは効かず，
-        task-level だから軽い，とは言えない．
-      </p>
+    <div class="sec-head"><span class="sec-num">2</span><h2>結果</h2></div>
+    <h3>ランダムとの比較：ほぼ同じ</h3>
+    <p>全 7 チャネルで潜在を学習し，選んだ窓を並列の共通セットとして val で評価した．</p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body">
+        <figure style="margin:0">
+          <div class="legend"><span><svg width="28" height="12" aria-hidden="true"><circle cx="14" cy="6" r="4" fill="var(--ink-faint)" stroke="var(--ink-faint)" stroke-width="2"/></svg>ランダム（平均 ± 標準偏差）</span><span><svg width="28" height="12" aria-hidden="true"><circle cx="14" cy="6" r="4" fill="var(--series-2)" stroke="var(--series-2)" stroke-width="2"/></svg>CLG</span><span><svg width="28" height="12" aria-hidden="true"><circle cx="14" cy="6" r="4" fill="var(--series-1)" stroke="var(--series-1)" stroke-width="2"/></svg>Parallel-CLG（L2）</span></div>
+          <svg viewBox="0 0 880 306" role="img" style="max-width:100%;height:auto"
+               aria-label="CLG と Parallel-CLG の MSE・MAE は，どの K でもランダムの平均 ± 標準偏差の近くにある．勾配の平均から最も遠いセット（逆）は K=128 ではっきり悪い．" fill="none" font-family="inherit" font-size="12">
+            <text x="64" y="22" fill="var(--ink)" stroke="none" font-size="13" font-weight="700">MSE</text>
+            <line x1="64" y1="208.4" x2="424" y2="208.4" stroke="var(--rule-soft)"/>
+            <text x="58" y="212.4" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.515</text>
+            <line x1="64" y1="164.3" x2="424" y2="164.3" stroke="var(--rule-soft)"/>
+            <text x="58" y="168.3" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.520</text>
+            <line x1="64" y1="120.3" x2="424" y2="120.3" stroke="var(--rule-soft)"/>
+            <text x="58" y="124.3" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.525</text>
+            <line x1="64" y1="76.3" x2="424" y2="76.3" stroke="var(--rule-soft)"/>
+            <text x="58" y="80.3" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.530</text>
+            <line x1="64" y1="250" x2="424" y2="250" stroke="var(--rule)"/>
+            <text x="124.0" y="268" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="11">K=32</text>
+            <text x="244.0" y="268" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="11">K=128</text>
+            <text x="364.0" y="268" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="11">K=256</text>
+            <line x1="64" y1="116.6" x2="424" y2="116.6" stroke="var(--ink-soft)" stroke-dasharray="5 4"/>
+            <text x="424" y="110.6" text-anchor="end" fill="var(--ink-soft)" stroke="none" font-size="10.5">参照なし 0.5254</text>
+            <line x1="108.0" y1="214.2" x2="108.0" y2="166.7" stroke="var(--ink-faint)" stroke-width="1.5"/>
+            <circle cx="108.0" cy="190.4" r="5" fill="var(--ink-faint)" stroke="var(--ink-faint)" stroke-width="2"><title>ランダム K=32：MSE 0.5170 ± 0.0027（25 seed）</title></circle>
+            <circle cx="124.0" cy="209.3" r="5" fill="var(--series-2)" stroke="var(--series-2)" stroke-width="2"><title>CLG K=32：MSE 0.5149（ランダム比 -0.4%）</title></circle>
+            <circle cx="140.0" cy="211.5" r="5" fill="var(--series-1)" stroke="var(--series-1)" stroke-width="2"><title>Parallel-CLG（L2） K=32：MSE 0.5146（ランダム比 -0.5%）</title></circle>
+            <line x1="228.0" y1="230.1" x2="228.0" y2="207.9" stroke="var(--ink-faint)" stroke-width="1.5"/>
+            <circle cx="228.0" cy="219.0" r="5" fill="var(--ink-faint)" stroke="var(--ink-faint)" stroke-width="2"><title>ランダム K=128：MSE 0.5138 ± 0.0013（5 seed）</title></circle>
+            <circle cx="244.0" cy="212.8" r="5" fill="var(--series-2)" stroke="var(--series-2)" stroke-width="2"><title>CLG K=128：MSE 0.5145（ランダム比 +0.1%）</title></circle>
+            <circle cx="260.0" cy="201.3" r="5" fill="var(--series-1)" stroke="var(--series-1)" stroke-width="2"><title>Parallel-CLG（L2） K=128：MSE 0.5158（ランダム比 +0.4%）</title></circle>
+            <line x1="348.0" y1="220.5" x2="348.0" y2="204.1" stroke="var(--ink-faint)" stroke-width="1.5"/>
+            <circle cx="348.0" cy="212.3" r="5" fill="var(--ink-faint)" stroke="var(--ink-faint)" stroke-width="2"><title>ランダム K=256：MSE 0.5146 ± 0.0009（5 seed）</title></circle>
+            <circle cx="364.0" cy="218.9" r="5" fill="var(--series-2)" stroke="var(--series-2)" stroke-width="2"><title>CLG K=256：MSE 0.5138（ランダム比 -0.1%）</title></circle>
+            <circle cx="380.0" cy="221.3" r="5" fill="var(--series-1)" stroke="var(--series-1)" stroke-width="2"><title>Parallel-CLG（L2） K=256：MSE 0.5135（ランダム比 -0.2%）</title></circle>
+            <path d="M277.0 58.9 L287.0 68.9 M277.0 68.9 L287.0 58.9" stroke="var(--ink-soft)" stroke-width="2"><title>Parallel-CLG の逆 K=128：MSE 0.5314（ランダム比 +3.4%）</title></path>
+            <text x="291.0" y="67.9" fill="var(--ink-soft)" stroke="none" font-size="10.5">逆 0.5314</text>
+            <text x="504" y="22" fill="var(--ink)" stroke="none" font-size="13" font-weight="700">MAE</text>
+            <line x1="504" y1="212.7" x2="864" y2="212.7" stroke="var(--rule-soft)"/>
+            <text x="498" y="216.7" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.465</text>
+            <line x1="504" y1="158.6" x2="864" y2="158.6" stroke="var(--rule-soft)"/>
+            <text x="498" y="162.6" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.470</text>
+            <line x1="504" y1="104.6" x2="864" y2="104.6" stroke="var(--rule-soft)"/>
+            <text x="498" y="108.6" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.475</text>
+            <line x1="504" y1="50.5" x2="864" y2="50.5" stroke="var(--rule-soft)"/>
+            <text x="498" y="54.5" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.480</text>
+            <line x1="504" y1="250" x2="864" y2="250" stroke="var(--rule)"/>
+            <text x="564.0" y="268" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="11">K=32</text>
+            <text x="684.0" y="268" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="11">K=128</text>
+            <text x="804.0" y="268" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="11">K=256</text>
+            <line x1="504" y1="230.1" x2="864" y2="230.1" stroke="var(--ink-soft)" stroke-dasharray="5 4"/>
+            <text x="864" y="224.1" text-anchor="end" fill="var(--ink-soft)" stroke="none" font-size="10.5">参照なし 0.4634</text>
+            <line x1="548.0" y1="174.5" x2="548.0" y2="145.0" stroke="var(--ink-faint)" stroke-width="1.5"/>
+            <circle cx="548.0" cy="159.8" r="5" fill="var(--ink-faint)" stroke="var(--ink-faint)" stroke-width="2"><title>ランダム K=32：MAE 0.4699 ± 0.0014（25 seed）</title></circle>
+            <circle cx="564.0" cy="163.3" r="5" fill="var(--series-2)" stroke="var(--series-2)" stroke-width="2"><title>CLG K=32：MAE 0.4696（ランダム比 -0.1%）</title></circle>
+            <circle cx="580.0" cy="169.4" r="5" fill="var(--series-1)" stroke="var(--series-1)" stroke-width="2"><title>Parallel-CLG（L2） K=32：MAE 0.4690（ランダム比 -0.2%）</title></circle>
+            <line x1="668.0" y1="180.4" x2="668.0" y2="164.4" stroke="var(--ink-faint)" stroke-width="1.5"/>
+            <circle cx="668.0" cy="172.4" r="5" fill="var(--ink-faint)" stroke="var(--ink-faint)" stroke-width="2"><title>ランダム K=128：MAE 0.4687 ± 0.0007（5 seed）</title></circle>
+            <circle cx="684.0" cy="157.2" r="5" fill="var(--series-2)" stroke="var(--series-2)" stroke-width="2"><title>CLG K=128：MAE 0.4701（ランダム比 +0.3%）</title></circle>
+            <circle cx="700.0" cy="161.6" r="5" fill="var(--series-1)" stroke="var(--series-1)" stroke-width="2"><title>Parallel-CLG（L2） K=128：MAE 0.4697（ランダム比 +0.2%）</title></circle>
+            <line x1="788.0" y1="175.1" x2="788.0" y2="158.0" stroke="var(--ink-faint)" stroke-width="1.5"/>
+            <circle cx="788.0" cy="166.5" r="5" fill="var(--ink-faint)" stroke="var(--ink-faint)" stroke-width="2"><title>ランダム K=256：MAE 0.4693 ± 0.0008（5 seed）</title></circle>
+            <circle cx="804.0" cy="162.1" r="5" fill="var(--series-2)" stroke="var(--series-2)" stroke-width="2"><title>CLG K=256：MAE 0.4697（ランダム比 +0.1%）</title></circle>
+            <circle cx="820.0" cy="165.5" r="5" fill="var(--series-1)" stroke="var(--series-1)" stroke-width="2"><title>Parallel-CLG（L2） K=256：MAE 0.4694（ランダム比 +0.0%）</title></circle>
+            <path d="M717.0 58.9 L727.0 68.9 M717.0 68.9 L727.0 58.9" stroke="var(--ink-soft)" stroke-width="2"><title>Parallel-CLG の逆 K=128：MAE 0.4788（ランダム比 +2.1%）</title></path>
+            <text x="731.0" y="67.9" fill="var(--ink-soft)" stroke="none" font-size="10.5">逆 0.4788</text>
+            <text x="440" y="292" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="11.5">灰色はランダム（平均 ± 標準偏差），破線は参照なし．低いほど良い</text>
+          </svg>
+          <figcaption class="plate-cap" style="border:0;background:none;padding:14px 0 0">
+            <b>CLG と Parallel-CLG はランダムのばらつきの中．逆（×）だけがはっきり悪い</b>
+            点にカーソルを合わせると値とランダム比が出る．数値は下の表．
+          </figcaption>
+        </figure>
+      </div>
     </div>
-  </div>
-  <div class="prose">
-    <h3>結果：ランダムと区別できない</h3>
-    <p>
-      全 7 チャネルで，CLG と Parallel-CLG の潜在をそれぞれ学習し（潜在 8 本，10 エポック），選んだ窓を並列の共通セットとして val で評価した．
-    </p>
   </div>
   <div class="wide">
     <div class="plate">
@@ -709,13 +756,13 @@ pre {
         <table>
           <thead>
             <tr><th class="lbl" rowspan="2">val（全 7 チャネル，並列）</th>
-              <th colspan="3" style="text-align:center">MSE（参照なし 0.5254）</th><th colspan="3" style="text-align:center">QL（参照なし 0.1852）</th></tr>
-            <tr><th>ランダム（平均）</th><th>CLG</th><th>Parallel-CLG</th><th>ランダム（平均）</th><th>CLG</th><th>Parallel-CLG</th></tr>
+              <th colspan="3" style="text-align:center">MSE（参照なし 0.5254）</th></tr>
+            <tr><th>ランダム（平均）</th><th>CLG</th><th>Parallel-CLG</th></tr>
           </thead>
           <tbody>
-            <tr><td class="lbl">K=32</td><td>0.5170</td><td>0.5149（−0.4%）</td><td>0.5146（−0.5%）</td><td>0.1870</td><td>0.1869（±0.0%）</td><td>0.1866（−0.2%）</td></tr>
-            <tr><td class="lbl">K=128</td><td>0.5138</td><td>0.5145（+0.1%）</td><td>0.5158（+0.4%）</td><td>0.1867</td><td>0.1874（+0.3%）</td><td>0.1872（+0.2%）</td></tr>
-            <tr><td class="lbl">K=256</td><td>0.5146</td><td>0.5138（−0.1%）</td><td>0.5135（−0.2%）</td><td>0.1871</td><td>0.1873（+0.1%）</td><td>0.1873（+0.1%）</td></tr>
+            <tr><td class="lbl">K=32</td><td>0.5170</td><td>0.5149（−0.4%）</td><td>0.5146（−0.5%）</td></tr>
+            <tr><td class="lbl">K=128</td><td>0.5138</td><td>0.5145（+0.1%）</td><td>0.5158（+0.4%）</td></tr>
+            <tr><td class="lbl">K=256</td><td>0.5146</td><td>0.5138（−0.1%）</td><td>0.5135（−0.2%）</td></tr>
           </tbody>
         </table>
       </div>
@@ -723,45 +770,123 @@ pre {
         <table>
           <thead>
             <tr><th class="lbl" rowspan="2">val（全 7 チャネル，並列）</th>
-              <th colspan="3" style="text-align:center">MAE（参照なし 0.4634）</th><th colspan="3" style="text-align:center">80% 区間の的中率（参照なし 0.739，理想 0.80）</th></tr>
-            <tr><th>ランダム（平均）</th><th>CLG</th><th>Parallel-CLG</th><th>ランダム（平均）</th><th>CLG</th><th>Parallel-CLG</th></tr>
+              <th colspan="3" style="text-align:center">MAE（参照なし 0.4634）</th></tr>
+            <tr><th>ランダム（平均）</th><th>CLG</th><th>Parallel-CLG</th></tr>
           </thead>
           <tbody>
-            <tr><td class="lbl">K=32</td><td>0.4699</td><td>0.4696（−0.1%）</td><td>0.4690（−0.2%）</td><td>0.828</td><td>0.830（+0.1 pt）</td><td>0.837（+0.8 pt）</td></tr>
-            <tr><td class="lbl">K=128</td><td>0.4687</td><td>0.4701（+0.3%）</td><td>0.4697（+0.2%）</td><td>0.847</td><td>0.852（+0.5 pt）</td><td>0.851（+0.4 pt）</td></tr>
-            <tr><td class="lbl">K=256</td><td>0.4693</td><td>0.4697（+0.1%）</td><td>0.4694（±0.0%）</td><td>0.851</td><td>0.853（+0.2 pt）</td><td>0.855（+0.5 pt）</td></tr>
+            <tr><td class="lbl">K=32</td><td>0.4699</td><td>0.4696（−0.1%）</td><td>0.4690（−0.2%）</td></tr>
+            <tr><td class="lbl">K=128</td><td>0.4687</td><td>0.4701（+0.3%）</td><td>0.4697（+0.2%）</td></tr>
+            <tr><td class="lbl">K=256</td><td>0.4693</td><td>0.4697（+0.1%）</td><td>0.4694（±0.0%）</td></tr>
           </tbody>
         </table>
       </div>
       <div class="plate-cap">
         <b>CLG と Parallel-CLG はランダムとほぼ同じ．勾配の平均から最も遠いセットは，はっきり悪い</b>
-        数値は MSE・MAE・QL（小さいほど良い）と 80% 区間の的中率．括弧内はランダム（K=32 は 25 本，K=128・256 は 5 本の平均）との比で，
-        マイナスならランダムより良い．的中率の括弧内はランダムとの差（ポイント）．
-        Parallel-CLG の逆（勾配の平均から最も遠いセット）は K=128 で MSE 0.5314（+3.4%），MAE 0.4788（+2.1%），QL 0.1914（+2.5%），的中率 0.857 で，ランダムよりはっきり悪い．
-        CLG と Parallel-CLG のランダムとの差は ±0.5% 以内で，K によって向きも変わり，一貫した優位はない．
-        どの選び方でも MAE と QL は参照なしより悪く，80% 区間は広がりすぎる（理想は 0.80）．
+        小さいほど良い．括弧内はランダム（K=32 は 25 本，K=128・256 は 5 本の平均）との比で，マイナスならランダムより良い．
+        Parallel-CLG はここでは L2（平均に合わせる）で選んだもの．
+        Parallel-CLG の逆（勾配の平均から最も遠いセット）は K=128 で MSE 0.5314（+3.4%），MAE 0.4788（+2.1%）で，ランダムよりはっきり悪い．
+        CLG と Parallel-CLG のランダムとの差は ±0.5% 以内で，K によって向きも変わり，一貫した優位はない．どの選び方でも MAE は参照なしより悪い．
       </div>
     </div>
-  </div>
-  <div class="prose">
-    <div class="callout">
-      <span class="lead">分かったこと</span>
-      <p>
-        <strong>勾配には信号があるが，「全体の平均勾配に合わせる」という目的では many-shot でランダムを超えられない．</strong>
-        最も遠いセット（元論文の逆の選択）は K=128 で QL がランダムより 2.5% 悪く（参照なしより 3.4% 悪い），OT を除く 6 チャネルすべてでランダムより悪い．悪いセットは勾配で見分けられている．
-        しかし，ランダムに選んだ n 件の平均勾配も，n が大きいほど全体の平均に近づく（ずれはおよそ <math><mn>1</mn><mo>/</mo><msqrt><mi>n</mi></msqrt></math>）．
-        many-shot では平均に合わせる目的がランダムでもほぼ満たされるため，選び方の差が出にくい．
-        「選ぶときの信号を推論の経路に揃える」こと（CLG と Parallel-CLG の違い）の効果も，この目的のままでは見えない．
-      </p>
-    </div>
-    <h3>合わせ方：平均との距離（L2）か，向きのそろい（コサイン）か</h3>
+  </div>  <div class="prose">
     <p>
-      CLG は，選んだ窓の平均勾配と全体の平均勾配の L2 距離を小さくする．代わりに，各窓の勾配の軌跡と全体の平均勾配のコサイン類似度で並べ，
-      上から選ぶ方法も試した．コサインが大きい窓は「その窓で潜在を学習すると，平均的なクエリの損失も下がる」窓である
-      （学習の各時点の勾配の内積を足す TracIn や，目標との勾配の類似度でデータを選ぶ LESS と同じ考え方）．
-      似た窓ばかり選ばれないよう，選んだ窓どうしの間隔に下限を設けた（K=32 で時間的に重ならない 15 本，K=128 で 4 本，K=256 で 2 本）．
-      CLG と Parallel-CLG の両方で，L2 とコサインを比べた．
+      CLG も Parallel-CLG も，ランダムとの差は ±0.5% 程度だった．
+      一方，勾配の平均から最も遠いセットを選ぶと，はっきり悪くなる．勾配で悪いセットは見分けられるが，良いセットは作れていない．
     </p>
+    <h3>選び方：平均に合わせる（L2）か，向きで選ぶ（コサイン）か</h3>
+    <p>
+      勾配の平均に合わせる代わりに，平均と向きがそろった窓（コサインが大きい窓）を上から選ぶ方法も試した．
+      似た窓ばかりにならないよう，選ぶ窓どうしの間隔に下限を付けた．
+    </p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body">
+        <figure style="margin:0">
+          <div class="legend"><span><svg width="28" height="12" aria-hidden="true"><circle cx="14" cy="6" r="4" fill="var(--ink-faint)" stroke="var(--ink-faint)" stroke-width="2"/></svg>ランダム</span><span><svg width="28" height="12" aria-hidden="true"><circle cx="14" cy="6" r="4" fill="var(--surface)" stroke="var(--series-2)" stroke-width="2"/></svg>CLG L2</span><span><svg width="28" height="12" aria-hidden="true"><circle cx="14" cy="6" r="4" fill="var(--series-2)" stroke="var(--series-2)" stroke-width="2"/></svg>CLG コサイン</span><span><svg width="28" height="12" aria-hidden="true"><circle cx="14" cy="6" r="4" fill="var(--surface)" stroke="var(--series-1)" stroke-width="2"/></svg>Parallel-CLG L2</span><span><svg width="28" height="12" aria-hidden="true"><circle cx="14" cy="6" r="4" fill="var(--series-1)" stroke="var(--series-1)" stroke-width="2"/></svg>Parallel-CLG コサイン</span></div>
+          <svg viewBox="0 0 880 306" role="img" style="max-width:100%;height:auto"
+               aria-label="合わせ方（L2・コサイン）別の MSE・MAE．MAE では Parallel-CLG のコサインだけが 3 つの K すべてでランダムより下にある．" fill="none" font-family="inherit" font-size="12">
+            <text x="64" y="22" fill="var(--ink)" stroke="none" font-size="13" font-weight="700">MSE</text>
+            <line x1="64" y1="230.5" x2="424" y2="230.5" stroke="var(--rule-soft)"/>
+            <text x="58" y="234.5" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.512</text>
+            <line x1="64" y1="198.3" x2="424" y2="198.3" stroke="var(--rule-soft)"/>
+            <text x="58" y="202.3" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.515</text>
+            <line x1="64" y1="166.1" x2="424" y2="166.1" stroke="var(--rule-soft)"/>
+            <text x="58" y="170.1" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.517</text>
+            <line x1="64" y1="133.9" x2="424" y2="133.9" stroke="var(--rule-soft)"/>
+            <text x="58" y="137.9" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.520</text>
+            <line x1="64" y1="101.7" x2="424" y2="101.7" stroke="var(--rule-soft)"/>
+            <text x="58" y="105.7" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.522</text>
+            <line x1="64" y1="69.4" x2="424" y2="69.4" stroke="var(--rule-soft)"/>
+            <text x="58" y="73.4" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.525</text>
+            <line x1="64" y1="250" x2="424" y2="250" stroke="var(--rule)"/>
+            <text x="124.0" y="268" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="11">K=32</text>
+            <text x="244.0" y="268" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="11">K=128</text>
+            <text x="364.0" y="268" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="11">K=256</text>
+            <line x1="64" y1="63.9" x2="424" y2="63.9" stroke="var(--ink-soft)" stroke-dasharray="5 4"/>
+            <text x="424" y="57.9" text-anchor="end" fill="var(--ink-soft)" stroke="none" font-size="10.5">参照なし 0.5254</text>
+            <line x1="92.0" y1="206.8" x2="92.0" y2="137.4" stroke="var(--ink-faint)" stroke-width="1.5"/>
+            <circle cx="92.0" cy="172.1" r="5" fill="var(--ink-faint)" stroke="var(--ink-faint)" stroke-width="2"><title>ランダム K=32：MSE 0.5170 ± 0.0027（25 seed）</title></circle>
+            <circle cx="108.0" cy="199.6" r="5" fill="var(--surface)" stroke="var(--series-2)" stroke-width="2"><title>CLG L2 K=32：MSE 0.5149（ランダム比 -0.4%）</title></circle>
+            <circle cx="124.0" cy="138.9" r="5" fill="var(--series-2)" stroke="var(--series-2)" stroke-width="2"><title>CLG コサイン K=32：MSE 0.5196（ランダム比 +0.5%）</title></circle>
+            <circle cx="140.0" cy="202.9" r="5" fill="var(--surface)" stroke="var(--series-1)" stroke-width="2"><title>Parallel-CLG L2 K=32：MSE 0.5146（ランダム比 -0.5%）</title></circle>
+            <circle cx="156.0" cy="159.6" r="5" fill="var(--series-1)" stroke="var(--series-1)" stroke-width="2"><title>Parallel-CLG コサイン K=32：MSE 0.5180（ランダム比 +0.2%）</title></circle>
+            <line x1="212.0" y1="230.1" x2="212.0" y2="197.6" stroke="var(--ink-faint)" stroke-width="1.5"/>
+            <circle cx="212.0" cy="213.9" r="5" fill="var(--ink-faint)" stroke="var(--ink-faint)" stroke-width="2"><title>ランダム K=128：MSE 0.5138 ± 0.0013（5 seed）</title></circle>
+            <circle cx="228.0" cy="204.7" r="5" fill="var(--surface)" stroke="var(--series-2)" stroke-width="2"><title>CLG L2 K=128：MSE 0.5145（ランダム比 +0.1%）</title></circle>
+            <circle cx="244.0" cy="195.0" r="5" fill="var(--series-2)" stroke="var(--series-2)" stroke-width="2"><title>CLG コサイン K=128：MSE 0.5153（ランダム比 +0.3%）</title></circle>
+            <circle cx="260.0" cy="187.9" r="5" fill="var(--surface)" stroke="var(--series-1)" stroke-width="2"><title>Parallel-CLG L2 K=128：MSE 0.5158（ランダム比 +0.4%）</title></circle>
+            <circle cx="276.0" cy="187.3" r="5" fill="var(--series-1)" stroke="var(--series-1)" stroke-width="2"><title>Parallel-CLG コサイン K=128：MSE 0.5159（ランダム比 +0.4%）</title></circle>
+            <line x1="332.0" y1="216.0" x2="332.0" y2="192.0" stroke="var(--ink-faint)" stroke-width="1.5"/>
+            <circle cx="332.0" cy="204.0" r="5" fill="var(--ink-faint)" stroke="var(--ink-faint)" stroke-width="2"><title>ランダム K=256：MSE 0.5146 ± 0.0009（5 seed）</title></circle>
+            <circle cx="348.0" cy="213.7" r="5" fill="var(--surface)" stroke="var(--series-2)" stroke-width="2"><title>CLG L2 K=256：MSE 0.5138（ランダム比 -0.1%）</title></circle>
+            <circle cx="364.0" cy="205.5" r="5" fill="var(--series-2)" stroke="var(--series-2)" stroke-width="2"><title>CLG コサイン K=256：MSE 0.5144（ランダム比 -0.0%）</title></circle>
+            <circle cx="380.0" cy="217.2" r="5" fill="var(--surface)" stroke="var(--series-1)" stroke-width="2"><title>Parallel-CLG L2 K=256：MSE 0.5135（ランダム比 -0.2%）</title></circle>
+            <circle cx="396.0" cy="210.1" r="5" fill="var(--series-1)" stroke="var(--series-1)" stroke-width="2"><title>Parallel-CLG コサイン K=256：MSE 0.5141（ランダム比 -0.1%）</title></circle>
+            <text x="504" y="22" fill="var(--ink)" stroke="none" font-size="13" font-weight="700">MAE</text>
+            <line x1="504" y1="217.2" x2="864" y2="217.2" stroke="var(--rule-soft)"/>
+            <text x="498" y="221.2" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.464</text>
+            <line x1="504" y1="175.0" x2="864" y2="175.0" stroke="var(--rule-soft)"/>
+            <text x="498" y="179.0" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.466</text>
+            <line x1="504" y1="132.8" x2="864" y2="132.8" stroke="var(--rule-soft)"/>
+            <text x="498" y="136.8" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.468</text>
+            <line x1="504" y1="90.6" x2="864" y2="90.6" stroke="var(--rule-soft)"/>
+            <text x="498" y="94.6" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.470</text>
+            <line x1="504" y1="48.4" x2="864" y2="48.4" stroke="var(--rule-soft)"/>
+            <text x="498" y="52.4" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.472</text>
+            <line x1="504" y1="250" x2="864" y2="250" stroke="var(--rule)"/>
+            <text x="564.0" y="268" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="11">K=32</text>
+            <text x="684.0" y="268" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="11">K=128</text>
+            <text x="804.0" y="268" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="11">K=256</text>
+            <line x1="504" y1="230.1" x2="864" y2="230.1" stroke="var(--ink-soft)" stroke-dasharray="5 4"/>
+            <text x="864" y="224.1" text-anchor="end" fill="var(--ink-soft)" stroke="none" font-size="10.5">参照なし 0.4634</text>
+            <line x1="532.0" y1="121.7" x2="532.0" y2="63.9" stroke="var(--ink-faint)" stroke-width="1.5"/>
+            <circle cx="532.0" cy="92.8" r="5" fill="var(--ink-faint)" stroke="var(--ink-faint)" stroke-width="2"><title>ランダム K=32：MAE 0.4699 ± 0.0014（25 seed）</title></circle>
+            <circle cx="548.0" cy="99.7" r="5" fill="var(--surface)" stroke="var(--series-2)" stroke-width="2"><title>CLG L2 K=32：MAE 0.4696（ランダム比 -0.1%）</title></circle>
+            <circle cx="564.0" cy="64.3" r="5" fill="var(--series-2)" stroke="var(--series-2)" stroke-width="2"><title>CLG コサイン K=32：MAE 0.4712（ランダム比 +0.3%）</title></circle>
+            <circle cx="580.0" cy="111.6" r="5" fill="var(--surface)" stroke="var(--series-1)" stroke-width="2"><title>Parallel-CLG L2 K=32：MAE 0.4690（ランダム比 -0.2%）</title></circle>
+            <circle cx="596.0" cy="148.3" r="5" fill="var(--series-1)" stroke="var(--series-1)" stroke-width="2"><title>Parallel-CLG コサイン K=32：MAE 0.4673（ランダム比 -0.6%）</title></circle>
+            <line x1="652.0" y1="133.2" x2="652.0" y2="101.9" stroke="var(--ink-faint)" stroke-width="1.5"/>
+            <circle cx="652.0" cy="117.5" r="5" fill="var(--ink-faint)" stroke="var(--ink-faint)" stroke-width="2"><title>ランダム K=128：MAE 0.4687 ± 0.0007（5 seed）</title></circle>
+            <circle cx="668.0" cy="87.9" r="5" fill="var(--surface)" stroke="var(--series-2)" stroke-width="2"><title>CLG L2 K=128：MAE 0.4701（ランダム比 +0.3%）</title></circle>
+            <circle cx="684.0" cy="92.4" r="5" fill="var(--series-2)" stroke="var(--series-2)" stroke-width="2"><title>CLG コサイン K=128：MAE 0.4699（ランダム比 +0.3%）</title></circle>
+            <circle cx="700.0" cy="96.4" r="5" fill="var(--surface)" stroke="var(--series-1)" stroke-width="2"><title>Parallel-CLG L2 K=128：MAE 0.4697（ランダム比 +0.2%）</title></circle>
+            <circle cx="716.0" cy="133.0" r="5" fill="var(--series-1)" stroke="var(--series-1)" stroke-width="2"><title>Parallel-CLG コサイン K=128：MAE 0.4680（ランダム比 -0.2%）</title></circle>
+            <line x1="772.0" y1="122.8" x2="772.0" y2="89.3" stroke="var(--ink-faint)" stroke-width="1.5"/>
+            <circle cx="772.0" cy="106.1" r="5" fill="var(--ink-faint)" stroke="var(--ink-faint)" stroke-width="2"><title>ランダム K=256：MAE 0.4693 ± 0.0008（5 seed）</title></circle>
+            <circle cx="788.0" cy="97.5" r="5" fill="var(--surface)" stroke="var(--series-2)" stroke-width="2"><title>CLG L2 K=256：MAE 0.4697（ランダム比 +0.1%）</title></circle>
+            <circle cx="804.0" cy="80.3" r="5" fill="var(--series-2)" stroke="var(--series-2)" stroke-width="2"><title>CLG コサイン K=256：MAE 0.4705（ランダム比 +0.3%）</title></circle>
+            <circle cx="820.0" cy="104.0" r="5" fill="var(--surface)" stroke="var(--series-1)" stroke-width="2"><title>Parallel-CLG L2 K=256：MAE 0.4694（ランダム比 +0.0%）</title></circle>
+            <circle cx="836.0" cy="139.4" r="5" fill="var(--series-1)" stroke="var(--series-1)" stroke-width="2"><title>Parallel-CLG コサイン K=256：MAE 0.4677（ランダム比 -0.3%）</title></circle>
+            <text x="440" y="292" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="11.5">灰色はランダム（平均 ± 標準偏差），破線は参照なし．低いほど良い</text>
+          </svg>
+          <figcaption class="plate-cap" style="border:0;background:none;padding:14px 0 0">
+            <b>MAE で Parallel-CLG のコサイン（青の塗り）だけが，どの K でもランダムより下</b>
+            点にカーソルを合わせると値とランダム比が出る．数値は下の表．
+          </figcaption>
+        </figure>
+      </div>
+    </div>
   </div>
   <div class="wide">
     <div class="plate">
@@ -785,55 +910,120 @@ pre {
           </tbody>
         </table>
       </div>
-      <div class="table-scroll" style="border-top:1px solid var(--rule)">
-        <table>
-          <thead><tr><th class="lbl">QL（参照なし 0.1852）</th><th>ランダム（平均）</th><th>CLG L2</th><th>CLG コサイン</th><th>Parallel-CLG L2</th><th>Parallel-CLG コサイン</th></tr></thead>
-          <tbody>
-            <tr><td class="lbl">K=32</td><td>0.1870</td><td>0.1869（±0.0%）</td><td>0.1876（+0.3%）</td><td>0.1866（−0.2%）</td><td>0.1865（−0.3%）</td></tr>
-            <tr><td class="lbl">K=128</td><td>0.1867</td><td>0.1874（+0.3%）</td><td>0.1875（+0.4%）</td><td>0.1872（+0.2%）</td><td>0.1866（−0.1%）</td></tr>
-            <tr><td class="lbl">K=256</td><td>0.1871</td><td>0.1873（+0.1%）</td><td>0.1877（+0.3%）</td><td>0.1873（+0.1%）</td><td>0.1866（−0.3%）</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="table-scroll" style="border-top:1px solid var(--rule)">
-        <table>
-          <thead><tr><th class="lbl">80% 区間の的中率<br>（理想 0.80，参照なし 0.739）</th><th>ランダム（平均）</th><th>CLG L2</th><th>CLG コサイン</th><th>Parallel-CLG L2</th><th>Parallel-CLG コサイン</th></tr></thead>
-          <tbody>
-            <tr><td class="lbl">K=32</td><td>0.828</td><td>0.830</td><td>0.837</td><td>0.837</td><td>0.811</td></tr>
-            <tr><td class="lbl">K=128</td><td>0.847</td><td>0.852</td><td>0.852</td><td>0.851</td><td>0.837</td></tr>
-            <tr><td class="lbl">K=256</td><td>0.851</td><td>0.853</td><td>0.855</td><td>0.855</td><td>0.842</td></tr>
-          </tbody>
-        </table>
-      </div>
       <div class="plate-cap">
-        <b>コサインで MAE・QL・区間が良くなるのは Parallel-CLG だけ．CLG ではむしろ少し悪くなる</b>
+        <b>コサインで MAE が良くなるのは Parallel-CLG だけ．CLG ではむしろ少し悪くなる</b>
         括弧内はランダム共通セット（K=32 は 25 本，K=128・256 は 5 本の平均）との比で，マイナスならランダムより良い．
-        Parallel-CLG のコサインは，MAE（−0.6%，−0.2%，−0.3%）と QL（−0.3%，−0.1%，−0.3%）が 3 つの K すべてでランダムより良く，区間も理想に近い．
-        CLG のコサインは，MAE・QL とも 3 つの K すべてでランダムより 0.3〜0.4% 悪い．MSE はどの組み合わせもランダムと同程度．
-        差は 0.1〜0.8% で，ランダムの seed によるばらつき（K=32 の QL で約 0.3%）と同程度だが，3 つの K で向きがそろっている．
+        Parallel-CLG のコサインは，MAE が 3 つの K すべてでランダムより良い（−0.6%，−0.2%，−0.3%）．
+        CLG のコサインは，MAE が 3 つの K すべてでランダムより 0.1〜0.3% 悪い．MSE はどの組み合わせもランダムと同程度．
+        差は小さく，ランダムの seed によるばらつきと同程度だが，3 つの K で向きがそろっている．
         この結果から，Parallel-CLG の既定の合わせ方をコサインにする（CLG は元論文どおり L2 のまま）．
       </div>
     </div>
-  </div>
-  <div class="prose">
-    <div class="callout">
-      <span class="lead">分かったこと</span>
-      <p>
-        <strong>潜在を並列に置いたときだけ，勾配の向きで選ぶと分布の当たり具合が良くなる．</strong>
-        同じコサインで選んでも，CLG（潜在を連結）では MAE・QL がランダムより悪く，Parallel-CLG（潜在を並列）では 3 つの K すべてで良い．
-        両者の違いは潜在の置き場所だけなので，「選ぶときの信号を推論の経路に揃える」ことの効果が，初めて結果に現れた
-        （Parallel-CLG のコサインは CLG のコサインより MAE が 0.4〜0.8%，QL が 0.5〜0.6% 良い）．
-        ただし効果は小さく，MAE と QL はまだ参照なしに届かない．
-      </p>
-    </div>
-  </div>
-  <div class="prose">
-    <h3>ハイブリッド：共通セットに文脈照合を足す</h3>
+  </div>  <div class="prose">
     <p>
-      元論文のハイブリッド（task-level の 128 件＋instance-level の 4 件）にならい，共通セットに，クエリごとの文脈照合の窓を足して並列に渡した．
-      文脈照合の窓は共通セットに入っていない窓から選ぶ．共通セットの件数（0 / 32 / 128）と文脈照合の件数（0 / 8 / 32 / 128）を独立に振った．
-      行に沿って読むと「文脈照合に共通セットを足すと良くなるか」，合計件数が近いもの同士を比べると「同じ行数でどう配分するか」が分かる．
+      コサインで選ぶと，Parallel-CLG だけ MAE がどの K でも少し良くなった．同じ選び方でも CLG では良くならない．
+      違いは潜在の置き場所だけなので，「選ぶ信号を推論の経路にそろえる」効果と言える．ただし差は小さい．
     </p>
+    <h3>文脈照合と組み合わせる（ハイブリッド）</h3>
+    <p>元論文にならい，共通セットにクエリごとの文脈照合の窓を足した．</p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body">
+        <figure style="margin:0">
+          <div class="legend"><span><svg width="28" height="12" aria-hidden="true"><line x1="1" y1="6" x2="27" y2="6" stroke="var(--ink)" stroke-width="2"/><circle cx="14" cy="6" r="4" fill="var(--ink)" stroke="var(--ink)" stroke-width="2"/></svg>共通セットなし</span><span><svg width="28" height="12" aria-hidden="true"><line x1="1" y1="6" x2="27" y2="6" stroke="var(--ink-faint)" stroke-width="2" stroke-dasharray="4 3"/><circle cx="14" cy="6" r="4" fill="var(--surface)" stroke="var(--ink-faint)" stroke-width="2"/></svg>共通 ランダム 32</span><span><svg width="28" height="12" aria-hidden="true"><line x1="1" y1="6" x2="27" y2="6" stroke="var(--ink-faint)" stroke-width="2"/><circle cx="14" cy="6" r="4" fill="var(--ink-faint)" stroke="var(--ink-faint)" stroke-width="2"/></svg>共通 ランダム 128</span><span><svg width="28" height="12" aria-hidden="true"><line x1="1" y1="6" x2="27" y2="6" stroke="var(--series-1)" stroke-width="2" stroke-dasharray="4 3"/><circle cx="14" cy="6" r="4" fill="var(--surface)" stroke="var(--series-1)" stroke-width="2"/></svg>共通 Parallel-CLG 32</span><span><svg width="28" height="12" aria-hidden="true"><line x1="1" y1="6" x2="27" y2="6" stroke="var(--series-1)" stroke-width="2"/><circle cx="14" cy="6" r="4" fill="var(--series-1)" stroke="var(--series-1)" stroke-width="2"/></svg>共通 Parallel-CLG 128</span></div>
+          <svg viewBox="0 0 880 306" role="img" style="max-width:100%;height:auto"
+               aria-label="文脈照合の件数ごとの MSE・MAE．文脈照合 0〜8 件では共通セットを足すと MSE が下がるが，32 件以上では線が重なり，128 件では共通セットなしが最も良い．" fill="none" font-family="inherit" font-size="12">
+            <text x="64" y="22" fill="var(--ink)" stroke="none" font-size="13" font-weight="700">MSE</text>
+            <line x1="64" y1="224.9" x2="424" y2="224.9" stroke="var(--rule-soft)"/>
+            <text x="58" y="228.9" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.510</text>
+            <line x1="64" y1="172.8" x2="424" y2="172.8" stroke="var(--rule-soft)"/>
+            <text x="58" y="176.8" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.515</text>
+            <line x1="64" y1="120.6" x2="424" y2="120.6" stroke="var(--rule-soft)"/>
+            <text x="58" y="124.6" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.520</text>
+            <line x1="64" y1="68.4" x2="424" y2="68.4" stroke="var(--rule-soft)"/>
+            <text x="58" y="72.4" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.525</text>
+            <line x1="64" y1="250" x2="424" y2="250" stroke="var(--rule)"/>
+            <text x="88.0" y="268" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="11">0</text>
+            <text x="192.0" y="268" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="11">8</text>
+            <text x="296.0" y="268" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="11">32</text>
+            <text x="400.0" y="268" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="11">128</text>
+            <path d="M88.0 63.9 L192.0 135.5 L296.0 204.5 L400.0 230.1" stroke="var(--ink)" stroke-width="2.5"/>
+            <circle cx="88.0" cy="63.9" r="4.5" fill="var(--ink)" stroke="var(--ink)" stroke-width="2"><title>共通セットなし，文脈照合 0：MSE 0.5254</title></circle>
+            <circle cx="192.0" cy="135.5" r="4.5" fill="var(--ink)" stroke="var(--ink)" stroke-width="2"><title>共通セットなし，文脈照合 8：MSE 0.5186</title></circle>
+            <circle cx="296.0" cy="204.5" r="4.5" fill="var(--ink)" stroke="var(--ink)" stroke-width="2"><title>共通セットなし，文脈照合 32：MSE 0.5120</title></circle>
+            <circle cx="400.0" cy="230.1" r="4.5" fill="var(--ink)" stroke="var(--ink)" stroke-width="2"><title>共通セットなし，文脈照合 128：MSE 0.5095</title></circle>
+            <path d="M88.0 110.6 L192.0 167.0 L296.0 195.1 L400.0 220.4" stroke="var(--ink-faint)" stroke-width="2" stroke-dasharray="5 4"/>
+            <circle cx="88.0" cy="110.6" r="4.5" fill="var(--surface)" stroke="var(--ink-faint)" stroke-width="2"><title>共通 ランダム 32，文脈照合 0：MSE 0.5210（共通セットなし比 -0.9%）</title></circle>
+            <circle cx="192.0" cy="167.0" r="4.5" fill="var(--surface)" stroke="var(--ink-faint)" stroke-width="2"><title>共通 ランダム 32，文脈照合 8：MSE 0.5156（共通セットなし比 -0.6%）</title></circle>
+            <circle cx="296.0" cy="195.1" r="4.5" fill="var(--surface)" stroke="var(--ink-faint)" stroke-width="2"><title>共通 ランダム 32，文脈照合 32：MSE 0.5129（共通セットなし比 +0.2%）</title></circle>
+            <circle cx="400.0" cy="220.4" r="4.5" fill="var(--surface)" stroke="var(--ink-faint)" stroke-width="2"><title>共通 ランダム 32，文脈照合 128：MSE 0.5104（共通セットなし比 +0.2%）</title></circle>
+            <path d="M88.0 177.9 L192.0 194.7 L296.0 219.1 L400.0 218.2" stroke="var(--ink-faint)" stroke-width="2"/>
+            <circle cx="88.0" cy="177.9" r="4.5" fill="var(--ink-faint)" stroke="var(--ink-faint)" stroke-width="2"><title>共通 ランダム 128，文脈照合 0：MSE 0.5145（共通セットなし比 -2.1%）</title></circle>
+            <circle cx="192.0" cy="194.7" r="4.5" fill="var(--ink-faint)" stroke="var(--ink-faint)" stroke-width="2"><title>共通 ランダム 128，文脈照合 8：MSE 0.5129（共通セットなし比 -1.1%）</title></circle>
+            <circle cx="296.0" cy="219.1" r="4.5" fill="var(--ink-faint)" stroke="var(--ink-faint)" stroke-width="2"><title>共通 ランダム 128，文脈照合 32：MSE 0.5106（共通セットなし比 -0.3%）</title></circle>
+            <circle cx="400.0" cy="218.2" r="4.5" fill="var(--ink-faint)" stroke="var(--ink-faint)" stroke-width="2"><title>共通 ランダム 128，文脈照合 128：MSE 0.5106（共通セットなし比 +0.2%）</title></circle>
+            <path d="M88.0 176.5 L192.0 198.6 L296.0 213.0 L400.0 226.3" stroke="var(--series-1)" stroke-width="2" stroke-dasharray="5 4"/>
+            <circle cx="88.0" cy="176.5" r="4.5" fill="var(--surface)" stroke="var(--series-1)" stroke-width="2"><title>共通 Parallel-CLG 32，文脈照合 0：MSE 0.5146（共通セットなし比 -2.1%）</title></circle>
+            <circle cx="192.0" cy="198.6" r="4.5" fill="var(--surface)" stroke="var(--series-1)" stroke-width="2"><title>共通 Parallel-CLG 32，文脈照合 8：MSE 0.5125（共通セットなし比 -1.2%）</title></circle>
+            <circle cx="296.0" cy="213.0" r="4.5" fill="var(--surface)" stroke="var(--series-1)" stroke-width="2"><title>共通 Parallel-CLG 32，文脈照合 32：MSE 0.5111（共通セットなし比 -0.2%）</title></circle>
+            <circle cx="400.0" cy="226.3" r="4.5" fill="var(--surface)" stroke="var(--series-1)" stroke-width="2"><title>共通 Parallel-CLG 32，文脈照合 128：MSE 0.5099（共通セットなし比 +0.1%）</title></circle>
+            <path d="M88.0 164.4 L192.0 178.9 L296.0 196.4 L400.0 212.7" stroke="var(--series-1)" stroke-width="2"/>
+            <circle cx="88.0" cy="164.4" r="4.5" fill="var(--series-1)" stroke="var(--series-1)" stroke-width="2"><title>共通 Parallel-CLG 128，文脈照合 0：MSE 0.5158（共通セットなし比 -1.8%）</title></circle>
+            <circle cx="192.0" cy="178.9" r="4.5" fill="var(--series-1)" stroke="var(--series-1)" stroke-width="2"><title>共通 Parallel-CLG 128，文脈照合 8：MSE 0.5144（共通セットなし比 -0.8%）</title></circle>
+            <circle cx="296.0" cy="196.4" r="4.5" fill="var(--series-1)" stroke="var(--series-1)" stroke-width="2"><title>共通 Parallel-CLG 128，文脈照合 32：MSE 0.5127（共通セットなし比 +0.2%）</title></circle>
+            <circle cx="400.0" cy="212.7" r="4.5" fill="var(--series-1)" stroke="var(--series-1)" stroke-width="2"><title>共通 Parallel-CLG 128，文脈照合 128：MSE 0.5112（共通セットなし比 +0.3%）</title></circle>
+            <text x="400.0" y="250.1" text-anchor="middle" fill="var(--ink)" stroke="none" font-size="10.5">0.5095</text>
+            <text x="504" y="22" fill="var(--ink)" stroke="none" font-size="13" font-weight="700">MAE</text>
+            <line x1="504" y1="216.5" x2="864" y2="216.5" stroke="var(--rule-soft)"/>
+            <text x="498" y="220.5" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.464</text>
+            <line x1="504" y1="172.0" x2="864" y2="172.0" stroke="var(--rule-soft)"/>
+            <text x="498" y="176.0" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.466</text>
+            <line x1="504" y1="127.5" x2="864" y2="127.5" stroke="var(--rule-soft)"/>
+            <text x="498" y="131.5" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.468</text>
+            <line x1="504" y1="83.0" x2="864" y2="83.0" stroke="var(--rule-soft)"/>
+            <text x="498" y="87.0" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.470</text>
+            <line x1="504" y1="250" x2="864" y2="250" stroke="var(--rule)"/>
+            <text x="528.0" y="268" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="11">0</text>
+            <text x="632.0" y="268" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="11">8</text>
+            <text x="736.0" y="268" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="11">32</text>
+            <text x="840.0" y="268" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="11">128</text>
+            <path d="M528.0 230.1 L632.0 141.6 L736.0 97.6 L840.0 117.7" stroke="var(--ink)" stroke-width="2.5"/>
+            <circle cx="528.0" cy="230.1" r="4.5" fill="var(--ink)" stroke="var(--ink)" stroke-width="2"><title>共通セットなし，文脈照合 0：MAE 0.4634</title></circle>
+            <circle cx="632.0" cy="141.6" r="4.5" fill="var(--ink)" stroke="var(--ink)" stroke-width="2"><title>共通セットなし，文脈照合 8：MAE 0.4674</title></circle>
+            <circle cx="736.0" cy="97.6" r="4.5" fill="var(--ink)" stroke="var(--ink)" stroke-width="2"><title>共通セットなし，文脈照合 32：MAE 0.4693</title></circle>
+            <circle cx="840.0" cy="117.7" r="4.5" fill="var(--ink)" stroke="var(--ink)" stroke-width="2"><title>共通セットなし，文脈照合 128：MAE 0.4684</title></circle>
+            <path d="M528.0 63.9 L632.0 116.8 L736.0 115.2 L840.0 128.5" stroke="var(--ink-faint)" stroke-width="2" stroke-dasharray="5 4"/>
+            <circle cx="528.0" cy="63.9" r="4.5" fill="var(--surface)" stroke="var(--ink-faint)" stroke-width="2"><title>共通 ランダム 32，文脈照合 0：MAE 0.4709（共通セットなし比 +1.6%）</title></circle>
+            <circle cx="632.0" cy="116.8" r="4.5" fill="var(--surface)" stroke="var(--ink-faint)" stroke-width="2"><title>共通 ランダム 32，文脈照合 8：MAE 0.4685（共通セットなし比 +0.2%）</title></circle>
+            <circle cx="736.0" cy="115.2" r="4.5" fill="var(--surface)" stroke="var(--ink-faint)" stroke-width="2"><title>共通 ランダム 32，文脈照合 32：MAE 0.4686（共通セットなし比 -0.2%）</title></circle>
+            <circle cx="840.0" cy="128.5" r="4.5" fill="var(--surface)" stroke="var(--ink-faint)" stroke-width="2"><title>共通 ランダム 32，文脈照合 128：MAE 0.4680（共通セットなし比 -0.1%）</title></circle>
+            <path d="M528.0 101.4 L632.0 120.0 L736.0 135.5 L840.0 128.9" stroke="var(--ink-faint)" stroke-width="2"/>
+            <circle cx="528.0" cy="101.4" r="4.5" fill="var(--ink-faint)" stroke="var(--ink-faint)" stroke-width="2"><title>共通 ランダム 128，文脈照合 0：MAE 0.4692（共通セットなし比 +1.2%）</title></circle>
+            <circle cx="632.0" cy="120.0" r="4.5" fill="var(--ink-faint)" stroke="var(--ink-faint)" stroke-width="2"><title>共通 ランダム 128，文脈照合 8：MAE 0.4683（共通セットなし比 +0.2%）</title></circle>
+            <circle cx="736.0" cy="135.5" r="4.5" fill="var(--ink-faint)" stroke="var(--ink-faint)" stroke-width="2"><title>共通 ランダム 128，文脈照合 32：MAE 0.4676（共通セットなし比 -0.4%）</title></circle>
+            <circle cx="840.0" cy="128.9" r="4.5" fill="var(--ink-faint)" stroke="var(--ink-faint)" stroke-width="2"><title>共通 ランダム 128，文脈照合 128：MAE 0.4679（共通セットなし比 -0.1%）</title></circle>
+            <path d="M528.0 105.2 L632.0 124.0 L736.0 110.9 L840.0 125.5" stroke="var(--series-1)" stroke-width="2" stroke-dasharray="5 4"/>
+            <circle cx="528.0" cy="105.2" r="4.5" fill="var(--surface)" stroke="var(--series-1)" stroke-width="2"><title>共通 Parallel-CLG 32，文脈照合 0：MAE 0.4690（共通セットなし比 +1.2%）</title></circle>
+            <circle cx="632.0" cy="124.0" r="4.5" fill="var(--surface)" stroke="var(--series-1)" stroke-width="2"><title>共通 Parallel-CLG 32，文脈照合 8：MAE 0.4682（共通セットなし比 +0.2%）</title></circle>
+            <circle cx="736.0" cy="110.9" r="4.5" fill="var(--surface)" stroke="var(--series-1)" stroke-width="2"><title>共通 Parallel-CLG 32，文脈照合 32：MAE 0.4687（共通セットなし比 -0.1%）</title></circle>
+            <circle cx="840.0" cy="125.5" r="4.5" fill="var(--surface)" stroke="var(--series-1)" stroke-width="2"><title>共通 Parallel-CLG 32，文脈照合 128：MAE 0.4681（共通セットなし比 -0.1%）</title></circle>
+            <path d="M528.0 89.1 L632.0 107.3 L736.0 115.1 L840.0 121.7" stroke="var(--series-1)" stroke-width="2"/>
+            <circle cx="528.0" cy="89.1" r="4.5" fill="var(--series-1)" stroke="var(--series-1)" stroke-width="2"><title>共通 Parallel-CLG 128，文脈照合 0：MAE 0.4697（共通セットなし比 +1.4%）</title></circle>
+            <circle cx="632.0" cy="107.3" r="4.5" fill="var(--series-1)" stroke="var(--series-1)" stroke-width="2"><title>共通 Parallel-CLG 128，文脈照合 8：MAE 0.4689（共通セットなし比 +0.3%）</title></circle>
+            <circle cx="736.0" cy="115.1" r="4.5" fill="var(--series-1)" stroke="var(--series-1)" stroke-width="2"><title>共通 Parallel-CLG 128，文脈照合 32：MAE 0.4686（共通セットなし比 -0.2%）</title></circle>
+            <circle cx="840.0" cy="121.7" r="4.5" fill="var(--series-1)" stroke="var(--series-1)" stroke-width="2"><title>共通 Parallel-CLG 128，文脈照合 128：MAE 0.4683（共通セットなし比 -0.0%）</title></circle>
+            <text x="632.0" y="161.6" text-anchor="middle" fill="var(--ink)" stroke="none" font-size="10.5">0.4674</text>
+            <text x="538.0" y="234.1" fill="var(--ink-soft)" stroke="none" font-size="10.5">参照なし 0.4634</text>
+            <text x="440" y="292" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="11.5">横軸はクエリごとの文脈照合の件数（0 は共通セットのみ）．低いほど良い</text>
+          </svg>
+          <figcaption class="plate-cap" style="border:0;background:none;padding:14px 0 0">
+            <b>文脈照合が少ないと共通セットが効くが，件数が増えると線が重なる</b>
+            点にカーソルを合わせると値と共通セットなし比が出る．数値は下の表．
+          </figcaption>
+        </figure>
+      </div>
+    </div>
   </div>
   <div class="wide">
     <div class="plate">
@@ -861,195 +1051,51 @@ pre {
           </tbody>
         </table>
       </div>
-      <div class="table-scroll" style="border-top:1px solid var(--rule)">
-        <table>
-          <thead><tr><th class="lbl">QL</th><th>文脈照合 0</th><th>文脈照合 8</th><th>文脈照合 32</th><th>文脈照合 128</th></tr></thead>
-          <tbody>
-            <tr><td class="lbl">共通セットなし</td><td>0.1852</td><td><b>0.1856</b></td><td>0.1859</td><td>0.1863</td></tr>
-            <tr><td class="lbl">共通 ランダム 32</td><td>0.1875（+1.3%）</td><td>0.1865（+0.5%）</td><td>0.1863（+0.2%）</td><td>0.1864（±0.0%）</td></tr>
-            <tr><td class="lbl">共通 ランダム 128</td><td>0.1869（+1.0%）</td><td>0.1865（+0.5%）</td><td>0.1861（+0.1%）</td><td>0.1864（±0.0%）</td></tr>
-            <tr><td class="lbl">共通 Parallel-CLG 32</td><td>0.1866（+0.8%）</td><td>0.1861（+0.3%）</td><td>0.1861（+0.1%）</td><td>0.1864（±0.0%）</td></tr>
-            <tr><td class="lbl">共通 Parallel-CLG 128</td><td>0.1872（+1.1%）</td><td>0.1868（+0.7%）</td><td>0.1866（+0.4%）</td><td>0.1866（+0.2%）</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="table-scroll" style="border-top:1px solid var(--rule)">
-        <table>
-          <thead><tr><th class="lbl">80% 区間の的中率（理想 0.80）</th><th>文脈照合 0</th><th>文脈照合 8</th><th>文脈照合 32</th><th>文脈照合 128</th></tr></thead>
-          <tbody>
-            <tr><td class="lbl">共通セットなし</td><td>0.739</td><td>0.796</td><td>0.838</td><td>0.855</td></tr>
-            <tr><td class="lbl">共通 ランダム 32</td><td>0.830</td><td>0.837</td><td>0.848</td><td>0.855</td></tr>
-            <tr><td class="lbl">共通 ランダム 128</td><td>0.845</td><td>0.846</td><td>0.848</td><td>0.852</td></tr>
-            <tr><td class="lbl">共通 Parallel-CLG 32</td><td>0.837</td><td>0.840</td><td>0.850</td><td>0.856</td></tr>
-            <tr><td class="lbl">共通 Parallel-CLG 128</td><td>0.851</td><td>0.851</td><td>0.852</td><td>0.855</td></tr>
-          </tbody>
-        </table>
-      </div>
       <div class="plate-cap">
         <b>文脈照合が少ないときは共通セットを足すと良くなる．同じ行数なら文脈照合だけの方が良い</b>
         val・全 7 チャネル．括弧内は同じ列の「共通セットなし」との比（文脈照合 0 の列では参照なしとの比）で，マイナスなら良い．太字は各指標の最良（参照なしを除く）．
         共通セットのランダムは seed 0 の 1 本，Parallel-CLG は L2（平均に合わせる）で選んだもの．
         文脈照合 8 件に共通セットを足すと MSE は 0.5186 から最大 0.5125（−1.2%，Parallel-CLG 32）まで下がるが，文脈照合 128 件では足すとわずかに悪くなる．
         合計の行数をそろえると（例：文脈照合 32 件の 0.5120 と，共通 32＋文脈照合 8 件の 0.5125・0.5156），文脈照合だけの方が同じか良い．
-        MAE と QL は，どの組み合わせも参照なしに届かない．
+        MAE は，どの組み合わせも参照なしに届かない．
       </div>
     </div>
-  </div>
-  <div class="prose">
-    <div class="callout">
-      <span class="lead">分かったこと</span>
-      <p>
-        <strong>共通の many-shot セットは，文脈照合の代わりではなく，文脈照合が少ないときの補いとして効く．</strong>
-        行数（計算量）をそろえると，クエリごとに選ぶ文脈照合の方が共通セットより良いか同等で，MSE の最良は文脈照合 128 件（0.5095）である．
-        共通セットを主張の中心に置くなら，文脈照合を超える選び方か，検索の索引が要らない・クエリの前に用意できるといった別の利点が必要になる．
-      </p>
-    </div>
-  </div>
-  <div class="prose">
-  </div>
-  <div class="prose">
-    <h3>合わせる先：train 全体か，直近の窓か</h3>
+  </div>  <div class="prose">
     <p>
-      時期のずれへの対策として，合わせる先を train 全体の平均勾配から，val の直前（train の最後の 2 / 4 / 8 週間）に終わる窓の平均勾配に変えた．
-      窓の数は 30 / 61 / 122 本．選んだセットは val の全クエリで共通なので task-level のままである．
-      直近の平均勾配は train 全体の平均勾配と向きがかなり違い（OT でコサイン −0.03〜0.31），選ばれるセットもほぼ入れ替わる．
+      文脈照合が少ないときは共通セットを足すと良くなるが，同じ行数なら文脈照合だけの方が良い．共通セットは補いにしかならない．
     </p>
-  </div>
-  <div class="wide">
-    <div class="plate">
-      <div class="table-scroll">
-        <table>
-          <thead><tr><th class="lbl">MSE（参照なし 0.5254）</th><th>train 全体</th><th>直近 2 週間</th><th>直近 4 週間</th><th>直近 8 週間</th></tr></thead>
-          <tbody>
-            <tr><td class="lbl">コサイン K=32</td><td>0.5180</td><td>0.5246（+1.3%）</td><td>0.5314（+2.6%）</td><td>0.5344（+3.2%）</td></tr>
-            <tr><td class="lbl">コサイン K=128</td><td>0.5159</td><td>0.5176（+0.3%）</td><td>0.5200（+0.8%）</td><td>0.5211（+1.0%）</td></tr>
-            <tr><td class="lbl">L2 K=128</td><td>0.5158</td><td>0.5191（+0.6%）</td><td>0.5175（+0.3%）</td><td>0.5163（+0.1%）</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="table-scroll" style="border-top:1px solid var(--rule)">
-        <table>
-          <thead><tr><th class="lbl">MAE（参照なし 0.4634）</th><th>train 全体</th><th>直近 2 週間</th><th>直近 4 週間</th><th>直近 8 週間</th></tr></thead>
-          <tbody>
-            <tr><td class="lbl">コサイン K=32</td><td>0.4673</td><td>0.4709（+0.8%）</td><td>0.4742（+1.5%）</td><td>0.4767（+2.0%）</td></tr>
-            <tr><td class="lbl">コサイン K=128</td><td>0.4680</td><td>0.4690（+0.2%）</td><td>0.4701（+0.4%）</td><td>0.4710（+0.6%）</td></tr>
-            <tr><td class="lbl">L2 K=128</td><td>0.4697</td><td>0.4688（−0.2%）</td><td>0.4687（−0.2%）</td><td>0.4695（±0.0%）</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="table-scroll" style="border-top:1px solid var(--rule)">
-        <table>
-          <thead><tr><th class="lbl">QL（参照なし 0.1852）</th><th>train 全体</th><th>直近 2 週間</th><th>直近 4 週間</th><th>直近 8 週間</th></tr></thead>
-          <tbody>
-            <tr><td class="lbl">コサイン K=32</td><td>0.1865</td><td>0.1876（+0.6%）</td><td>0.1885（+1.1%）</td><td>0.1893（+1.5%）</td></tr>
-            <tr><td class="lbl">コサイン K=128</td><td>0.1866</td><td>0.1867（+0.1%）</td><td>0.1871（+0.3%）</td><td>0.1874（+0.4%）</td></tr>
-            <tr><td class="lbl">L2 K=128</td><td>0.1872</td><td>0.1867（−0.3%）</td><td>0.1869（−0.1%）</td><td>0.1870（−0.1%）</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="table-scroll" style="border-top:1px solid var(--rule)">
-        <table>
-          <thead><tr><th class="lbl">80% 区間の的中率<br>（理想 0.80）</th><th>train 全体</th><th>直近 2 週間</th><th>直近 4 週間</th><th>直近 8 週間</th></tr></thead>
-          <tbody>
-            <tr><td class="lbl">コサイン K=32</td><td>0.811</td><td>0.795</td><td>0.817</td><td>0.816</td></tr>
-            <tr><td class="lbl">コサイン K=128</td><td>0.837</td><td>0.828</td><td>0.835</td><td>0.835</td></tr>
-            <tr><td class="lbl">L2 K=128</td><td>0.851</td><td>0.828</td><td>0.836</td><td>0.838</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="plate-cap">
-        <b>直近の窓に合わせると，どの長さでも悪くなる</b>
-        val・全 7 チャネル・Parallel-CLG．括弧内は同じ行の「train 全体」との比で，プラスなら悪い．
-        コサインでは MSE が最大 +3.2%（K=32，直近 8 週間），MAE と QL もすべての長さで悪化する．L2 では MAE と QL はほぼ変わらず，MSE が少し悪くなる．
-        直近の数十本の平均は，その数週間に特有の動きに引っ張られ，4 か月続く val 全体を代表しないためと考えられる．
-      </div>
-    </div>
-  </div>
-  <div class="prose">
-    <h3>補足：学習した潜在そのものは val で効くか（OT）</h3>
+    <h3>補足：学習した潜在そのものは効くか（OT）</h3>
     <p>
-      OT は，どの共通セットでも参照なしより悪くなるチャネルである．Parallel-CLG で学習した潜在 8 本をそのまま事例として渡すと，
-      train では MSE −8.4%，QL −3.6% まで改善するが，val では MSE +1.3%，QL +0.8% と参照なしより悪い．
-      train の期間で最適化した「理想の事例」すら val で通用しないので，OT では実在の窓をどう選んでも参照なしを超えにくい．
-      train（2016-07〜2017-06）と val（2017 年夏〜秋）の時期のずれが原因と考えられる．
-    </p>
-    <p>
-      実装上の注意：CLG（連結）の損失は，潜在込みで決まる正規化のまま測っている（連結が履歴と 1 本の系列に見えること自体が問題点という立場）．
-      そのため train の損失は 2.75 から約 0.8 まで下がるが，予測の改善ではなく正規化の幅が広がった影響が大きい．
-      また履歴の先頭が欠測の窓では，欠測が潜在の勾配に NaN として混ざるので，欠測の埋め草を取り除いてからつないでいる．
+      Parallel-CLG で学習した潜在 8 本をそのまま事例にすると，train では MSE −8.4% と効くが，val では参照なしより悪い（+1.3%）．
+      train で最適な事例ですら，val では通用しない．
     </p>
   </div>
 </section>
 
-<!-- ============================== 2 -->
+<!-- ============================== 3 -->
 <section>
   <div class="prose">
-    <div class="sec-head"><span class="sec-num">2</span><h2>なぜうまくいかなかったか</h2></div>
-    <p>
-      CLG も Parallel-CLG も，同じ件数ではクエリごとの文脈照合に届かず，ランダムな共通セットとの差も ±0.5% 程度にとどまった．
-      結果から考えられる理由を，確からしい順に挙げる．どれも ETTh1 の val での観察からの推測で，切り分けの実験はしていないものを含む．
-    </p>
-
-    <h3>1．「全体の平均勾配に合わせる」目的は，many-shot ではランダムでもほぼ満たされる</h3>
-    <p>
-      CLG の目的は，選んだ n 件の平均勾配を全体の平均勾配に近づけることである．しかし，ランダムに選んだ n 件の平均も，
-      n が大きいほど全体の平均に近づく（ずれはおよそ <math><mn>1</mn><mo>/</mo><msqrt><mi>n</mi></msqrt></math>）．
-      OT の K=128 では，全体の平均までの距離がランダム 0.046，Parallel-CLG 0.016 で，ランダムもすでに近い．
-      目的がほぼ満たされた状態からさらに詰めても，予測には差が出にくい．
-      逆に，最も遠いセット（逆の選択）ははっきり悪かった（K=128 で QL がランダムより 2.5% 悪い）．
-      勾配には「悪いセット」を見分ける信号があるが，「ランダムより良いセット」を作る余地が，この目的では残っていない．
-      元論文が 128-shot で差を出せたのは，NLP のデータの方が例ごとのばらつきが大きく，ランダムな部分集合が全体を代表しにくいためかもしれない．
-    </p>
-
-    <h3>2．共通セットという制約そのものが不利</h3>
-    <p>
-      同じ件数なら，クエリごとに選ぶ文脈照合の方が，どの共通セットよりも MSE で 0.7〜1.0% 良かった．
-      共通セットは全クエリに同じ事例を渡すので，1 つ 1 つのクエリに合わせられない．
-      group attention は並んだ行の中から使う事例を選べるが，選べるのはセットに入っている事例だけで，ライブラリの中身が同じなら限界がある．
-      さらに Chronos-2 の並列では，事例の行が各層でクエリを見るため，中間表現がクエリごとに変わる．
-      LLM で共通セットが好まれる理由（共通部分を一度だけ計算して使い回せる）が，ここでは成り立たない．
-      精度でも計算でも共通セットを選ぶ理由が弱く，選び方を工夫する土台そのものが不利だった．
-    </p>
-
-    <h3>3．train で最適な事例が val で最適とは限らない（時期のずれ）</h3>
-    <p>
-      OT では，Parallel-CLG で学習した潜在 8 本をそのまま事例にすると，train では MSE −8.4% まで効くのに，val では参照なしより悪かった（+1.3%）．
-      CLG 系の勾配はすべて train の窓から計算するので，選ばれるのは「train の期間で役に立つ事例」である．
-      train（2016-07〜2017-06）と val（2017 年夏〜秋）で系列の性質がずれていると，その事例は val では役に立たない．
-      直近の窓に合わせる工夫は，数十本の平均がその数週間に特有の動きに引っ張られ，かえって悪化した．
-    </p>
-
-    <h3>4．勾配が測っているのは「事例として渡したときの効果」ではない</h3>
-    <p>
-      窓 q の勾配は，q をクエリにしたときの損失を潜在で微分したもので，「q を予測するとき，並列の行から何を受け取りたいか」を表す．
-      「q を事例として渡したら，ほかのクエリがどれだけ良くなるか」は測っていない．
-      両者を結びつけるのは「ICL とファインチューニングに必要なデータは似ている」という元論文の仮説だけで，時系列で成り立つかは確かめていない．
-      また，潜在は推論の 128〜256 本に対して 8 本しか並べていないので，系列間の注意の分け合い方も推論と違う．
-    </p>
-
-    <h3>5．事例を渡すと分布が広がる問題を，選び方では解けない</h3>
-    <p>
-      どの選び方でも，事例を渡すと 80% 区間が広がりすぎ（的中率 0.83〜0.86，理想 0.80），MAE と QL は参照なしに届かなかった．
-      いろいろな未来を持つ事例が並ぶと，モデルの予測分布もその分だけ広がると考えられる．
-      Parallel-CLG をコサインで選ぶと広がりは少し抑えられたが，参照なしを超えるほどではない．
-      これは選び方より，事例の渡し方（並列の行の読まれ方）に起因する可能性が高い．
-    </p>
-
-    <div class="callout">
-      <span class="lead">それでも見えたこと</span>
-      <p>
-        同じコサインで選んでも，潜在を連結した CLG では MAE・QL がランダムより悪く，潜在を並列に置いた Parallel-CLG では 3 つの K すべてで良かった．
-        両者の違いは潜在の置き場所だけなので，<strong>選ぶときの信号を推論の経路（group attention）に揃えると，分布の当たり具合が良くなる</strong>．
-        効果は小さい（0.1〜0.8%）が，Parallel-CLG の発想（推論と同じ経路で信号を取る）自体は支持された．
-      </p>
+    <div class="sec-head"><span class="sec-num">3</span><h2>なぜうまくいかなかったか</h2></div>
+    <div class="branch">
+      <div><span class="cond">1</span><span class="then"><b>件数が多いと，ランダムでも目的が満たされてしまう</b>．
+        「平均の勾配に合わせる」という目的は，ランダムに選んでも件数が多いほど自然に満たされる．many-shot では工夫の余地が小さい</span></div>
+      <div><span class="cond">2</span><span class="then"><b>全クエリに同じセットを渡すこと自体が不利</b>．
+        クエリごとに選べないので，同じ件数なら文脈照合に負ける．LLM と違い，計算を使い回せる利点もない</span></div>
+      <div><span class="cond">3</span><span class="then"><b>train で良い事例が，val でも良いとは限らない</b>．
+        勾配はすべて train の窓から取るので，時期による性質のずれに弱い</span></div>
+      <div><span class="cond">4</span><span class="then"><b>勾配は「事例としての効き目」を直接は測っていない</b>．
+        測っているのは「その窓を予測するとき何が欲しいか」で，「その窓を渡すと他がどれだけ良くなるか」ではない</span></div>
     </div>
-
+    <div class="callout">
+      <span class="lead">残したこと</span>
+      <p>選ぶ信号を推論の経路（並列の行）にそろえると，MAE が少し良くなる．Parallel-CLG の発想そのものは支持された．</p>
+    </div>
     <h3>まだ試していないこと</h3>
     <div class="branch">
-      <div><span class="cond">分位点</span><span class="then">中央値と裾の損失の勾配を分けて並べ，両方を同時に合わせる．区間の広がりすぎに直接効く可能性がある</span></div>
-      <div><span class="cond">潜在の本数</span><span class="then">潜在を推論の件数（128 本など）に近づける．計算は 4〜7 倍</span></div>
-      <div><span class="cond">潜在の空間</span><span class="then">値の空間（1 本 160 次元）ではなく，埋め込みの空間（1 本 11 トークン × 768 次元）に置く．計算はほぼ同じ</span></div>
-      <div><span class="cond">効果を直接測る</span><span class="then">潜在ではなく実在の窓を並列の行に置き，train のクエリの損失がどれだけ変わるかで選ぶ（事例としての効果の 1 次近似）</span></div>
+      <div><span class="cond">分位点</span><span class="then">中央値と裾の勾配を分けて合わせる</span></div>
+      <div><span class="cond">潜在の本数</span><span class="then">潜在を推論の件数（128 本など）に近づける</span></div>
+      <div><span class="cond">潜在の空間</span><span class="then">値の空間ではなく，モデル内部の表現（埋め込み）に潜在を置く</span></div>
+      <div><span class="cond">効き目を直接測る</span><span class="then">実在の窓を並列の行に置き，他のクエリの損失がどれだけ変わるかで選ぶ</span></div>
     </div>
   </div>
 </section>
@@ -1057,9 +1103,9 @@ pre {
 <section>
   <div class="prose footnote">
     <p>
-      <b>コード</b>：<code>codes/clg.py</code>（潜在の学習と勾配の軌跡），<code>codes/selection.py</code>（<code>match_mean</code>・<code>align</code>），
-      <code>codes/run.py</code>（<code>--select clg|pclg</code>，<code>--match</code>，<code>--reverse-match</code>，<code>--recent</code>，<code>--inst-k</code>）．
-      勾配は <code>results/clg/</code>．実験条件は<a href="raf-note.html">本ノート</a>と同じ（val，全 7 チャネル，候補は train の 11 点おきの窓 771 本）．
+      <b>コード</b>：<code>codes/clg.py</code>（潜在の学習と勾配），<code>codes/selection.py</code>（選択），
+      <code>codes/run.py --select clg|pclg</code>（<code>--match</code>，<code>--reverse-match</code>，<code>--recent</code>，<code>--inst-k</code>）．
+      勾配は <code>results/clg/</code>．実験条件は<a href="raf-note.html">本ノート</a>と同じ．
     </p>
   </div>
 </section>

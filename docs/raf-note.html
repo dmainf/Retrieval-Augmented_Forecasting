@@ -20,6 +20,8 @@
   --oracle-tint: #F3DFC7;
   --oracle-wash: rgba(176, 98, 28, 0.12);
   --warn: #A03A2E;
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
 
   --f-display: "Zen Old Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
   --f-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
@@ -43,6 +45,8 @@
     --oracle-tint: #3A2B1B;
     --oracle-wash: rgba(224, 161, 100, 0.14);
     --warn: #E08476;
+    --series-1: #3987e5;
+    --series-2: #d95926;
   }
 }
 
@@ -62,6 +66,8 @@
   --oracle-tint: #3A2B1B;
   --oracle-wash: rgba(224, 161, 100, 0.14);
   --warn: #E08476;
+  --series-1: #3987e5;
+  --series-2: #d95926;
 }
 
 * { box-sizing: border-box; }
@@ -417,8 +423,8 @@ pre {
           <tbody>
             <tr class="orc"><td class="lbl">融合は並列（共変量の行）にする</td><td><b>確定</b></td>
               <td style="text-align:left;white-space:normal">未来照合（oracle）の事例を渡すと，並列は −18.7%，連結は −2.4%．自己＋正解（truth）なら連結も −32.7% まで読む（2 節）</td></tr>
-            <tr><td class="lbl">数件の検索では届かない</td><td><b>確定</b></td>
-              <td style="text-align:left;white-space:normal">K=8 の文脈照合（l2）は MSE −4.5% だが MAE・QL は約 1% 悪化．未来照合（oracle）なら −18.7%（3 節）</td></tr>
+            <tr><td class="lbl">正しい参照を選べれば大きく効く</td><td><b>確定</b></td>
+              <td style="text-align:left;white-space:normal">未来照合（診断）は 8 件で MSE −11.1%，QL −5.5%（val）．文脈照合は最良でも 64 件で MSE −3.2%，QL は参照なしに届かない．この差が選び方の改善余地（3 節）</td></tr>
             <tr class="ctx"><td class="lbl">many-shot にすると良くなる</td><td><b>検証中</b></td>
               <td style="text-align:left;white-space:normal">文脈照合 128 件で MSE −3.0%（val，これまでの最良）．ランダムな共通セットでも 128 件で −2.2%．事例の中身は読まれている（未来を入れ替えると悪化）．MAE・QL は参照なしに届かない（4 節）</td></tr>
             <tr><td class="lbl">共通セットを勾配で選ぶ（CLG・Parallel-CLG）</td><td><b>取り下げ</b></td>
@@ -481,36 +487,11 @@ pre {
       そこで<strong>事例 1 件を「未来まで分かっている共変量」1 本として登録する</strong>．
       事例の文脈 96 点は履歴の末尾にそろえて置き，手前は NaN（欠測）で埋める．事例の未来 64 点は，予測したい 64 点と同じ位置に置く．
     </p>
-<pre>target            = クエリの履歴 2032 点
-past_covariates   = { "ret0": [NaN × 1936, 事例0の文脈 96 点], …, "ret7": … }
-future_covariates = { "ret0": 事例0の未来 64 点,               …, "ret7": … }</pre>
     <p>
       モデルの中では，各行が 16 点ずつのトークンに切られる（1 行 132 トークン）．
       各層で，行の中を混ぜる <b>time attention</b>（横）と，同じ位置のトークンを行をまたいで混ぜる
       <b>group attention</b>（縦）が交互にかかる．
     </p>
-  </div>
-  <div class="wide">
-    <div class="plate">
-      <div class="table-scroll">
-        <table>
-          <thead><tr><th class="lbl">行</th><th>過去 1〜121</th><th>過去 122〜127</th><th>未来 1〜4</th></tr></thead>
-          <tbody>
-            <tr class="ctx"><td class="lbl">target（クエリ）</td><td>履歴</td><td>履歴</td>
-              <td><b>空（ここを予測する）</b></td></tr>
-            <tr><td class="lbl">ret0（事例 0）</td><td>NaN（無視される）</td><td>事例の文脈</td>
-              <td class="best">事例の未来</td></tr>
-            <tr><td class="lbl">ret1（事例 1）</td><td>NaN（無視される）</td><td>事例の文脈</td>
-              <td class="best">事例の未来</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="plate-cap">
-        <b>要点</b>
-        クエリの「未来 1 個目（1〜16 ステップ先）」は，group attention で事例の「未来 1 個目」を同じ位置で直接見られる．
-        事例の行で値があるのは 11 トークンだけなので，その分だけ計算すれば済む．事例を数百件並べても計算が軽い．
-      </div>
-    </div>
   </div>
   <div class="prose">
     <p>従来の連結と並べると次のようになる．</p>
@@ -649,7 +630,90 @@ future_covariates = { "ret0": 事例0の未来 64 点,               …, "ret7"
     <p>
       同じ事例を両方の渡し方で比べた（K=8）．選び方の定義は 4 節の後の「実験条件」の表のとおり．
       自己＋正解は「渡した未来をどこまで使えるか」，未来照合は「実在の窓で検索が完璧ならどこまで効くか」の上限を測る診断である．
+      割合はすべて，事例を渡さない参照なしとの比である．
     </p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body">
+        <figure style="margin:0">
+          <svg viewBox="0 0 880 340" role="img" style="max-width:100%;height:auto"
+               aria-label="選び方ごとに，並列と連結の MSE を比べた棒グラフ（K=8，低いほど良い）．test：自己＋正解 並列 0.136・連結 0.236，未来照合 0.286・0.343，文脈照合 0.335・0.346，参照なし 0.351．val：自己＋正解 0.266・0.375，未来照合 0.467・0.516，文脈照合 0.519・0.527，参照なし 0.525．"
+               fill="none" font-family="inherit" font-size="12">
+            <text x="70" y="30" fill="var(--ink)" stroke="none" font-size="13" font-weight="700">test</text>
+            <line x1="70" y1="260.0" x2="440" y2="260.0" stroke="var(--rule)"/>
+            <text x="64" y="264.0" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="11">0.0</text>
+            <line x1="70" y1="207.5" x2="440" y2="207.5" stroke="var(--rule-soft)"/>
+            <text x="64" y="211.5" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="11">0.1</text>
+            <line x1="70" y1="155.0" x2="440" y2="155.0" stroke="var(--rule-soft)"/>
+            <text x="64" y="159.0" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="11">0.2</text>
+            <line x1="70" y1="102.5" x2="440" y2="102.5" stroke="var(--rule-soft)"/>
+            <text x="64" y="106.5" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="11">0.3</text>
+            <line x1="70" y1="50.0" x2="440" y2="50.0" stroke="var(--rule-soft)"/>
+            <text x="64" y="54.0" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="11">0.4</text>
+            <rect x="94.7" y="188.6" width="36" height="71.4" rx="2" fill="var(--series-1)"><title>自己＋正解 並列（test）：MSE 0.1360（参照なし 0.3512）</title></rect>
+            <rect x="132.7" y="135.9" width="36" height="124.1" rx="2" fill="var(--ink-faint)"><title>自己＋正解 連結（test）：MSE 0.2363（参照なし 0.3512）</title></rect>
+            <text x="131.7" y="282" text-anchor="middle" fill="var(--ink)" stroke="none" font-size="11.5">自己＋正解</text>
+            <text x="131.7" y="298" text-anchor="middle" fill="var(--ink-faint)" stroke="none" font-size="10.5">（診断）</text>
+            <rect x="218.0" y="110.1" width="36" height="149.9" rx="2" fill="var(--series-1)"><title>未来照合 並列（test）：MSE 0.2855（参照なし 0.3512）</title></rect>
+            <rect x="256.0" y="80.0" width="36" height="180.0" rx="2" fill="var(--ink-faint)"><title>未来照合 連結（test）：MSE 0.3429（参照なし 0.3512）</title></rect>
+            <text x="255.0" y="282" text-anchor="middle" fill="var(--ink)" stroke="none" font-size="11.5">未来照合</text>
+            <text x="255.0" y="298" text-anchor="middle" fill="var(--ink-faint)" stroke="none" font-size="10.5">（診断）</text>
+            <rect x="341.3" y="84.0" width="36" height="176.0" rx="2" fill="var(--series-1)"><title>文脈照合 並列（test）：MSE 0.3353（参照なし 0.3512）</title></rect>
+            <rect x="379.3" y="78.4" width="36" height="181.6" rx="2" fill="var(--ink-faint)"><title>文脈照合 連結（test）：MSE 0.3459（参照なし 0.3512）</title></rect>
+            <text x="378.3" y="282" text-anchor="middle" fill="var(--ink)" stroke="none" font-size="11.5">文脈照合</text>
+            <line x1="70" y1="75.6" x2="440" y2="75.6" stroke="var(--ink-soft)" stroke-dasharray="5 4"/>
+            <text x="76" y="69.6" text-anchor="start" fill="var(--ink-soft)" stroke="none" font-size="11">参照なし 0.351</text>
+            <text x="112.7" y="182.6" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="10.5">0.136</text>
+            <text x="150.7" y="129.9" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="10.5">0.236</text>
+            <text x="236.0" y="104.1" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="10.5">0.285</text>
+            <text x="274.0" y="95.0" text-anchor="middle" fill="var(--surface)" stroke="none" font-size="10.5" font-weight="600">0.343</text>
+            <text x="359.3" y="99.0" text-anchor="middle" fill="var(--surface)" stroke="none" font-size="10.5" font-weight="600">0.335</text>
+            <text x="397.3" y="93.4" text-anchor="middle" fill="var(--surface)" stroke="none" font-size="10.5" font-weight="600">0.346</text>
+            <text x="500" y="30" fill="var(--ink)" stroke="none" font-size="13" font-weight="700">val</text>
+            <line x1="500" y1="260.0" x2="870" y2="260.0" stroke="var(--rule)"/>
+            <text x="494" y="264.0" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="11">0.0</text>
+            <line x1="500" y1="190.0" x2="870" y2="190.0" stroke="var(--rule-soft)"/>
+            <text x="494" y="194.0" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="11">0.2</text>
+            <line x1="500" y1="120.0" x2="870" y2="120.0" stroke="var(--rule-soft)"/>
+            <text x="494" y="124.0" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="11">0.4</text>
+            <line x1="500" y1="50.0" x2="870" y2="50.0" stroke="var(--rule-soft)"/>
+            <text x="494" y="54.0" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="11">0.6</text>
+            <rect x="524.7" y="167.1" width="36" height="92.9" rx="2" fill="var(--series-1)"><title>自己＋正解 並列（val）：MSE 0.2655（参照なし 0.5254）</title></rect>
+            <rect x="562.7" y="128.8" width="36" height="131.2" rx="2" fill="var(--ink-faint)"><title>自己＋正解 連結（val）：MSE 0.3748（参照なし 0.5254）</title></rect>
+            <text x="561.7" y="282" text-anchor="middle" fill="var(--ink)" stroke="none" font-size="11.5">自己＋正解</text>
+            <text x="561.7" y="298" text-anchor="middle" fill="var(--ink-faint)" stroke="none" font-size="10.5">（診断）</text>
+            <rect x="648.0" y="96.5" width="36" height="163.5" rx="2" fill="var(--series-1)"><title>未来照合 並列（val）：MSE 0.4672（参照なし 0.5254）</title></rect>
+            <rect x="686.0" y="79.3" width="36" height="180.7" rx="2" fill="var(--ink-faint)"><title>未来照合 連結（val）：MSE 0.5163（参照なし 0.5254）</title></rect>
+            <text x="685.0" y="282" text-anchor="middle" fill="var(--ink)" stroke="none" font-size="11.5">未来照合</text>
+            <text x="685.0" y="298" text-anchor="middle" fill="var(--ink-faint)" stroke="none" font-size="10.5">（診断）</text>
+            <rect x="771.3" y="78.5" width="36" height="181.5" rx="2" fill="var(--series-1)"><title>文脈照合 並列（val）：MSE 0.5186（参照なし 0.5254）</title></rect>
+            <rect x="809.3" y="75.6" width="36" height="184.4" rx="2" fill="var(--ink-faint)"><title>文脈照合 連結（val）：MSE 0.5268（参照なし 0.5254）</title></rect>
+            <text x="808.3" y="282" text-anchor="middle" fill="var(--ink)" stroke="none" font-size="11.5">文脈照合</text>
+            <line x1="500" y1="76.1" x2="870" y2="76.1" stroke="var(--ink-soft)" stroke-dasharray="5 4"/>
+            <text x="506" y="70.1" text-anchor="start" fill="var(--ink-soft)" stroke="none" font-size="11">参照なし 0.525</text>
+            <text x="542.7" y="161.1" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="10.5">0.266</text>
+            <text x="580.7" y="122.8" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="10.5">0.375</text>
+            <text x="666.0" y="111.5" text-anchor="middle" fill="var(--surface)" stroke="none" font-size="10.5" font-weight="600">0.467</text>
+            <text x="704.0" y="94.3" text-anchor="middle" fill="var(--surface)" stroke="none" font-size="10.5" font-weight="600">0.516</text>
+            <text x="789.3" y="93.5" text-anchor="middle" fill="var(--surface)" stroke="none" font-size="10.5" font-weight="600">0.519</text>
+            <text x="827.3" y="90.6" text-anchor="middle" fill="var(--surface)" stroke="none" font-size="10.5" font-weight="600">0.527</text>
+            <g transform="translate(70,326)">
+              <rect x="0" y="-9" width="14" height="10" rx="2" fill="var(--series-1)"/>
+              <text x="20" y="0" fill="var(--ink-soft)" stroke="none" font-size="11.5">並列（共変量の行）</text>
+              <rect x="150" y="-9" width="14" height="10" rx="2" fill="var(--ink-faint)"/>
+              <text x="170" y="0" fill="var(--ink-soft)" stroke="none" font-size="11.5">連結（履歴の前につなぐ）</text>
+              <line x1="330" y1="-4" x2="352" y2="-4" stroke="var(--ink-soft)" stroke-dasharray="5 4"/>
+              <text x="358" y="0" fill="var(--ink-soft)" stroke="none" font-size="11.5">参照なし</text>
+            </g>
+          </svg>
+          <figcaption class="plate-cap" style="border:0;background:none;padding:14px 0 0">
+            <b>MSE（K=8）．低いほど良い．破線は参照なし</b>
+            棒にカーソルを合わせると値が出る．実在の窓（未来照合・文脈照合）では，連結は参照なしからほとんど下がらない．
+          </figcaption>
+        </figure>
+      </div>
+    </div>
   </div>
   <div class="wide">
     <div class="plate">
@@ -660,11 +724,12 @@ future_covariates = { "ret0": 事例0の未来 64 点,               …, "ret7"
             <tr><td class="lbl">自己＋正解（truth，診断）</td><td class="best">0.1360（−61.3%）</td><td>0.2363（−32.7%）</td><td class="best">0.2655（−49.5%）</td><td>0.3748（−28.7%）</td></tr>
             <tr><td class="lbl">未来照合（oracle，診断）</td><td class="best">0.2855（−18.7%）</td><td>0.3429（−2.4%）</td><td class="best">0.4672（−11.1%）</td><td>0.5163（−1.7%）</td></tr>
             <tr><td class="lbl">文脈照合（l2）</td><td>0.3353（−4.5%）</td><td>0.3459（−1.5%）</td><td>0.5186（−1.3%）</td><td>0.5268（+0.3%）</td></tr>
+            <tr class="ctx"><td class="lbl">参照なし（基準）</td><td>0.3512</td><td>0.3512</td><td>0.5254</td><td>0.5254</td></tr>
           </tbody>
         </table>
       </div>
       <div class="plate-cap">
-        <b>MSE（参照なし比）．連結は履歴 2032 点を残したまま前に足し，事例ごとに区切り 16 点を挟む</b>
+        <b>MSE．括弧内は参照なし（test 0.3512，val 0.5254）との比．連結は履歴 2032 点を残したまま前に足し，事例ごとに区切り 16 点を挟む</b>
         自己＋正解では連結も大きく良くなるが，並列はそれ以上に良くなる．
         実在の窓（未来照合・文脈照合）になると連結はほとんど良くならない．検索の質の差（未来照合と文脈照合の差）が結果に届くのは並列だけである
         （test で並列 14.2 ポイント，連結 0.9 ポイント）．
@@ -699,11 +764,90 @@ future_covariates = { "ret0": 事例0の未来 64 点,               …, "ret7"
 <!-- ============================== 3 -->
 <section>
   <div class="prose">
-    <div class="sec-head"><span class="sec-num">3</span><h2>数件の検索では届かない</h2></div>
+    <div class="sec-head"><span class="sec-num">3</span><h2>正しい参照を選べれば大きく効く</h2></div>
     <p>
-      並列なら事例は読まれる．では従来どおりクエリごとに検索すればよいか．
-      同じ並列の容れ物で，選び方だけを変えた（K=8）．
+      並列なら事例は読まれる．では，どの事例を選べばどこまで良くなるか．同じ並列の容れ物で，選び方と件数 K だけを変えた．
+      未来照合は正解の未来に近い未来を持つ実在の窓を選ぶ診断で，「検索が完璧ならどこまで効くか」を測る．
+      文脈照合は従来の RAF の検索で，実際に使える．K は 1 から 256 までの 2 の累乗である．
     </p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body">
+        <figure style="margin:0">
+          <svg viewBox="0 0 880 340" role="img" style="max-width:100%;height:auto"
+               aria-label="事例の件数 K（1〜256，2 の累乗）と val の MSE．未来照合は K=8 で最良の 0.4672 になり，件数を増やすと悪くなる．文脈照合は K=4 まで参照なしより悪く，K=64 で最良の 0.5084．参照なしは 0.5254．"
+               fill="none" font-family="inherit" font-size="12">
+            <line x1="80" y1="258.8" x2="760" y2="258.8" stroke="var(--rule-soft)"/><text x="70" y="262.8" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="11">0.47</text><line x1="80" y1="196.3" x2="760" y2="196.3" stroke="var(--rule-soft)"/><text x="70" y="200.3" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="11">0.49</text><line x1="80" y1="133.8" x2="760" y2="133.8" stroke="var(--rule-soft)"/><text x="70" y="137.8" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="11">0.51</text><line x1="80" y1="71.3" x2="760" y2="71.3" stroke="var(--rule-soft)"/><text x="70" y="75.3" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="11">0.53</text>
+            <line x1="80" y1="85.5" x2="760" y2="85.5" stroke="var(--ink-soft)" stroke-dasharray="5 4"/>
+            <text x="768" y="89.5" fill="var(--ink-soft)" stroke="none" font-size="11">参照なし 0.5254</text>
+            <line x1="80" y1="290" x2="760" y2="290" stroke="var(--rule)"/>
+            <text x="80.0" y="310" text-anchor="middle" fill="var(--ink-faint)" stroke="none" font-size="11">1</text><text x="165.0" y="310" text-anchor="middle" fill="var(--ink-faint)" stroke="none" font-size="11">2</text><text x="250.0" y="310" text-anchor="middle" fill="var(--ink-faint)" stroke="none" font-size="11">4</text><text x="335.0" y="310" text-anchor="middle" fill="var(--ink-faint)" stroke="none" font-size="11">8</text><text x="420.0" y="310" text-anchor="middle" fill="var(--ink-faint)" stroke="none" font-size="11">16</text><text x="505.0" y="310" text-anchor="middle" fill="var(--ink-faint)" stroke="none" font-size="11">32</text><text x="590.0" y="310" text-anchor="middle" fill="var(--ink-faint)" stroke="none" font-size="11">64</text><text x="675.0" y="310" text-anchor="middle" fill="var(--ink-faint)" stroke="none" font-size="11">128</text><text x="760.0" y="310" text-anchor="middle" fill="var(--ink-faint)" stroke="none" font-size="11">256</text>
+            <text x="420" y="330" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="11.5">事例の件数 K（対数目盛）</text>
+            <text x="70" y="26" text-anchor="end" fill="var(--ink-soft)" stroke="none" font-size="11.5">MSE（val）</text>
+            <path d="M80.0 78.0 L165.0 67.0 L250.0 77.8 L335.0 107.0 L420.0 124.7 L505.0 127.6 L590.0 138.9 L675.0 135.3 L760.0 131.5" stroke="var(--series-1)" stroke-width="2" fill="none"/><circle cx="80.0" cy="78.0" r="4.5" fill="var(--series-1)" stroke="var(--surface)" stroke-width="2"><title>文脈照合 K=1：MSE 0.5278（参照なし比 +0.5%）</title></circle><circle cx="165.0" cy="67.0" r="4.5" fill="var(--series-1)" stroke="var(--surface)" stroke-width="2"><title>文脈照合 K=2：MSE 0.5313（参照なし比 +1.1%）</title></circle><circle cx="250.0" cy="77.8" r="4.5" fill="var(--series-1)" stroke="var(--surface)" stroke-width="2"><title>文脈照合 K=4：MSE 0.5279（参照なし比 +0.5%）</title></circle><circle cx="335.0" cy="107.0" r="4.5" fill="var(--series-1)" stroke="var(--surface)" stroke-width="2"><title>文脈照合 K=8：MSE 0.5186（参照なし比 −1.3%）</title></circle><circle cx="420.0" cy="124.7" r="4.5" fill="var(--series-1)" stroke="var(--surface)" stroke-width="2"><title>文脈照合 K=16：MSE 0.5129（参照なし比 −2.4%）</title></circle><circle cx="505.0" cy="127.6" r="4.5" fill="var(--series-1)" stroke="var(--surface)" stroke-width="2"><title>文脈照合 K=32：MSE 0.5120（参照なし比 −2.6%）</title></circle><circle cx="590.0" cy="138.9" r="4.5" fill="var(--series-1)" stroke="var(--surface)" stroke-width="2"><title>文脈照合 K=64：MSE 0.5084（参照なし比 −3.2%）</title></circle><circle cx="675.0" cy="135.3" r="4.5" fill="var(--series-1)" stroke="var(--surface)" stroke-width="2"><title>文脈照合 K=128：MSE 0.5095（参照なし比 −3.0%）</title></circle><circle cx="760.0" cy="131.5" r="4.5" fill="var(--series-1)" stroke="var(--surface)" stroke-width="2"><title>文脈照合 K=256：MSE 0.5107（参照なし比 −2.8%）</title></circle>
+            <path d="M80.0 146.9 L165.0 185.9 L250.0 243.7 L335.0 267.4 L420.0 265.1 L505.0 236.2 L590.0 219.5 L675.0 190.8 L760.0 168.5" stroke="var(--series-2)" stroke-width="2" fill="none"/><circle cx="80.0" cy="146.9" r="4.5" fill="var(--series-2)" stroke="var(--surface)" stroke-width="2"><title>未来照合 K=1：MSE 0.5058（参照なし比 −3.7%）</title></circle><circle cx="165.0" cy="185.9" r="4.5" fill="var(--series-2)" stroke="var(--surface)" stroke-width="2"><title>未来照合 K=2：MSE 0.4933（参照なし比 −6.1%）</title></circle><circle cx="250.0" cy="243.7" r="4.5" fill="var(--series-2)" stroke="var(--surface)" stroke-width="2"><title>未来照合 K=4：MSE 0.4748（参照なし比 −9.6%）</title></circle><circle cx="335.0" cy="267.4" r="4.5" fill="var(--series-2)" stroke="var(--surface)" stroke-width="2"><title>未来照合 K=8：MSE 0.4672（参照なし比 −11.1%）</title></circle><circle cx="420.0" cy="265.1" r="4.5" fill="var(--series-2)" stroke="var(--surface)" stroke-width="2"><title>未来照合 K=16：MSE 0.4680（参照なし比 −10.9%）</title></circle><circle cx="505.0" cy="236.2" r="4.5" fill="var(--series-2)" stroke="var(--surface)" stroke-width="2"><title>未来照合 K=32：MSE 0.4772（参照なし比 −9.2%）</title></circle><circle cx="590.0" cy="219.5" r="4.5" fill="var(--series-2)" stroke="var(--surface)" stroke-width="2"><title>未来照合 K=64：MSE 0.4826（参照なし比 −8.2%）</title></circle><circle cx="675.0" cy="190.8" r="4.5" fill="var(--series-2)" stroke="var(--surface)" stroke-width="2"><title>未来照合 K=128：MSE 0.4917（参照なし比 −6.4%）</title></circle><circle cx="760.0" cy="168.5" r="4.5" fill="var(--series-2)" stroke="var(--surface)" stroke-width="2"><title>未来照合 K=256：MSE 0.4989（参照なし比 −5.1%）</title></circle>
+            <text x="770.0" y="125.5" fill="var(--ink)" stroke="none" font-size="11.5">文脈照合</text>
+            <text x="770.0" y="172.5" fill="var(--ink)" stroke="none" font-size="11.5">未来照合</text>
+            <g transform="translate(80,10)">
+              <line x1="0" y1="0" x2="20" y2="0" stroke="var(--series-2)" stroke-width="2"/><circle cx="10" cy="0" r="4" fill="var(--series-2)"/>
+              <text x="28" y="4" fill="var(--ink-soft)" stroke="none" font-size="11.5">未来照合（診断）</text>
+              <line x1="150" y1="0" x2="170" y2="0" stroke="var(--series-1)" stroke-width="2"/><circle cx="160" cy="0" r="4" fill="var(--series-1)"/>
+              <text x="178" y="4" fill="var(--ink-soft)" stroke="none" font-size="11.5">文脈照合</text>
+            </g>
+          </svg>
+          <figcaption class="plate-cap" style="border:0;background:none;padding:14px 0 0">
+            <b>未来照合は 8 件で最良，文脈照合は件数を増やしてもその一部にしか届かない</b>
+            点にカーソルを合わせると値が出る．数値は下の表．
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+    <div class="plate">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th class="lbl" rowspan="2">val（全 7 チャネル，並列）</th>
+              <th colspan="2" style="text-align:center">MSE（参照なし 0.5254）</th><th colspan="2" style="text-align:center">MAE（参照なし 0.4634）</th><th colspan="2" style="text-align:center">QL（参照なし 0.1852）</th></tr>
+            <tr><th>文脈照合</th><th>未来照合</th><th>文脈照合</th><th>未来照合</th><th>文脈照合</th><th>未来照合</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="lbl">K=1</td><td>0.5278（+0.5%）</td><td>0.5058（−3.7%）</td><td>0.4657（+0.5%）</td><td>0.4559（−1.6%）</td><td>0.1866（+0.8%）</td><td>0.1810（−2.2%）</td></tr>
+            <tr><td class="lbl">K=2</td><td>0.5313（+1.1%）</td><td>0.4933（−6.1%）</td><td>0.4690（+1.2%）</td><td>0.4517（−2.5%）</td><td>0.1873（+1.1%）</td><td>0.1785（−3.6%）</td></tr>
+            <tr><td class="lbl">K=4</td><td>0.5279（+0.5%）</td><td>0.4748（−9.6%）</td><td>0.4693（+1.3%）</td><td>0.4452（−3.9%）</td><td>0.1867（+0.8%）</td><td>0.1756（−5.2%）</td></tr>
+            <tr class="orc"><td class="lbl">K=8</td><td>0.5186（−1.3%）</td><td>0.4672（−11.1%）</td><td>0.4674（+0.9%）</td><td>0.4434（−4.3%）</td><td>0.1856（+0.2%）</td><td>0.1749（−5.5%）</td></tr>
+            <tr><td class="lbl">K=16</td><td>0.5129（−2.4%）</td><td>0.4680（−10.9%）</td><td>0.4675（+0.9%）</td><td>0.4451（−4.0%）</td><td>0.1855（+0.2%）</td><td>0.1758（−5.0%）</td></tr>
+            <tr><td class="lbl">K=32</td><td>0.5120（−2.6%）</td><td>0.4772（−9.2%）</td><td>0.4693（+1.3%）</td><td>0.4498（−2.9%）</td><td>0.1859（+0.4%）</td><td>0.1778（−3.9%）</td></tr>
+            <tr><td class="lbl">K=64</td><td>0.5084（−3.2%）</td><td>0.4826（−8.2%）</td><td>0.4689（+1.2%）</td><td>0.4538（−2.1%）</td><td>0.1862（+0.6%）</td><td>0.1797（−2.9%）</td></tr>
+            <tr><td class="lbl">K=128</td><td>0.5095（−3.0%）</td><td>0.4917（−6.4%）</td><td>0.4684（+1.1%）</td><td>0.4584（−1.1%）</td><td>0.1863（+0.6%）</td><td>0.1821（−1.6%）</td></tr>
+            <tr><td class="lbl">K=256</td><td>0.5107（−2.8%）</td><td>0.4989（−5.1%）</td><td>0.4687（+1.1%）</td><td>0.4625（−0.2%）</td><td>0.1869（+0.9%）</td><td>0.1841（−0.5%）</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="plate-cap">
+        <b>括弧内は参照なしとの比．マイナスなら参照なしより良い</b>
+        未来照合は K=8 で MSE −11.1%，MAE −4.3%，QL −5.5% と，3 つの指標すべてで参照なしを大きく上回り，80% 区間の的中率も 0.801 と理想の 0.80 に一致する．
+        件数を増やすと順位の低い（未来の遠い）窓が混ざり，K=256 では MSE −5.1%，QL −0.5% まで落ちる．
+        文脈照合は K=4 までは参照なしより悪く，件数を増やすと MSE は K=64 の −3.2% まで良くなるが，MAE と QL はどの K でも参照なしに届かない（的中率は 0.74〜0.86 と広がりすぎる）．
+      </div>
+    </div>
+  </div>
+  <div class="prose">
+    <div class="callout">
+      <span class="lead">分かったこと</span>
+      <p>
+        <strong>正しい参照なら，少ない件数で MSE・MAE・QL のすべてが大きく良くなる．</strong>
+        未来照合 8 件（MSE −11.1%）と，文脈照合の最良（64 件で −3.2%）の間には大きな差があり，これが選び方を改善できる余地である．
+        文脈照合は質の低さを件数で補っている形で，件数を増やすほど予測の区間が広がり，分布の当たり具合（QL）は良くならない．
+        目指すべきは，件数を増やすことではなく，未来照合に近い窓を少数でも選べる検索である．
+      </p>
+    </div>
+    <p>
+      ただし未来照合は正解を見て選んでいるので，この差をどこまで埋められるかは分からない．
+      文脈が似ている窓の未来は，クエリの未来とあまり似ていない（整理前の測定で，OT チャネルの順位相関 +0.12）．
+      整理前には encoder や多様性の工夫も試したが，どれも直前の窓（recency）を超えられなかった．
+    </p>
+    <h3>test での確認（K=8）</h3>
   </div>
   <div class="wide">
     <div class="plate">
@@ -719,22 +863,13 @@ future_covariates = { "ret0": 事例0の未来 64 点,               …, "ret7"
         </table>
       </div>
       <div class="plate-cap">
-        <b>未来照合なら大きく効くが，実際に使える文脈照合はほぼ効かない</b>
+        <b>test でも同じ傾向：未来照合は大きく効き，文脈照合（K=8）はほぼ効かない</b>
         文脈照合は MSE だけわずかに良くなり，MAE と QL（分布の当たり具合）はむしろ悪くなる．
         test の MSE −4.5% は HUFL・MUFL の 2 チャネル（それぞれ −6%，−7%）がほぼすべてで，OT では +12% 悪化する．
       </div>
     </div>
   </div>
-  <div class="prose">
-    <p>
-      文脈が似ている窓の未来は，クエリの未来とあまり似ていない（整理前の測定で，OT チャネルの順位相関 +0.12）．
-      クエリごとに未来照合の窓を当てるのは，未来を予測するのと同じくらい難しい．
-      整理前には encoder や多様性の工夫も試したが，どれも直前の窓（recency）を超えられなかった．
-    </p>
-    <p>
-      ただしこれは K=8 の結果である．並列なら文脈照合も数百件まで増やせて，件数を増やすと効くようになる（4 節）．
-    </p>
-  </div>
+
 </section>
 
 <!-- ============================== 4 -->
@@ -839,28 +974,92 @@ future_covariates = { "ret0": 事例0の未来 64 点,               …, "ret7"
         連結は 8192 点の文脈に 35 件しか入らない（2 節）．数百件を渡せるのは並列だけである</span></div>
       <div><span class="cond">件数で安定する</span><span class="then">ランダムに選んでも，件数を増やすほど seed によるばらつきが小さくなる（K=8 で ±0.0048，K=256 で ±0.0009）．
         どのクエリにも合う事例が含まれる確率が上がるためと考えられる</span></div>
-      <div><span class="cond">LLM の知見</span><span class="then">LLM の many-shot ICL では，件数が増えるとクエリごとの検索の利点は薄れ，固定のセットを使い回すのが主流になっている
-        （Agarwal et al., 2024；Bertsch et al., 2024）</span></div>
     </div>
     <h3>ランダムな共通セットの結果</h3>
   </div>
   <div class="wide">
     <div class="plate">
+      <div class="plate-body">
+        <figure style="margin:0">
+          <svg viewBox="0 0 880 300" role="img" style="max-width:100%;height:auto"
+               aria-label="ランダム共通セットの件数 K と val の MSE・MAE．MSE は K=128 まで下がり参照なしより良いが，MAE はどの K でも参照なしより悪い．" fill="none" font-family="inherit" font-size="12">
+            <text x="70" y="26" fill="var(--ink)" stroke="none" font-size="13" font-weight="700">MSE</text>
+            <line x1="70" y1="182.7" x2="420" y2="182.7" stroke="var(--rule-soft)"/>
+            <text x="64" y="186.7" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.515</text>
+            <line x1="70" y1="129.1" x2="420" y2="129.1" stroke="var(--rule-soft)"/>
+            <text x="64" y="133.1" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.520</text>
+            <line x1="70" y1="75.4" x2="420" y2="75.4" stroke="var(--rule-soft)"/>
+            <text x="64" y="79.4" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.525</text>
+            <line x1="70" y1="230" x2="420" y2="230" stroke="var(--rule)"/>
+            <text x="88.0" y="248" text-anchor="middle" fill="var(--ink-faint)" stroke="none" font-size="10.5">8</text>
+            <text x="213.6" y="248" text-anchor="middle" fill="var(--ink-faint)" stroke="none" font-size="10.5">32</text>
+            <text x="339.2" y="248" text-anchor="middle" fill="var(--ink-faint)" stroke="none" font-size="10.5">128</text>
+            <text x="402.0" y="248" text-anchor="middle" fill="var(--ink-faint)" stroke="none" font-size="10.5">256</text>
+            <line x1="70" y1="70.8" x2="420" y2="70.8" stroke="var(--ink-soft)" stroke-dasharray="5 4"/>
+            <text x="420" y="64.8" text-anchor="end" fill="var(--ink-soft)" stroke="none" font-size="10.5">参照なし 0.5254</text>
+            <path d="M88.0 139.7 L213.6 134.1 L339.2 195.7 L402.0 187.5" stroke="var(--series-1)" stroke-width="2" fill="none"/>
+            <line x1="88.0" y1="191.0" x2="88.0" y2="88.4" stroke="var(--series-1)" stroke-width="1.5"/>
+            <circle cx="88.0" cy="139.7" r="4.5" fill="var(--series-1)" stroke="var(--surface)" stroke-width="2"><title>ランダム共通セット K=8：MSE 0.5190 ± 0.0048（5 seed）．参照なし 0.5254</title></circle>
+            <line x1="213.6" y1="160.0" x2="213.6" y2="108.3" stroke="var(--series-1)" stroke-width="1.5"/>
+            <circle cx="213.6" cy="134.1" r="4.5" fill="var(--series-1)" stroke="var(--surface)" stroke-width="2"><title>ランダム共通セット K=32：MSE 0.5195 ± 0.0024（5 seed）．参照なし 0.5254</title></circle>
+            <line x1="339.2" y1="209.2" x2="339.2" y2="182.2" stroke="var(--series-1)" stroke-width="1.5"/>
+            <circle cx="339.2" cy="195.7" r="4.5" fill="var(--series-1)" stroke="var(--surface)" stroke-width="2"><title>ランダム共通セット K=128：MSE 0.5138 ± 0.0013（5 seed）．参照なし 0.5254</title></circle>
+            <line x1="402.0" y1="197.5" x2="402.0" y2="177.5" stroke="var(--series-1)" stroke-width="1.5"/>
+            <circle cx="402.0" cy="187.5" r="4.5" fill="var(--series-1)" stroke="var(--surface)" stroke-width="2"><title>ランダム共通セット K=256：MSE 0.5146 ± 0.0009（5 seed）．参照なし 0.5254</title></circle>
+            <text x="510" y="26" fill="var(--ink)" stroke="none" font-size="13" font-weight="700">MAE</text>
+            <line x1="510" y1="223.4" x2="860" y2="223.4" stroke="var(--rule-soft)"/>
+            <text x="504" y="227.4" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.463</text>
+            <line x1="510" y1="183.8" x2="860" y2="183.8" stroke="var(--rule-soft)"/>
+            <text x="504" y="187.8" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.465</text>
+            <line x1="510" y1="144.2" x2="860" y2="144.2" stroke="var(--rule-soft)"/>
+            <text x="504" y="148.2" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.468</text>
+            <line x1="510" y1="104.7" x2="860" y2="104.7" stroke="var(--rule-soft)"/>
+            <text x="504" y="108.7" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.470</text>
+            <line x1="510" y1="65.1" x2="860" y2="65.1" stroke="var(--rule-soft)"/>
+            <text x="504" y="69.1" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.472</text>
+            <line x1="510" y1="230" x2="860" y2="230" stroke="var(--rule)"/>
+            <text x="528.0" y="248" text-anchor="middle" fill="var(--ink-faint)" stroke="none" font-size="10.5">8</text>
+            <text x="653.6" y="248" text-anchor="middle" fill="var(--ink-faint)" stroke="none" font-size="10.5">32</text>
+            <text x="779.2" y="248" text-anchor="middle" fill="var(--ink-faint)" stroke="none" font-size="10.5">128</text>
+            <text x="842.0" y="248" text-anchor="middle" fill="var(--ink-faint)" stroke="none" font-size="10.5">256</text>
+            <line x1="510" y1="209.2" x2="860" y2="209.2" stroke="var(--ink-soft)" stroke-dasharray="5 4"/>
+            <text x="860" y="203.2" text-anchor="end" fill="var(--ink-soft)" stroke="none" font-size="10.5">参照なし 0.4634</text>
+            <path d="M528.0 133.3 L653.6 88.6 L779.2 124.8 L842.0 116.3" stroke="var(--series-1)" stroke-width="2" fill="none"/>
+            <line x1="528.0" y1="162.0" x2="528.0" y2="104.6" stroke="var(--series-1)" stroke-width="1.5"/>
+            <circle cx="528.0" cy="133.3" r="4.5" fill="var(--series-1)" stroke="var(--surface)" stroke-width="2"><title>ランダム共通セット K=8：MAE 0.4682 ± 0.0018（5 seed）．参照なし 0.4634</title></circle>
+            <line x1="653.6" y1="106.4" x2="653.6" y2="70.8" stroke="var(--series-1)" stroke-width="1.5"/>
+            <circle cx="653.6" cy="88.6" r="4.5" fill="var(--series-1)" stroke="var(--surface)" stroke-width="2"><title>ランダム共通セット K=32：MAE 0.4710 ± 0.0011（5 seed）．参照なし 0.4634</title></circle>
+            <line x1="779.2" y1="136.6" x2="779.2" y2="113.1" stroke="var(--series-1)" stroke-width="1.5"/>
+            <circle cx="779.2" cy="124.8" r="4.5" fill="var(--series-1)" stroke="var(--surface)" stroke-width="2"><title>ランダム共通セット K=128：MAE 0.4687 ± 0.0007（5 seed）．参照なし 0.4634</title></circle>
+            <line x1="842.0" y1="128.8" x2="842.0" y2="103.7" stroke="var(--series-1)" stroke-width="1.5"/>
+            <circle cx="842.0" cy="116.3" r="4.5" fill="var(--series-1)" stroke="var(--surface)" stroke-width="2"><title>ランダム共通セット K=256：MAE 0.4693 ± 0.0008（5 seed）．参照なし 0.4634</title></circle>
+            <text x="465" y="270" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="11.5">事例の件数 K（対数目盛）．点は 5 seed の平均，縦線は ±標準偏差，破線は参照なし．低いほど良い</text>
+          </svg>
+          <figcaption class="plate-cap" style="border:0;background:none;padding:14px 0 0">
+            <b>MSE は件数とともに下がるが，MAE は参照なしに届かない</b>
+            点にカーソルを合わせると値が出る．数値は下の表．
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+  <div class="wide">
+    <div class="plate">
       <div class="table-scroll">
         <table>
-          <thead><tr><th class="lbl">val（全 7 チャネル，並列）</th><th>MSE</th><th>参照なし比</th><th>MAE</th><th>QL</th></tr></thead>
+          <thead><tr><th class="lbl">val（全 7 チャネル，並列）</th><th>MSE</th><th>参照なし比</th><th>MAE</th></tr></thead>
           <tbody>
-            <tr class="ctx"><td class="lbl">参照なし</td><td>0.5254</td><td>—</td><td>0.4634</td><td>0.1852</td></tr>
-            <tr><td class="lbl">ランダム共通セット K=8</td><td>0.5190 ±0.0048</td><td>−1.2%</td><td>0.4682（+1.0%）</td><td>0.1864（+0.7%）</td></tr>
-            <tr><td class="lbl">ランダム共通セット K=32</td><td>0.5195 ±0.0024</td><td>−1.1%</td><td>0.4710（+1.6%）</td><td>0.1874（+1.2%）</td></tr>
-            <tr><td class="lbl">ランダム共通セット K=128</td><td>0.5138 ±0.0013</td><td>−2.2%</td><td>0.4687（+1.2%）</td><td>0.1867（+0.9%）</td></tr>
-            <tr><td class="lbl">ランダム共通セット K=256</td><td>0.5146 ±0.0009</td><td>−2.1%</td><td>0.4693（+1.3%）</td><td>0.1871（+1.1%）</td></tr>
-            <tr><td class="lbl">（参考）文脈照合 K=8</td><td>0.5186</td><td>−1.3%</td><td>0.4674（+0.9%）</td><td>0.1856（+0.2%）</td></tr>
+            <tr class="ctx"><td class="lbl">参照なし</td><td>0.5254</td><td>—</td><td>0.4634</td></tr>
+            <tr><td class="lbl">ランダム共通セット K=8</td><td>0.5190 ±0.0048</td><td>−1.2%</td><td>0.4682（+1.0%）</td></tr>
+            <tr><td class="lbl">ランダム共通セット K=32</td><td>0.5195 ±0.0024</td><td>−1.1%</td><td>0.4710（+1.6%）</td></tr>
+            <tr><td class="lbl">ランダム共通セット K=128</td><td>0.5138 ±0.0013</td><td>−2.2%</td><td>0.4687（+1.2%）</td></tr>
+            <tr><td class="lbl">ランダム共通セット K=256</td><td>0.5146 ±0.0009</td><td>−2.1%</td><td>0.4693（+1.3%）</td></tr>
+            <tr><td class="lbl">（参考）文脈照合 K=8</td><td>0.5186</td><td>−1.3%</td><td>0.4674（+0.9%）</td></tr>
           </tbody>
         </table>
       </div>
       <div class="plate-cap">
-        <b>件数を増やすと MSE は K=128 まで下がって頭打ち．MAE と QL はどの K でも約 1% 悪化</b>
+        <b>件数を増やすと MSE は K=128 まで下がって頭打ち．MAE はどの K でも約 1% 悪化</b>
         ランダム共通セットは 5 seed の平均 ± 標準偏差．ランダムに選ぶだけでは，文脈照合と同程度にとどまる．
         K は val で決めてから test を出す（test はまだ）．
       </div>
@@ -875,12 +1074,66 @@ future_covariates = { "ret0": 事例0の未来 64 点,               …, "ret7"
   </div>
   <div class="wide">
     <div class="plate">
+      <div class="plate-body">
+        <figure style="margin:0">
+          <svg viewBox="0 0 880 300" role="img" style="max-width:100%;height:auto"
+               aria-label="同じランダム共通セット（K=32）で，事例どうしの未来を入れ替えると MSE と MAE がどちらも悪化する．MSE 0.5195 → 0.5451，MAE 0.4710 → 0.4938．参照なしは MSE 0.5254，MAE 0.4634．" fill="none" font-family="inherit" font-size="12">
+            <text x="70" y="26" fill="var(--ink)" stroke="none" font-size="13" font-weight="700">MSE</text>
+            <line x1="70" y1="230.0" x2="420" y2="230.0" stroke="var(--rule)"/>
+            <text x="64" y="234.0" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.0</text>
+            <line x1="70" y1="170.0" x2="420" y2="170.0" stroke="var(--rule-soft)"/>
+            <text x="64" y="174.0" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.2</text>
+            <line x1="70" y1="110.0" x2="420" y2="110.0" stroke="var(--rule-soft)"/>
+            <text x="64" y="114.0" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.4</text>
+            <line x1="70" y1="50.0" x2="420" y2="50.0" stroke="var(--rule-soft)"/>
+            <text x="64" y="54.0" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.6</text>
+            <rect x="140.0" y="74.1" width="70" height="155.9" rx="2" fill="var(--series-1)"><title>ランダム共通セット（K=32）：MSE 0.5195 ± 0.0024（5 seed）．参照なし 0.5254</title></rect>
+            <line x1="175.0" y1="74.9" x2="175.0" y2="73.4" stroke="var(--ink)" stroke-width="1.5"/>
+            <text x="175.0" y="248" text-anchor="middle" fill="var(--ink)" stroke="none" font-size="11.5">ランダム共通セット</text>
+            <rect x="280.0" y="66.5" width="70" height="163.5" rx="2" fill="var(--ink-faint)"><title>未来を入れ替え（K=32）：MSE 0.5451 ± 0.0029（5 seed）．参照なし 0.5254</title></rect>
+            <line x1="315.0" y1="67.4" x2="315.0" y2="65.6" stroke="var(--ink)" stroke-width="1.5"/>
+            <text x="315.0" y="248" text-anchor="middle" fill="var(--ink)" stroke="none" font-size="11.5">未来を入れ替え</text>
+            <line x1="70" y1="72.4" x2="420" y2="72.4" stroke="var(--ink-soft)" stroke-dasharray="5 4"/>
+            <text x="76" y="66.4" fill="var(--ink-soft)" stroke="none" font-size="10.5">参照なし 0.5254</text>
+            <text x="175.0" y="92.1" text-anchor="middle" fill="var(--surface)" stroke="none" font-size="11" font-weight="600">0.5195</text>
+            <text x="315.0" y="58.5" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="11">0.5451</text>
+            <text x="510" y="26" fill="var(--ink)" stroke="none" font-size="13" font-weight="700">MAE</text>
+            <line x1="510" y1="230.0" x2="860" y2="230.0" stroke="var(--rule)"/>
+            <text x="504" y="234.0" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.0</text>
+            <line x1="510" y1="170.0" x2="860" y2="170.0" stroke="var(--rule-soft)"/>
+            <text x="504" y="174.0" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.2</text>
+            <line x1="510" y1="110.0" x2="860" y2="110.0" stroke="var(--rule-soft)"/>
+            <text x="504" y="114.0" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.4</text>
+            <line x1="510" y1="50.0" x2="860" y2="50.0" stroke="var(--rule-soft)"/>
+            <text x="504" y="54.0" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="10.5">0.6</text>
+            <rect x="580.0" y="88.7" width="70" height="141.3" rx="2" fill="var(--series-1)"><title>ランダム共通セット（K=32）：MAE 0.4710 ± 0.0011（5 seed）．参照なし 0.4634</title></rect>
+            <line x1="615.0" y1="89.0" x2="615.0" y2="88.4" stroke="var(--ink)" stroke-width="1.5"/>
+            <text x="615.0" y="248" text-anchor="middle" fill="var(--ink)" stroke="none" font-size="11.5">ランダム共通セット</text>
+            <rect x="720.0" y="81.9" width="70" height="148.1" rx="2" fill="var(--ink-faint)"><title>未来を入れ替え（K=32）：MAE 0.4938 ± 0.0014（5 seed）．参照なし 0.4634</title></rect>
+            <line x1="755.0" y1="82.3" x2="755.0" y2="81.4" stroke="var(--ink)" stroke-width="1.5"/>
+            <text x="755.0" y="248" text-anchor="middle" fill="var(--ink)" stroke="none" font-size="11.5">未来を入れ替え</text>
+            <line x1="510" y1="91.0" x2="860" y2="91.0" stroke="var(--ink-soft)" stroke-dasharray="5 4"/>
+            <text x="516" y="85.0" fill="var(--ink-soft)" stroke="none" font-size="10.5">参照なし 0.4634</text>
+            <text x="615.0" y="80.7" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="11">0.4710</text>
+            <text x="755.0" y="73.9" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="11">0.4938</text>
+            <text x="465" y="274" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="11.5">val，K=32．棒は 5 seed の平均，縦線は ±標準偏差，破線は参照なし．低いほど良い</text>
+          </svg>
+          <figcaption class="plate-cap" style="border:0;background:none;padding:14px 0 0">
+            <b>未来を入れ替えると，MSE も MAE も悪化する</b>
+            点にカーソルを合わせると値が出る．数値は下の表．
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+  <div class="wide">
+    <div class="plate">
       <div class="table-scroll">
         <table>
-          <thead><tr><th class="lbl">val，K=32，5 seed</th><th>MSE</th><th>MAE</th><th>QL</th></tr></thead>
+          <thead><tr><th class="lbl">val，K=32，5 seed</th><th>MSE</th><th>MAE</th></tr></thead>
           <tbody>
-            <tr><td class="lbl">ランダム共通セット</td><td>0.5195（−1.1%）</td><td>0.4710（+1.6%）</td><td>0.1874（+1.2%）</td></tr>
-            <tr><td class="lbl">同じセットで未来を入れ替え</td><td>0.5451（+3.7%）</td><td>0.4938（+6.6%）</td><td>0.2023（+9.3%）</td></tr>
+            <tr><td class="lbl">ランダム共通セット</td><td>0.5195（−1.1%）</td><td>0.4710（+1.6%）</td></tr>
+            <tr><td class="lbl">同じセットで未来を入れ替え</td><td>0.5451（+3.7%）</td><td>0.4938（+6.6%）</td></tr>
           </tbody>
         </table>
       </div>
@@ -889,48 +1142,6 @@ future_covariates = { "ret0": 事例0の未来 64 点,               …, "ret7"
         割合は参照なし比．未来の値の集合は同じなので，分布だけが使われているなら変わらないはずである．
         モデルは事例ごとの「この文脈の後にこの未来が来た」という対応を使っている．
       </div>
-    </div>
-  </div>
-  <div class="prose">
-    <h3>クエリごとの検索も many-shot にできる</h3>
-    <p>
-      並列なら，クエリごとの文脈照合も数百件まで増やせる．同じ件数で，ランダムな共通セットと文脈照合を比べた．
-    </p>
-  </div>
-  <div class="wide">
-    <div class="plate">
-      <div class="table-scroll">
-        <table>
-          <thead>
-            <tr><th class="lbl" rowspan="2">val（全 7 チャネル，並列）</th>
-              <th colspan="2" style="text-align:center">MSE（参照なし 0.5254）</th><th colspan="2" style="text-align:center">MAE（参照なし 0.4634）</th><th colspan="2" style="text-align:center">QL（参照なし 0.1852）</th></tr>
-            <tr><th>ランダム（平均）</th><th>文脈照合</th><th>ランダム（平均）</th><th>文脈照合</th><th>ランダム（平均）</th><th>文脈照合</th></tr>
-          </thead>
-          <tbody>
-            <tr><td class="lbl">K=8</td><td>0.5190</td><td>0.5186（−0.1%）</td><td>0.4682</td><td>0.4674（−0.2%）</td><td>0.1864</td><td>0.1856（−0.5%）</td></tr>
-            <tr><td class="lbl">K=32</td><td>0.5170</td><td>0.5120（−1.0%）</td><td>0.4699</td><td>0.4693（−0.1%）</td><td>0.1870</td><td>0.1859（−0.6%）</td></tr>
-            <tr><td class="lbl">K=128</td><td>0.5138</td><td>0.5095（−0.8%）</td><td>0.4687</td><td>0.4684（−0.1%）</td><td>0.1867</td><td>0.1863（−0.2%）</td></tr>
-            <tr><td class="lbl">K=256</td><td>0.5146</td><td>0.5107（−0.7%）</td><td>0.4693</td><td>0.4687（−0.1%）</td><td>0.1871</td><td>0.1869（−0.2%）</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="plate-cap">
-        <b>どの件数でも文脈照合の方が良く，MSE は文脈照合 128 件（参照なし比 −3.0%）が最良</b>
-        括弧内はランダム共通セット（K=32 は 25 本，ほかは 5 本の平均）との比で，マイナスなら良い．
-        文脈照合は件数を増やすほど良くなり，K=128 で頭打ちになる．MAE と QL は，どちらも参照なしに届かない（事例を増やすと 80% 区間が広がりすぎる）．
-        共通セットに文脈照合を足すハイブリッドは，文脈照合が少ないときだけ効いた（<a href="clg-note.html">別冊</a>）．
-      </div>
-    </div>
-  </div>
-  <div class="prose">
-    <div class="callout">
-      <span class="lead">分かったこと</span>
-      <p>
-        <strong>並列なら many-shot にでき，件数を増やすほど MSE が下がる．同じ件数なら，クエリごとの文脈照合の方が共通セットより良い．</strong>
-        事例の中身（文脈と未来の対応）は読まれている．共通セットの中身を勾配で選ぶ試み（CLG・Parallel-CLG）は，
-        ランダムとの差が小さく文脈照合に届かなかったので，<a href="clg-note.html">別冊</a>に分けた．
-        残る課題は，事例を増やすと予測の区間が広がりすぎ，MAE と QL が参照なしに届かないことである．
-      </p>
     </div>
   </div>
 </section>
