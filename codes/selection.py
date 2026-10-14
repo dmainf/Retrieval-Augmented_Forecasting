@@ -17,6 +17,11 @@ instance-level (chosen per query among the pool windows that end before its cont
             context and the query on its history, as the rows reach Chronos-2
   oracle    nearest futures to the TRUE future; a diagnostic bound, not a method
   oraclerv  the same in the reader's view; a diagnostic bound, not a method
+  ar        nearest past->future relation: AR coefficients (lags AR_LAGS) fitted on each window's
+            context + future, against the query's fitted on its last seq_len + pred_len history
+            points; no distance on values at all
+  aroracle  the same with the query's coefficients fitted on its context + TRUE future; a
+            diagnostic bound, not a method
   proxy     nearest futures to y + lambda * (f - y), f the no-reference median forecast:
             lambda 0 is the oracle, 1 retrieves by the model's own forecast (realizable);
             in between measures how good a guess of the future must be (diagnostic)
@@ -44,7 +49,9 @@ hybrid (--inst-k)
 import numpy as np
 
 TASK_LEVEL = ("random", "clg", "pclg")
-INSTANCE_LEVEL = ("l2", "l2rv", "oracle", "oraclerv", "proxy", "truth", "attn")
+INSTANCE_LEVEL = ("l2", "l2rv", "oracle", "oraclerv", "ar", "aroracle", "proxy", "truth", "attn")
+AR_LAGS = (1, 2, 3, 24)
+AR_RIDGE = 1e-2
 
 
 def nearest(keys_db: np.ndarray, keys_q: np.ndarray, k: int, limit: np.ndarray,
@@ -72,6 +79,15 @@ def reader_view(x: np.ndarray, ref: np.ndarray) -> np.ndarray:
     return np.arcsinh((x - loc) / np.where(scale == 0, 1e-5, scale))
 
 
+def ar_coef(x: np.ndarray, ref: np.ndarray, lags=AR_LAGS, ridge: float = AR_RIDGE) -> np.ndarray:
+    """(N, T) series z-normed on ref (N, R) -> (N, len(lags) + 1) ridge AR coefficients and intercept."""
+    z = (x - ref.mean(1, keepdims=True)) / (ref.std(1, keepdims=True) + 1e-8)
+    m = max(lags)
+    X = np.stack([z[:, m - l:z.shape[1] - l] for l in lags] + [np.ones((len(z), z.shape[1] - m))], -1)
+    A = np.einsum("ntp,ntq->npq", X, X) + ridge * np.eye(X.shape[-1])[None]
+    return np.linalg.solve(A, np.einsum("ntp,nt->np", X, z[:, m:])[..., None])[..., 0]
+
+
 def instance_level(method: str, pool: np.ndarray, query: np.ndarray, limit: np.ndarray,
                    k: int, s: int, exclude=None, history: np.ndarray = None,
                    target: np.ndarray = None):
@@ -94,6 +110,17 @@ def instance_level(method: str, pool: np.ndarray, query: np.ndarray, limit: np.n
         idx = nearest(p64[:, :s], q64[:, :s], k, limit, exclude)
     elif method in ("oracle", "oraclerv"):
         idx = nearest(p64[:, s:], q64[:, s:], k, limit)
+    elif method in ("ar", "aroracle"):
+        tc = ar_coef(p64, p64[:, :s])
+        if method == "aroracle":
+            tq = ar_coef(q64, q64[:, :s])
+        else:
+            if history is None:
+                raise ValueError("ar needs the query history")
+            w = history.astype(np.float64)[:, -pool.shape[1]:]
+            tq = ar_coef(w, w[:, :s])
+        scale = tc.std(0, keepdims=True) + 1e-8
+        idx = nearest(tc / scale, tq / scale, k, limit)
     elif method == "proxy":
         if target is None:
             raise ValueError("proxy needs a target future per query")

@@ -424,7 +424,7 @@ pre {
             <tr class="orc"><td class="lbl">融合は並列（共変量の行）にする</td><td><b>確定</b></td>
               <td style="text-align:left;white-space:normal">未来照合（oracle）の事例を渡すと，並列は −18.7%，連結は −2.4%．自己＋正解（truth）なら連結も −32.7% まで読む（2 節）</td></tr>
             <tr><td class="lbl">正しい参照を選べれば大きく効く</td><td><b>確定</b></td>
-              <td style="text-align:left;white-space:normal">未来照合（診断）は 8 件で MSE −11.1%，QL −5.5%（val）．文脈照合は最良でも 64 件で MSE −3.2%，QL は参照なしに届かない．この差が選び方の改善余地（3 節）</td></tr>
+              <td style="text-align:left;white-space:normal">未来照合（診断）は 8 件で MSE −11.1%，QL −5.5%（val）．文脈照合は最良でも 64 件で MSE −3.2%，QL は参照なしに届かない．この差が選び方の改善余地（3 節，詳細は<a href="selection-note.html">別冊</a>）</td></tr>
             <tr class="ctx"><td class="lbl">many-shot にすると良くなる</td><td><b>検証中</b></td>
               <td style="text-align:left;white-space:normal">文脈照合 128 件で MSE −3.0%（val，これまでの最良）．ランダムな共通セットでも 128 件で −2.2%．事例の中身は読まれている（未来を入れ替えると悪化）．MAE・QL は参照なしに届かない（4 節）</td></tr>
             <tr><td class="lbl">共通セットを勾配で選ぶ（CLG・Parallel-CLG）</td><td><b>取り下げ</b></td>
@@ -501,7 +501,7 @@ pre {
       <div class="plate-body">
         <figure style="margin:0">
           <svg viewBox="0 0 880 430" role="img" style="max-width:100%;height:auto"
-               aria-label="連結は事例を時間軸に割り込ませ，事例の未来を過去の領域に置く。並列は事例を共変量行として並べ、履歴を保ったまま事例の未来を予測区間の上に置き、group attention が同じ時刻位置の行を混ぜる。"
+               aria-label="連結は事例を時間軸に割り込ませ，事例の未来を過去の領域に置く．並列は事例を共変量行として並べ，履歴を保ったまま事例の未来を予測区間の上に置き，group attention が同じ時刻位置の行を混ぜる．"
                fill="none" stroke="currentColor" font-family="inherit" font-size="12">
             <defs>
               <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6"
@@ -766,110 +766,14 @@ pre {
   <div class="prose">
     <div class="sec-head"><span class="sec-num">3</span><h2>正しい参照を選べれば大きく効く</h2></div>
     <p>
-      並列なら事例は読まれる．では，どの事例を選べばどこまで良くなるか．同じ並列の容れ物で，選び方と件数 K だけを変えた．
-      未来照合は正解の未来に近い未来を持つ実在の窓を選ぶ診断で，「検索が完璧ならどこまで効くか」を測る．
-      文脈照合は従来の RAF の検索で，実際に使える．K は 1 から 256 までの 2 の累乗である．
+      選び方の診断は<a href="selection-note.html">別冊（選び方の予備実験）</a>の 1 節に移した．要点は次のとおり．
     </p>
+    <ul>
+      <li>未来照合（正解に未来が近い窓を選ぶ診断）は 8 件で MSE −11.1%，QL −5.5%（val）．test では MSE −18.7%．</li>
+      <li>文脈照合は最良でも 64 件で MSE −3.2% で，MAE と QL は参照なしに届かない．</li>
+      <li>この差が選び方の改善余地である．ただし未来照合は正解を見て選んでいるので，どこまで埋められるかは分からない．</li>
+    </ul>
   </div>
-  <div class="wide">
-    <div class="plate">
-      <div class="plate-body">
-        <figure style="margin:0">
-          <svg viewBox="0 0 880 340" role="img" style="max-width:100%;height:auto"
-               aria-label="事例の件数 K（1〜256，2 の累乗）と val の MSE．未来照合は K=8 で最良の 0.4672 になり，件数を増やすと悪くなる．文脈照合は K=4 まで参照なしより悪く，K=64 で最良の 0.5084．参照なしは 0.5254．"
-               fill="none" font-family="inherit" font-size="12">
-            <line x1="80" y1="258.8" x2="760" y2="258.8" stroke="var(--rule-soft)"/><text x="70" y="262.8" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="11">0.47</text><line x1="80" y1="196.3" x2="760" y2="196.3" stroke="var(--rule-soft)"/><text x="70" y="200.3" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="11">0.49</text><line x1="80" y1="133.8" x2="760" y2="133.8" stroke="var(--rule-soft)"/><text x="70" y="137.8" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="11">0.51</text><line x1="80" y1="71.3" x2="760" y2="71.3" stroke="var(--rule-soft)"/><text x="70" y="75.3" text-anchor="end" fill="var(--ink-faint)" stroke="none" font-size="11">0.53</text>
-            <line x1="80" y1="85.5" x2="760" y2="85.5" stroke="var(--ink-soft)" stroke-dasharray="5 4"/>
-            <text x="768" y="89.5" fill="var(--ink-soft)" stroke="none" font-size="11">参照なし 0.5254</text>
-            <line x1="80" y1="290" x2="760" y2="290" stroke="var(--rule)"/>
-            <text x="80.0" y="310" text-anchor="middle" fill="var(--ink-faint)" stroke="none" font-size="11">1</text><text x="165.0" y="310" text-anchor="middle" fill="var(--ink-faint)" stroke="none" font-size="11">2</text><text x="250.0" y="310" text-anchor="middle" fill="var(--ink-faint)" stroke="none" font-size="11">4</text><text x="335.0" y="310" text-anchor="middle" fill="var(--ink-faint)" stroke="none" font-size="11">8</text><text x="420.0" y="310" text-anchor="middle" fill="var(--ink-faint)" stroke="none" font-size="11">16</text><text x="505.0" y="310" text-anchor="middle" fill="var(--ink-faint)" stroke="none" font-size="11">32</text><text x="590.0" y="310" text-anchor="middle" fill="var(--ink-faint)" stroke="none" font-size="11">64</text><text x="675.0" y="310" text-anchor="middle" fill="var(--ink-faint)" stroke="none" font-size="11">128</text><text x="760.0" y="310" text-anchor="middle" fill="var(--ink-faint)" stroke="none" font-size="11">256</text>
-            <text x="420" y="330" text-anchor="middle" fill="var(--ink-soft)" stroke="none" font-size="11.5">事例の件数 K（対数目盛）</text>
-            <text x="70" y="26" text-anchor="end" fill="var(--ink-soft)" stroke="none" font-size="11.5">MSE（val）</text>
-            <path d="M80.0 78.0 L165.0 67.0 L250.0 77.8 L335.0 107.0 L420.0 124.7 L505.0 127.6 L590.0 138.9 L675.0 135.3 L760.0 131.5" stroke="var(--series-1)" stroke-width="2" fill="none"/><circle cx="80.0" cy="78.0" r="4.5" fill="var(--series-1)" stroke="var(--surface)" stroke-width="2"><title>文脈照合 K=1：MSE 0.5278（参照なし比 +0.5%）</title></circle><circle cx="165.0" cy="67.0" r="4.5" fill="var(--series-1)" stroke="var(--surface)" stroke-width="2"><title>文脈照合 K=2：MSE 0.5313（参照なし比 +1.1%）</title></circle><circle cx="250.0" cy="77.8" r="4.5" fill="var(--series-1)" stroke="var(--surface)" stroke-width="2"><title>文脈照合 K=4：MSE 0.5279（参照なし比 +0.5%）</title></circle><circle cx="335.0" cy="107.0" r="4.5" fill="var(--series-1)" stroke="var(--surface)" stroke-width="2"><title>文脈照合 K=8：MSE 0.5186（参照なし比 −1.3%）</title></circle><circle cx="420.0" cy="124.7" r="4.5" fill="var(--series-1)" stroke="var(--surface)" stroke-width="2"><title>文脈照合 K=16：MSE 0.5129（参照なし比 −2.4%）</title></circle><circle cx="505.0" cy="127.6" r="4.5" fill="var(--series-1)" stroke="var(--surface)" stroke-width="2"><title>文脈照合 K=32：MSE 0.5120（参照なし比 −2.6%）</title></circle><circle cx="590.0" cy="138.9" r="4.5" fill="var(--series-1)" stroke="var(--surface)" stroke-width="2"><title>文脈照合 K=64：MSE 0.5084（参照なし比 −3.2%）</title></circle><circle cx="675.0" cy="135.3" r="4.5" fill="var(--series-1)" stroke="var(--surface)" stroke-width="2"><title>文脈照合 K=128：MSE 0.5095（参照なし比 −3.0%）</title></circle><circle cx="760.0" cy="131.5" r="4.5" fill="var(--series-1)" stroke="var(--surface)" stroke-width="2"><title>文脈照合 K=256：MSE 0.5107（参照なし比 −2.8%）</title></circle>
-            <path d="M80.0 146.9 L165.0 185.9 L250.0 243.7 L335.0 267.4 L420.0 265.1 L505.0 236.2 L590.0 219.5 L675.0 190.8 L760.0 168.5" stroke="var(--series-2)" stroke-width="2" fill="none"/><circle cx="80.0" cy="146.9" r="4.5" fill="var(--series-2)" stroke="var(--surface)" stroke-width="2"><title>未来照合 K=1：MSE 0.5058（参照なし比 −3.7%）</title></circle><circle cx="165.0" cy="185.9" r="4.5" fill="var(--series-2)" stroke="var(--surface)" stroke-width="2"><title>未来照合 K=2：MSE 0.4933（参照なし比 −6.1%）</title></circle><circle cx="250.0" cy="243.7" r="4.5" fill="var(--series-2)" stroke="var(--surface)" stroke-width="2"><title>未来照合 K=4：MSE 0.4748（参照なし比 −9.6%）</title></circle><circle cx="335.0" cy="267.4" r="4.5" fill="var(--series-2)" stroke="var(--surface)" stroke-width="2"><title>未来照合 K=8：MSE 0.4672（参照なし比 −11.1%）</title></circle><circle cx="420.0" cy="265.1" r="4.5" fill="var(--series-2)" stroke="var(--surface)" stroke-width="2"><title>未来照合 K=16：MSE 0.4680（参照なし比 −10.9%）</title></circle><circle cx="505.0" cy="236.2" r="4.5" fill="var(--series-2)" stroke="var(--surface)" stroke-width="2"><title>未来照合 K=32：MSE 0.4772（参照なし比 −9.2%）</title></circle><circle cx="590.0" cy="219.5" r="4.5" fill="var(--series-2)" stroke="var(--surface)" stroke-width="2"><title>未来照合 K=64：MSE 0.4826（参照なし比 −8.2%）</title></circle><circle cx="675.0" cy="190.8" r="4.5" fill="var(--series-2)" stroke="var(--surface)" stroke-width="2"><title>未来照合 K=128：MSE 0.4917（参照なし比 −6.4%）</title></circle><circle cx="760.0" cy="168.5" r="4.5" fill="var(--series-2)" stroke="var(--surface)" stroke-width="2"><title>未来照合 K=256：MSE 0.4989（参照なし比 −5.1%）</title></circle>
-            <text x="770.0" y="125.5" fill="var(--ink)" stroke="none" font-size="11.5">文脈照合</text>
-            <text x="770.0" y="172.5" fill="var(--ink)" stroke="none" font-size="11.5">未来照合</text>
-            <g transform="translate(80,10)">
-              <line x1="0" y1="0" x2="20" y2="0" stroke="var(--series-2)" stroke-width="2"/><circle cx="10" cy="0" r="4" fill="var(--series-2)"/>
-              <text x="28" y="4" fill="var(--ink-soft)" stroke="none" font-size="11.5">未来照合（診断）</text>
-              <line x1="150" y1="0" x2="170" y2="0" stroke="var(--series-1)" stroke-width="2"/><circle cx="160" cy="0" r="4" fill="var(--series-1)"/>
-              <text x="178" y="4" fill="var(--ink-soft)" stroke="none" font-size="11.5">文脈照合</text>
-            </g>
-          </svg>
-          <figcaption class="plate-cap" style="border:0;background:none;padding:14px 0 0">
-            <b>未来照合は 8 件で最良，文脈照合は件数を増やしてもその一部にしか届かない</b>
-            点にカーソルを合わせると値が出る．数値は下の表．
-          </figcaption>
-        </figure>
-      </div>
-    </div>
-    <div class="plate">
-      <div class="table-scroll">
-        <table>
-          <thead>
-            <tr><th class="lbl" rowspan="2">val（全 7 チャネル，並列）</th>
-              <th colspan="2" style="text-align:center">MSE（参照なし 0.5254）</th><th colspan="2" style="text-align:center">MAE（参照なし 0.4634）</th><th colspan="2" style="text-align:center">QL（参照なし 0.1852）</th></tr>
-            <tr><th>文脈照合</th><th>未来照合</th><th>文脈照合</th><th>未来照合</th><th>文脈照合</th><th>未来照合</th></tr>
-          </thead>
-          <tbody>
-            <tr><td class="lbl">K=1</td><td>0.5278（+0.5%）</td><td>0.5058（−3.7%）</td><td>0.4657（+0.5%）</td><td>0.4559（−1.6%）</td><td>0.1866（+0.8%）</td><td>0.1810（−2.2%）</td></tr>
-            <tr><td class="lbl">K=2</td><td>0.5313（+1.1%）</td><td>0.4933（−6.1%）</td><td>0.4690（+1.2%）</td><td>0.4517（−2.5%）</td><td>0.1873（+1.1%）</td><td>0.1785（−3.6%）</td></tr>
-            <tr><td class="lbl">K=4</td><td>0.5279（+0.5%）</td><td>0.4748（−9.6%）</td><td>0.4693（+1.3%）</td><td>0.4452（−3.9%）</td><td>0.1867（+0.8%）</td><td>0.1756（−5.2%）</td></tr>
-            <tr class="orc"><td class="lbl">K=8</td><td>0.5186（−1.3%）</td><td>0.4672（−11.1%）</td><td>0.4674（+0.9%）</td><td>0.4434（−4.3%）</td><td>0.1856（+0.2%）</td><td>0.1749（−5.5%）</td></tr>
-            <tr><td class="lbl">K=16</td><td>0.5129（−2.4%）</td><td>0.4680（−10.9%）</td><td>0.4675（+0.9%）</td><td>0.4451（−4.0%）</td><td>0.1855（+0.2%）</td><td>0.1758（−5.0%）</td></tr>
-            <tr><td class="lbl">K=32</td><td>0.5120（−2.6%）</td><td>0.4772（−9.2%）</td><td>0.4693（+1.3%）</td><td>0.4498（−2.9%）</td><td>0.1859（+0.4%）</td><td>0.1778（−3.9%）</td></tr>
-            <tr><td class="lbl">K=64</td><td>0.5084（−3.2%）</td><td>0.4826（−8.2%）</td><td>0.4689（+1.2%）</td><td>0.4538（−2.1%）</td><td>0.1862（+0.6%）</td><td>0.1797（−2.9%）</td></tr>
-            <tr><td class="lbl">K=128</td><td>0.5095（−3.0%）</td><td>0.4917（−6.4%）</td><td>0.4684（+1.1%）</td><td>0.4584（−1.1%）</td><td>0.1863（+0.6%）</td><td>0.1821（−1.6%）</td></tr>
-            <tr><td class="lbl">K=256</td><td>0.5107（−2.8%）</td><td>0.4989（−5.1%）</td><td>0.4687（+1.1%）</td><td>0.4625（−0.2%）</td><td>0.1869（+0.9%）</td><td>0.1841（−0.5%）</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="plate-cap">
-        <b>括弧内は参照なしとの比．マイナスなら参照なしより良い</b>
-        未来照合は K=8 で MSE −11.1%，MAE −4.3%，QL −5.5% と，3 つの指標すべてで参照なしを大きく上回り，80% 区間の的中率も 0.801 と理想の 0.80 に一致する．
-        件数を増やすと順位の低い（未来の遠い）窓が混ざり，K=256 では MSE −5.1%，QL −0.5% まで落ちる．
-        文脈照合は K=4 までは参照なしより悪く，件数を増やすと MSE は K=64 の −3.2% まで良くなるが，MAE と QL はどの K でも参照なしに届かない（的中率は 0.74〜0.86 と広がりすぎる）．
-      </div>
-    </div>
-  </div>
-  <div class="prose">
-    <div class="callout">
-      <span class="lead">分かったこと</span>
-      <p>
-        <strong>正しい参照なら，少ない件数で MSE・MAE・QL のすべてが大きく良くなる．</strong>
-        未来照合 8 件（MSE −11.1%）と，文脈照合の最良（64 件で −3.2%）の間には大きな差があり，これが選び方を改善できる余地である．
-        文脈照合は質の低さを件数で補っている形で，件数を増やすほど予測の区間が広がり，分布の当たり具合（QL）は良くならない．
-        目指すべきは，件数を増やすことではなく，未来照合に近い窓を少数でも選べる検索である．
-      </p>
-    </div>
-    <p>
-      ただし未来照合は正解を見て選んでいるので，この差をどこまで埋められるかは分からない．
-      文脈が似ている窓の未来は，クエリの未来とあまり似ていない（整理前の測定で，OT チャネルの順位相関 +0.12）．
-      整理前には encoder や多様性の工夫も試したが，どれも直前の窓（recency）を超えられなかった．
-    </p>
-    <h3>test での確認（K=8）</h3>
-  </div>
-  <div class="wide">
-    <div class="plate">
-      <div class="table-scroll">
-        <table>
-          <thead><tr><th class="lbl">選び方（並列，test）</th><th>MSE</th><th>MAE</th><th>QL</th><th>MSE（val）</th></tr></thead>
-          <tbody>
-            <tr class="orc"><td class="lbl">未来照合（oracle，診断．実際には使えない）</td>
-              <td class="best">0.2855（−18.7%）</td><td class="best">0.3370（−5.9%）</td><td class="best">0.1309（−5.7%）</td><td class="best">0.4672（−11.1%）</td></tr>
-            <tr><td class="lbl">文脈照合（l2，従来の RAF の検索）</td><td>0.3353（−4.5%）</td><td>0.3611（+0.9%）</td><td>0.1402（+1.0%）</td><td>0.5186（−1.3%）</td></tr>
-            <tr class="ctx"><td class="lbl">参照なし</td><td>0.3512</td><td>0.3580</td><td>0.1388</td><td>0.5254</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="plate-cap">
-        <b>test でも同じ傾向：未来照合は大きく効き，文脈照合（K=8）はほぼ効かない</b>
-        文脈照合は MSE だけわずかに良くなり，MAE と QL（分布の当たり具合）はむしろ悪くなる．
-        test の MSE −4.5% は HUFL・MUFL の 2 チャネル（それぞれ −6%，−7%）がほぼすべてで，OT では +12% 悪化する．
-      </div>
-    </div>
-  </div>
-
 </section>
 
 <!-- ============================== 4 -->
@@ -1228,7 +1132,7 @@ pre {
     <div class="sec-head"><span class="sec-num">5</span><h2>実験計画と現在地</h2></div>
     <div class="branch">
       <div><span class="cond">済</span><span class="then"><b>E1 融合</b>：並列と連結を同じ事例で比べる（2 節）</span></div>
-      <div><span class="cond">済</span><span class="then"><b>E2 クエリごとの検索の限界</b>：未来照合・文脈照合（3 節）</span></div>
+      <div><span class="cond">済</span><span class="then"><b>E2 クエリごとの検索の限界</b>：未来照合・文脈照合（3 節，<a href="selection-note.html">別冊</a>）</span></div>
       <div><span class="cond">済</span><span class="then"><b>E3 many-shot</b>：ランダム共通セットで K = 8 / 32 / 128 / 256（val，各 5 seed）．MSE は K=128 で頭打ち（4 節）</span></div>
       <div><span class="cond">済</span><span class="then"><b>E4 選び方</b>：同じ K で，ランダム共通セットと文脈照合を比べる．K=32〜256 で文脈照合が MSE 0.7〜1.0% 良い（4 節）</span></div>
       <div><span class="cond">済</span><span class="then"><b>E5 何が読まれているか</b>：共通セット内で未来を入れ替えると，5 seed すべてで MSE が 3.9〜6.1% 悪化．文脈と未来の対応が読まれている（4 節）</span></div>
