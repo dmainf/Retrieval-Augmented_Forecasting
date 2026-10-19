@@ -464,6 +464,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
       <li><strong>今の改善の大半は件数と長さから来ていて，選び方によらない（2 節）．</strong></li>
       <li><strong>正解なしの鍵は，どれもランダムと区別できない．</strong>文脈，予測，活性，逆予測など（3 節）．</li>
       <li><strong>理由：文脈から作った鍵は，未来−予測と相関しない．</strong>選び方の上乗せは，モデル自身が最良からどれだけずれているかで頭打ちになる（4 節）．</li>
+      <li><strong>並列の行は長い履歴の代わりではない．</strong>履歴を伸ばしても行の上乗せは残る．ただし行は区間を良くしない（5 節）．</li>
     </ul>
   </div>
   <div class="wide">
@@ -975,33 +976,138 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
 <!-- ============================== 5 -->
 <section>
   <div class="prose">
-    <div class="sec-head"><span class="sec-num">5</span><h2>これから</h2></div>
+    <div class="sec-head"><span class="sec-num">5</span><h2>履歴の長さと並列の行</h2></div>
+    <p>
+      4 節の理論では，文脈の外の情報だけが上乗せになる．それなら並列の行は，長い履歴の代わりにすぎないかもしれない．
+      クエリの履歴を 512〜8192 点に変え，事例なしと事例 128 件ありを比べた．8192 点は Chronos-2 の上限で，val の起点から train のほぼ全体が入る．
+    </p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 330" role="img" aria-label="クエリの履歴の長さと並列の行ごとの MSE と QL">
+<line x1="52" x2="78" y1="18" y2="18" stroke="var(--ink-faint)" stroke-width="2.5" stroke-dasharray=""/>
+<text class="t-ink" x="84" y="22">参照なし</text>
+<line x1="210" x2="236" y1="18" y2="18" stroke="var(--accent)" stroke-width="2.5" stroke-dasharray=""/>
+<text class="t-ink" x="242" y="22">ランダム K=128（2 seed の平均）</text>
+<line x1="480" x2="506" y1="18" y2="18" stroke="var(--accent)" stroke-width="2.5" stroke-dasharray="6 4"/>
+<text class="t-ink" x="512" y="22">文脈＝文脈照合 K=128</text>
+<text class="t-ink" x="182.0" y="62" text-anchor="middle">MSE</text>
+<line class="grid" x1="52" x2="312" y1="290.0" y2="290.0"/>
+<text x="44" y="294.0" text-anchor="end">−6%</text>
+<line class="grid" x1="52" x2="312" y1="218.0" y2="218.0"/>
+<text x="44" y="222.0" text-anchor="end">−3%</text>
+<line class="zero" x1="52" x2="312" y1="146.0" y2="146.0"/>
+<text x="44" y="150.0" text-anchor="end">0</text>
+<line class="grid" x1="52" x2="312" y1="74.0" y2="74.0"/>
+<text x="44" y="78.0" text-anchor="end">+3%</text>
+<text x="52.0" y="308" text-anchor="middle">512</text>
+<text x="117.0" y="308" text-anchor="middle">1024</text>
+<text x="182.0" y="308" text-anchor="middle">2032</text>
+<text x="247.0" y="308" text-anchor="middle">4096</text>
+<text x="312.0" y="308" text-anchor="middle">8192</text>
+<text x="182.0" y="326" text-anchor="middle">クエリの履歴（点）</text>
+<polyline points="52.0,87.1 117.0,130.5 182.0,146.0 247.0,163.8 312.0,197.6" fill="none" stroke="var(--ink-faint)" stroke-width="2" stroke-dasharray=""/>
+<circle cx="52.0" cy="87.1" r="3.5" fill="var(--ink-faint)"><title>参照なし・履歴 512 点：MSE +2.5%</title></circle>
+<circle cx="117.0" cy="130.5" r="3.5" fill="var(--ink-faint)"><title>参照なし・履歴 1024 点：MSE +0.6%</title></circle>
+<circle cx="182.0" cy="146.0" r="3.5" fill="var(--ink-faint)"><title>参照なし・履歴 2032 点：MSE +0.0%</title></circle>
+<circle cx="247.0" cy="163.8" r="3.5" fill="var(--ink-faint)"><title>参照なし・履歴 4096 点：MSE −0.7%</title></circle>
+<circle cx="312.0" cy="197.6" r="3.5" fill="var(--ink-faint)"><title>参照なし・履歴 8192 点：MSE −2.2%</title></circle>
+<polyline points="52.0,194.6 182.0,248.1 312.0,275.5" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray=""/>
+<line x1="52.0" x2="52.0" y1="210.9" y2="178.4" stroke="var(--accent)" stroke-width="1.5"/>
+<circle cx="52.0" cy="194.6" r="3.5" fill="var(--accent)"><title>ランダム K=128（2 seed の平均）・履歴 512 点：MSE −2.0%</title></circle>
+<line x1="182.0" x2="182.0" y1="256.5" y2="239.6" stroke="var(--accent)" stroke-width="1.5"/>
+<circle cx="182.0" cy="248.1" r="3.5" fill="var(--accent)"><title>ランダム K=128（2 seed の平均）・履歴 2032 点：MSE −4.3%</title></circle>
+<line x1="312.0" x2="312.0" y1="283.5" y2="267.5" stroke="var(--accent)" stroke-width="1.5"/>
+<circle cx="312.0" cy="275.5" r="3.5" fill="var(--accent)"><title>ランダム K=128（2 seed の平均）・履歴 8192 点：MSE −5.4%</title></circle>
+<polyline points="52.0,193.5 182.0,262.9 312.0,286.7" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="6 4"/>
+<circle cx="52.0" cy="193.5" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=128・履歴 512 点：MSE −2.0%</title></circle>
+<circle cx="182.0" cy="262.9" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=128・履歴 2032 点：MSE −4.9%</title></circle>
+<circle cx="312.0" cy="286.7" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=128・履歴 8192 点：MSE −5.9%</title></circle>
+<text class="t-ink" x="530.0" y="62" text-anchor="middle">QL</text>
+<line class="grid" x1="400" x2="660" y1="290.0" y2="290.0"/>
+<text x="392" y="294.0" text-anchor="end">−2%</text>
+<line class="grid" x1="400" x2="660" y1="236.0" y2="236.0"/>
+<text x="392" y="240.0" text-anchor="end">−1%</text>
+<line class="zero" x1="400" x2="660" y1="182.0" y2="182.0"/>
+<text x="392" y="186.0" text-anchor="end">0</text>
+<line class="grid" x1="400" x2="660" y1="128.0" y2="128.0"/>
+<text x="392" y="132.0" text-anchor="end">+1%</text>
+<line class="grid" x1="400" x2="660" y1="74.0" y2="74.0"/>
+<text x="392" y="78.0" text-anchor="end">+2%</text>
+<text x="400.0" y="308" text-anchor="middle">512</text>
+<text x="465.0" y="308" text-anchor="middle">1024</text>
+<text x="530.0" y="308" text-anchor="middle">2032</text>
+<text x="595.0" y="308" text-anchor="middle">4096</text>
+<text x="660.0" y="308" text-anchor="middle">8192</text>
+<text x="530.0" y="326" text-anchor="middle">クエリの履歴（点）</text>
+<polyline points="400.0,88.7 465.0,141.2 530.0,182.0 595.0,214.1 660.0,260.7" fill="none" stroke="var(--ink-faint)" stroke-width="2" stroke-dasharray=""/>
+<circle cx="400.0" cy="88.7" r="3.5" fill="var(--ink-faint)"><title>参照なし・履歴 512 点：QL +1.7%</title></circle>
+<circle cx="465.0" cy="141.2" r="3.5" fill="var(--ink-faint)"><title>参照なし・履歴 1024 点：QL +0.8%</title></circle>
+<circle cx="530.0" cy="182.0" r="3.5" fill="var(--ink-faint)"><title>参照なし・履歴 2032 点：QL +0.0%</title></circle>
+<circle cx="595.0" cy="214.1" r="3.5" fill="var(--ink-faint)"><title>参照なし・履歴 4096 点：QL −0.6%</title></circle>
+<circle cx="660.0" cy="260.7" r="3.5" fill="var(--ink-faint)"><title>参照なし・履歴 8192 点：QL −1.5%</title></circle>
+<polyline points="400.0,110.6 530.0,183.5 660.0,212.6" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray=""/>
+<line x1="400.0" x2="400.0" y1="126.6" y2="94.5" stroke="var(--accent)" stroke-width="1.5"/>
+<circle cx="400.0" cy="110.6" r="3.5" fill="var(--accent)"><title>ランダム K=128（2 seed の平均）・履歴 512 点：QL +1.3%</title></circle>
+<line x1="530.0" x2="530.0" y1="193.7" y2="173.3" stroke="var(--accent)" stroke-width="1.5"/>
+<circle cx="530.0" cy="183.5" r="3.5" fill="var(--accent)"><title>ランダム K=128（2 seed の平均）・履歴 2032 点：QL −0.0%</title></circle>
+<line x1="660.0" x2="660.0" y1="222.8" y2="202.4" stroke="var(--accent)" stroke-width="1.5"/>
+<circle cx="660.0" cy="212.6" r="3.5" fill="var(--accent)"><title>ランダム K=128（2 seed の平均）・履歴 8192 点：QL −0.6%</title></circle>
+<polyline points="400.0,100.4 530.0,199.5 660.0,219.9" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="6 4"/>
+<circle cx="400.0" cy="100.4" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=128・履歴 512 点：QL +1.5%</title></circle>
+<circle cx="530.0" cy="199.5" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=128・履歴 2032 点：QL −0.3%</title></circle>
+<circle cx="660.0" cy="219.9" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=128・履歴 8192 点：QL −0.7%</title></circle>
+</svg></div>
+      <div class="plate-cap"><b>クエリの履歴の長さと MSE・QL（val）</b>どれも履歴 2032 点の参照なし（MSE 0.5254，QL 0.1852）との比．事例は K=128，文脈 384 点．ひげはランダムの 2 seed の範囲．同じ履歴の参照なしと比べた行の上乗せは，MSE で 512 点 −3.7〜−5.0%，2032 点 −3.9〜−4.6%，8192 点 −3.0〜−3.8%．MAE はどの長さでも行を入れると悪くなる．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <h3>分かったこと</h3>
+    <ul class="tight">
+      <li><strong>並列の行は長い履歴の代わりではない．</strong>履歴を train のほぼ全体まで伸ばしても，行を足すと MSE はさらに良くなる．行が足しているのは，履歴に並べるだけでは読まれないものである．</li>
+      <li><strong>文脈を短くしても，行の効き目は大きくならない．</strong>「文脈の外の情報が多いほど検索が効く」という予想は，このデータでは当たらなかった．</li>
+      <li><strong>行は中央値を動かすが，区間を良くしない．</strong>長い履歴は MSE も QL も良くするが，行は QL をほとんど動かさない．行の弱点は区間にある．</li>
+      <li><strong>どの長さでも，文脈＝文脈照合はランダムと区別できない．</strong>類似度で上位 k 件を選ぶことは，履歴の長さによらず上乗せにならない．</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================== 6 -->
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">6</span><h2>これから</h2></div>
+    <p>
+      類似度で上位 k 件を選ぶのは最良ではない（2〜5 節）．似すぎた事例はむしろ害になり，選ばない事例でも効く．
+      そこで，選ぶ側で当てるのをやめ，事例を広く渡して，どれをどれだけ使うかを group attention に任せる．
+      ただし 10-10 の attention の分析では，今の読み手は役に立つ行ではなく目立つ行に注意を向けていた．<strong>読み手の重み付けを，学習なしで設計する</strong>のが次の一手である．
+    </p>
     <div class="flow">
+      <div class="step now">
+        <h4><span class="tag now">本命</span>読み方を設計する</h4>
+        <p>ランダムな事例 128 件を固定し，group attention の見せ方だけを変える．(1) 事例どうしを見せない，事例はクエリも見ない片方向にする（データベースを一度計算すれば全窓を渡せる），(2) 事例の行の logit に一様な値や類似度に応じた値を足す，(3) 事例を前半か後半の層だけで見せる．目標は MSE を保ったまま区間を直すこと．</p>
+      </div>
+      <div class="down">↓</div>
       <div class="fork">
         <div class="step">
-          <h4><span class="tag next">候補</span>B　信じさせ方を変える</h4>
-          <p>クエリごとに事例をどこまで効かせるかを決める．ただし手がかりが文脈だけなら，4 節と同じ壁に当たる．</p>
+          <h4><span class="tag next">並行</span>未来の候補を行にする</h4>
+          <p>行を「クエリの文脈＋参照なしの予測＋データベースの窓の未来−予測」で作る．データベースを，選ぶ相手ではなく外れ方の実例として使う．</p>
         </div>
         <div class="step">
-          <h4><span class="tag next">候補</span>D　文脈の外の情報を入れる</h4>
-          <p>同時刻の他のチャネルや別の変電所（ETTh2）の履歴を行として渡す．4 節の壁を越えられる道．</p>
-        </div>
-        <div class="step">
-          <h4><span class="tag later">あと</span>C　学習する</h4>
-          <p>検索器や attention を学習する．B と D の結果を見てから．</p>
+          <h4><span class="tag later">外す</span>鍵・信じさせ方・学習</h4>
+          <p>鍵の改良とクエリごとの信じさせ方は 4 節の壁に当たる．Chronos-2 の微調整はしない．同時刻の他系列は Chronos-2 の多変量モードが比較相手になる．</p>
         </div>
       </div>
       <div class="down">↓</div>
       <div class="step">
         <h4><span class="tag later">最後</span>確定させる</h4>
-        <p>val で決めた設定で test を出す．ETTh1 以外のデータでも確かめる．</p>
+        <p>val で決めた設定で test を出す．ETTh1 以外のデータと，履歴 512 点・予測 64 点の標準設定でも確かめる．</p>
       </div>
     </div>
     <h3>論文の筋（案）</h3>
     <ul class="tight">
-      <li><strong>分析：</strong>文脈が似ていても未来は似ない．未来が似ていても，モデルの予測と同じなら効かない．正解なしの鍵の上乗せはモデル自身のずれで頭打ちになり，効き目の大半は件数と長さから来る．LLM の many-shot で「件数が多いと選び方は効かなくなる」と言われる現象（Baek et al.，arXiv 2412.16926）を，時系列で上限と実測として，理由まで示す．</li>
-      <li><strong>D が効けば：</strong>文脈の外の情報を入れる参照を手法として出す．</li>
-      <li><strong>効かなければ：</strong>分析を主にして，件数と長さの使い方を実用の提案にする．</li>
+      <li><strong>主張：</strong>Chronos-2 の並列の文脈内学習では，類似度で上位 k 件を選ぶより，事例を広く渡して読み手に任せるほうがよい．読み手の重み付けを学習なしで設計すると，さらに良くなる（本命が効けば）．</li>
+      <li><strong>分析：</strong>文脈が似ていても未来は似ない．未来が似ていても，モデルの予測と同じなら効かない．正解なしの鍵の上乗せはモデル自身のずれで頭打ちになり，効き目の大半は件数と長さから来る．行は長い履歴の代わりではない．LLM の many-shot で「件数が多いと選び方は効かなくなる」と言われる現象（Baek et al.，arXiv 2412.16926）と，TimeRAF の「類似度で重み付けするより一様のほうがよい」を，理由まで示す．</li>
+      <li><strong>比べる相手：</strong>Align-RAG（arXiv 2608.05571）は事例を連結で 10 件渡し，学習なしで Chronos-2 を平均 −3.8% 改善する．並列なら数百件を渡せる点が違う．</li>
     </ul>
   </div>
 </section>
@@ -1011,9 +1117,10 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
   <div class="prose">
     <div class="sec-head"><span class="sec-num">条件</span><h2>実験条件</h2></div>
     <ul class="tight">
-      <li>ETTh1，各チャネルを 1 変量として扱う．履歴 2032 点，予測 64 点，Chronos-2 は凍結．</li>
+      <li>ETTh1，各チャネルを 1 変量として扱う．履歴 2032 点（5 節は 512〜8192 点），予測 64 点，Chronos-2 は凍結．</li>
       <li>val の予測起点は 17 時間おきに 1,162 本．候補は train の窓を 11 点おき，予測の起点より 96 点以上前に終わるものに限る．事例は並列（共変量の行）で渡す．</li>
       <li>候補窓の参照なしの予測は <code>results/poolfc/</code>，予測＝予測照合の many-shot は <code>results/poolfc/ETTh1_val_pp_many.npz</code>（scratchpad の <code>pp_many.py</code>），確認 3 は <code>results/poolfc/ETTh1_val_hist_ex.npz</code>（<code>hist_ex.py</code>）．コードは未コミット．</li>
+      <li>5 節は <code>codes/run.py --history 512|1024|4096|8192</code> で取った <code>results/ETTh1_val_*_h*.parquet</code>．ランダムは全クエリ共通のセット（seed 0・1）．</li>
     </ul>
   </div>
 </section>

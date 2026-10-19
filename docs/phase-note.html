@@ -1,0 +1,1005 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>時刻をそろえた事例</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root {
+  --ground: #F2F5F7;
+  --surface: #FFFFFF;
+  --surface-sunk: #E9EEF2;
+  --ink: #131A21;
+  --ink-soft: #5C6873;
+  --ink-faint: #8794A1;
+  --rule: #D6DEE5;
+  --rule-soft: #E5EBF0;
+  --accent: #2F5F8F;
+  --accent-tint: #D5E3F0;
+  --accent-wash: rgba(47, 95, 143, 0.10);
+  --oracle: #B0621C;
+  --oracle-tint: #F3DFC7;
+  --oracle-wash: rgba(176, 98, 28, 0.12);
+  --warn: #A03A2E;
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+
+  --f-display: "Zen Old Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --f-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --f-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0F141A;
+    --surface: #161E26;
+    --surface-sunk: #1C262F;
+    --ink: #E3EAF1;
+    --ink-soft: #97A5B3;
+    --ink-faint: #6E7D8C;
+    --rule: #2A3540;
+    --rule-soft: #222C36;
+    --accent: #7FB0DC;
+    --accent-tint: #24384B;
+    --accent-wash: rgba(127, 176, 220, 0.13);
+    --oracle: #E0A164;
+    --oracle-tint: #3A2B1B;
+    --oracle-wash: rgba(224, 161, 100, 0.14);
+    --warn: #E08476;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground: #0F141A;
+  --surface: #161E26;
+  --surface-sunk: #1C262F;
+  --ink: #E3EAF1;
+  --ink-soft: #97A5B3;
+  --ink-faint: #6E7D8C;
+  --rule: #2A3540;
+  --rule-soft: #222C36;
+  --accent: #7FB0DC;
+  --accent-tint: #24384B;
+  --accent-wash: rgba(127, 176, 220, 0.13);
+  --oracle: #E0A164;
+  --oracle-tint: #3A2B1B;
+  --oracle-wash: rgba(224, 161, 100, 0.14);
+  --warn: #E08476;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 16px;
+  line-height: 1.85;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page { padding: 0 20px 96px; }
+.prose { max-width: 40rem; margin-inline: auto; }
+.wide  { max-width: 66rem; margin-inline: auto; }
+
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+/* ---------- masthead ---------- */
+
+.masthead {
+  border-bottom: 1px solid var(--rule);
+  padding: 64px 0 40px;
+  margin-bottom: 56px;
+}
+.kicker {
+  font-family: var(--f-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0 0 18px;
+}
+h1 {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: clamp(2rem, 5.5vw, 2.9rem);
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+  margin: 0 0 20px;
+  text-wrap: balance;
+}
+.standfirst {
+  font-size: 1.03rem;
+  color: var(--ink-soft);
+  margin: 0;
+  max-width: 34rem;
+}
+
+/* ---------- section rhythm ---------- */
+
+section { margin-bottom: 72px; }
+
+.sec-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 10px;
+  margin-bottom: 28px;
+}
+.sec-num {
+  font-family: var(--f-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.06em;
+  flex: none;
+}
+h2 {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 1.42rem;
+  line-height: 1.45;
+  margin: 0;
+  text-wrap: balance;
+}
+h3 {
+  font-family: var(--f-body);
+  font-weight: 700;
+  font-size: 1.02rem;
+  margin: 38px 0 12px;
+  letter-spacing: 0.01em;
+}
+p { margin: 0 0 1.15em; }
+strong { font-weight: 700; }
+.em-blue { color: var(--accent); font-weight: 700; }
+.em-amber { color: var(--oracle); font-weight: 700; }
+
+code {
+  font-family: var(--f-mono);
+  font-size: 0.85em;
+  background: var(--surface-sunk);
+  padding: 0.12em 0.4em;
+  border-radius: 3px;
+}
+
+/* ---------- plates: figures, diagrams, tables ---------- */
+
+.plate {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  margin: 32px 0;
+  overflow: hidden;
+}
+.plate-body { padding: 22px 24px; }
+.plate-cap {
+  border-top: 1px solid var(--rule-soft);
+  padding: 12px 24px 14px;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  background: var(--surface-sunk);
+}
+.plate-cap b {
+  font-family: var(--f-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  display: block;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.shot { background: #FFFFFF; padding: 14px; }
+.shot-scroll { overflow-x: auto; }
+.shot img { display: block; width: 100%; min-width: 720px; height: auto; }
+.shot--narrow img { min-width: 420px; max-width: 560px; margin-inline: auto; }
+
+svg.diagram { display: block; width: 100%; height: auto; }
+
+/* ---------- tables ---------- */
+
+.table-scroll { overflow-x: auto; }
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 560px;
+  font-family: var(--f-mono);
+  font-size: 0.84rem;
+  font-variant-numeric: tabular-nums;
+}
+caption { display: none; }
+th, td {
+  padding: 9px 12px;
+  text-align: right;
+  border-bottom: 1px solid var(--rule-soft);
+  white-space: nowrap;
+}
+thead th {
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+  border-bottom: 1px solid var(--rule);
+}
+tbody th, td.lbl {
+  text-align: left;
+  font-family: var(--f-body);
+  font-weight: 500;
+  font-size: 0.86rem;
+  color: var(--ink);
+}
+tr.ctx td, tr.ctx th { background: var(--accent-wash); }
+tr.orc td, tr.orc th { background: var(--oracle-wash); }
+td.best { font-weight: 600; color: var(--oracle); }
+tbody tr:last-child td, tbody tr:last-child th { border-bottom: none; }
+
+/* ---------- callouts ---------- */
+
+.callout {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-wash);
+  padding: 16px 20px;
+  margin: 28px 0;
+  border-radius: 0 4px 4px 0;
+}
+.callout.amber { border-left-color: var(--oracle); background: var(--oracle-wash); }
+.callout p:last-child { margin-bottom: 0; }
+.callout .lead {
+  font-family: var(--f-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.badge {
+  display: inline-block;
+  font-family: var(--f-mono);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 3px;
+  vertical-align: 0.15em;
+  background: var(--warn);
+  color: var(--surface);
+}
+:root[data-theme="dark"] .badge,
+:root:not([data-theme="light"]) .badge { color: #12181F; }
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .badge { color: #FFFFFF; }
+}
+
+/* ---------- branch list ---------- */
+
+.branch {
+  display: grid;
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 28px 0;
+}
+.branch > div {
+  background: var(--surface);
+  padding: 16px 20px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 14px;
+  align-items: baseline;
+}
+.branch .cond {
+  font-family: var(--f-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-faint);
+  letter-spacing: 0.06em;
+}
+.branch .then { font-size: 0.94rem; line-height: 1.7; }
+.branch .then b { color: var(--accent); }
+
+/* ---------- axis cards ---------- */
+
+.axes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px;
+  margin: 28px 0;
+}
+.axis {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 18px 20px;
+}
+.axis h4 {
+  font-family: var(--f-mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 4px;
+  font-weight: 600;
+}
+.axis .q { font-size: 0.9rem; font-weight: 700; margin: 0 0 12px; }
+.axis dl { margin: 0; font-size: 0.84rem; line-height: 1.65; }
+.axis dt {
+  font-family: var(--f-mono);
+  font-size: 0.78rem;
+  color: var(--ink);
+  font-weight: 500;
+  margin-top: 8px;
+}
+.axis dt:first-child { margin-top: 0; }
+.axis dd { margin: 0; color: var(--ink-soft); font-size: 0.82rem; line-height: 1.6; }
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  margin: 0 0 16px;
+  font-family: var(--f-body);
+}
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.swatch { width: 22px; height: 10px; border-radius: 2px; flex: none; }
+
+.footnote {
+  border-top: 1px solid var(--rule);
+  padding-top: 22px;
+  font-size: 0.84rem;
+  color: var(--ink-soft);
+  line-height: 1.75;
+}
+.footnote p { margin-bottom: 0.6em; }
+
+math { font-size: 1.02em; color: var(--ink); }
+math[display="block"].eq {
+  display: block;
+  margin: 22px auto;
+  padding: 14px 18px;
+  background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 4px 4px 0;
+  overflow-x: auto;
+  font-size: 1.08em;
+}
+math mtext { font-family: var(--f-body); font-size: 0.78em; color: var(--ink-faint); }
+td math, .plate-cap math { font-size: 0.95em; }
+pre {
+  font-family: var(--f-mono);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 14px 16px;
+  margin: 0 0 1.15em;
+  overflow-x: auto;
+}
+</style>
+
+
+<style>
+.chart text { font-family: var(--f-mono); font-size: 11px; fill: var(--ink-soft); }
+.chart .axis-line { stroke: var(--rule); stroke-width: 1; }
+.chart .grid { stroke: var(--rule-soft); stroke-width: 1; }
+.chart .zero { stroke: var(--ink-faint); stroke-width: 1; stroke-dasharray: 4 3; }
+.chart .s-ctx { stroke: var(--accent); fill: none; stroke-width: 2; }
+.chart .s-ctxrv { stroke: var(--accent); fill: none; stroke-width: 2; stroke-dasharray: 5 4; }
+.chart .s-orc { stroke: var(--oracle); fill: none; stroke-width: 2; }
+.chart .s-orcrv { stroke: var(--oracle); fill: none; stroke-width: 2; stroke-dasharray: 5 4; }
+.chart .d-ctx { fill: var(--accent); } .chart .d-orc { fill: var(--oracle); }
+.chart .d-ref { fill: var(--surface); stroke: var(--accent); stroke-width: 2; }
+.chart .lbl-ctx { fill: var(--accent); } .chart .lbl-orc { fill: var(--oracle); }
+math[display="block"].eq { display: block math; text-align: center; }
+li math[display="block"].eq { margin: 12px 0; }
+td.wrap, th.wrap { text-align: left; white-space: normal; min-width: 14rem; }
+tr.neg td { color: var(--warn); }
+ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.tight li { margin-bottom: 0.35em; }
+
+.chart .bar-ctx { fill: var(--accent); } .chart .bar-orc { fill: var(--oracle); }
+.chart .bar-rnd { fill: var(--ink-faint); } .chart .bar-soft { fill: var(--accent-tint); }
+.chart .t-ink { fill: var(--ink); } .chart .t-big { font-size: 13px; }
+.chart .box { fill: var(--surface-sunk); stroke: var(--rule); }
+.chart .box-ctx { fill: var(--accent-wash); stroke: var(--accent); }
+.chart .box-orc { fill: var(--oracle-wash); stroke: var(--oracle); }
+.chart .box-q { fill: none; stroke: var(--ink-faint); stroke-dasharray: 4 3; }
+.chart .arrow { stroke: var(--ink-soft); stroke-width: 1.5; fill: none; }
+.chart .ah { fill: var(--ink-soft); }
+.flow { display: grid; gap: 0; margin: 28px 0; }
+.flow .step { border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); padding: 14px 18px; }
+.flow .step.done { background: var(--surface-sunk); }
+.flow .step.now { border: 2px solid var(--accent); }
+.flow .step h4 { margin: 0 0 6px; font-size: 1rem; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.flow .step p { margin: 0; font-size: 0.92rem; line-height: 1.7; }
+.flow .tag { font-family: var(--f-mono); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; padding: 1px 8px; border-radius: 99px; border: 1px solid currentColor; }
+.flow .tag.done { color: var(--ink-faint); } .flow .tag.now { color: var(--accent); } .flow .tag.next { color: var(--oracle); } .flow .tag.later { color: var(--ink-faint); }
+.flow .down { text-align: center; color: var(--ink-faint); font-size: 1.1rem; line-height: 1; padding: 6px 0; }
+.flow .fork { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 10px; }
+.flow .result { margin-top: 6px; font-size: 0.88rem; color: var(--ink-soft); }
+</style>
+
+<style>
+.chart .s-rnd { stroke: var(--ink-faint); fill: none; stroke-width: 2; }
+.chart .s-ink { stroke: var(--ink); fill: none; stroke-width: 2; }
+.chart .s-faint { stroke: var(--ink-faint); fill: none; stroke-width: 1.5; }
+.chart .band-ctx { fill: var(--accent-wash); stroke: none; }
+.chart .band-orc { fill: var(--oracle-wash); stroke: none; }
+.chart .d-rnd { fill: var(--ink-faint); } .chart .d-ink { fill: var(--ink); }
+.chart .t-small { font-size: 10px; }
+.chart .patch { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 3 3; }
+.algo { background: var(--surface); border: 1px solid var(--rule); border-radius: 4px; padding: 18px 22px 8px; margin: 28px 0; }
+.algo h4 { margin: 0 0 10px; font-size: 0.95rem; }
+.algo ol { margin: 0 0 10px; padding-left: 1.4em; font-size: 0.93rem; line-height: 1.75; }
+.vs { display: grid; grid-template-columns: 9rem 1fr; gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; margin: 24px 0; }
+.vs > div { background: var(--surface); padding: 10px 14px; font-size: 0.88rem; line-height: 1.65; }
+.vs > div.k { font-weight: 700; background: var(--surface-sunk); }
+</style>
+
+</head>
+<body>
+<div class="page">
+
+<header class="masthead">
+  <div class="prose">
+    <p class="kicker">RAF 研究ノート（方向の提案） · 2026-10-19 · ETTh1 / Chronos-2 · すべて val</p>
+    <h1>時刻をそろえた many-shot 並列文脈内学習</h1>
+    <p class="standfirst">
+      事例を類似度で選んでも，ランダムより良くならない．行の効き目の多くはデータによらない引きで，残りは<strong>時刻</strong>にある．
+      そこで，似ているかどうかは見ずに，<strong>予測の起点がクエリと同じ時刻の窓だけ</strong>を候補にし，そこからランダムに数百件を並列の行として渡す．
+    </p>
+  </div>
+</header>
+
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">要約</span><h2>ここまでの流れ</h2></div>
+    <ol class="tight">
+      <li><strong>選ぶ側で当てても伸びない．</strong>文脈照合は悪く，近さをばらけさせてもランダムと並ぶだけ．件数を増やすと，どれも同じところに集まる（1 節）．</li>
+      <li><strong>効き目の多くはデータによらない．</strong>別のデータの窓でも大部分が出る（2 節）．</li>
+      <li><strong>区間は行の未来のばらつきで決まり，読み方を変えても直らない（3 節）．</strong></li>
+      <li><strong>残る手がかりは時刻．</strong>予測の起点の時刻をそろえると，行の合意が未来の形を持つ．12 時間ずらすと形が逆になる（4・5 節）．</li>
+      <li><strong>提案：</strong>時刻だけで候補を絞り，その中はランダムにして数百件を並列に渡す．学習なし，類似度なし（6 節）．</li>
+    </ol>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 284" role="img">
+<line class="grid" x1="281.9" x2="281.9" y1="10" y2="258"/>
+<text x="281.9" y="274" text-anchor="middle">−10.0%</text>
+<line class="grid" x1="325.6" x2="325.6" y1="10" y2="258"/>
+<text x="325.6" y="274" text-anchor="middle">−8.0%</text>
+<line class="grid" x1="369.4" x2="369.4" y1="10" y2="258"/>
+<text x="369.4" y="274" text-anchor="middle">−6.0%</text>
+<line class="grid" x1="413.1" x2="413.1" y1="10" y2="258"/>
+<text x="413.1" y="274" text-anchor="middle">−4.0%</text>
+<line class="grid" x1="456.9" x2="456.9" y1="10" y2="258"/>
+<text x="456.9" y="274" text-anchor="middle">−2.0%</text>
+<line class="grid" x1="500.6" x2="500.6" y1="10" y2="258"/>
+<text x="500.6" y="274" text-anchor="middle">0.0%</text>
+<line class="grid" x1="544.4" x2="544.4" y1="10" y2="258"/>
+<text x="544.4" y="274" text-anchor="middle">+2.0%</text>
+<line class="grid" x1="588.1" x2="588.1" y1="10" y2="258"/>
+<text x="588.1" y="274" text-anchor="middle">+4.0%</text>
+<line class="zero" x1="500.6" x2="500.6" y1="10" y2="258"/>
+<text class="t-ink" x="250" y="30" text-anchor="end">文脈照合（K=16）</text>
+<rect class="bar-orc" x="500.6" y="16" width="72.2" height="20" rx="2"/>
+<text class="t-ink" x="578.8" y="30">+3.3%</text>
+<text class="t-ink" x="250" y="64" text-anchor="end">文脈照合・等間隔（K=16）</text>
+<rect class="bar-soft" x="441.6" y="50" width="59.1" height="20" rx="2"/>
+<text class="t-ink" x="435.6" y="64" text-anchor="end">−2.7%</text>
+<text class="t-ink" x="250" y="98" text-anchor="end">ランダム（K=128）</text>
+<rect class="bar-rnd" x="406.6" y="84" width="94.1" height="20" rx="2"/>
+<text class="t-ink" x="400.6" y="98" text-anchor="end">−4.3%</text>
+<text class="t-ink" x="250" y="132" text-anchor="end">別のデータからランダム（K=128）</text>
+<rect class="bar-rnd" x="406.6" y="118" width="94.1" height="20" rx="2"/>
+<text class="t-ink" x="400.6" y="132" text-anchor="end">−4.3%</text>
+<text class="t-ink" x="250" y="166" text-anchor="end">12 時間ずらす（K=128）</text>
+<rect class="bar-orc" x="432.8" y="152" width="67.8" height="20" rx="2"/>
+<text class="t-ink" x="426.8" y="166" text-anchor="end">−3.1%</text>
+<text class="t-ink" x="250" y="200" text-anchor="end">時刻をそろえる（K=128）</text>
+<rect class="bar-ctx" x="389.1" y="186" width="111.6" height="20" rx="2"/>
+<text class="t-ink" x="383.1" y="200" text-anchor="end">−5.1%　提案</text>
+<text class="t-ink" x="250" y="234" text-anchor="end">正解の未来で選ぶ（K=128，診断）</text>
+<rect class="bar-rnd" x="297.2" y="220" width="203.4" height="20" rx="2"/>
+<text class="t-ink" x="291.2" y="234" text-anchor="end">−9.3%</text>
+</svg></div>
+      <div class="plate-cap"><b>参照なしからの MSE の変化（val）</b>履歴 2032 点，予測 64 点，事例の文脈 384 点．ランダム K=128 は seed 0・1 の平均（−4.6%，−3.9%）．別のデータは ETTh2．時刻をそろえる・ずらすは seed 0 のみ．参照なしの val MSE は 0.5254．</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">1</span><h2>選ぶ側で当てても伸びない</h2></div>
+    <p>文脈が似た窓を選ぶのが最良かを確かめるため，文脈照合と文脈照合・等間隔をランダムと比べた．どれも正解は使わない．
+    候補は train の窓 <math><msub><mi>w</mi><mi>j</mi></msub><mo>=</mo><mo stretchy="false">(</mo><msub><mi>c</mi><mi>j</mi></msub><mo>,</mo><msub><mi>y</mi><mi>j</mi></msub><mo stretchy="false">)</mo></math>（文脈 <math><msub><mi>c</mi><mi>j</mi></msub></math> は <math><mi>S</mi><mo>=</mo><mn>384</mn></math> 点，未来 <math><msub><mi>y</mi><mi>j</mi></msub></math> は 64 点），<math><mi>j</mi><mo>=</mo><mn>1</mn><mo>,</mo><mo>…</mo><mo>,</mo><mi>N</mi></math>．
+    クエリの文脈を <math><mi>q</mi></math>，選ぶ K 件の集合を <math><mi>E</mi></math> とする．<math><mi>μ</mi><mo stretchy="false">(</mo><mo>·</mo><mo stretchy="false">)</mo><mo>,</mo><mi>σ</mi><mo stretchy="false">(</mo><mo>·</mo><mo stretchy="false">)</mo></math> は平均と標準偏差．</p>
+    <ul class="tight">
+      <li><strong>ランダム：</strong>候補から K 件を一様に取る．全クエリで共通．
+        <math display="block" class="eq"><mi>E</mi><mo>∼</mo><mi mathvariant="normal">Unif</mi><mo stretchy="false">(</mo><mo stretchy="false">{</mo><mi>J</mi><mo>⊂</mo><mo stretchy="false">{</mo><mn>1</mn><mo>,</mo><mo>…</mo><mo>,</mo><mi>N</mi><mo stretchy="false">}</mo><mo>:</mo><mo stretchy="false">|</mo><mi>J</mi><mo stretchy="false">|</mo><mo>=</mo><mi>K</mi><mo stretchy="false">}</mo><mo stretchy="false">)</mo></math></li>
+      <li><strong>文脈照合：</strong>クエリの文脈との距離が小さい順に K 件．クエリごとに選ぶ．
+        <math display="block" class="eq"><msub><mi>d</mi><mi>j</mi></msub><mo>=</mo><msup><mrow><mo stretchy="false">‖</mo><msub><mi>c</mi><mi>j</mi></msub><mo>−</mo><mi>q</mi><mo stretchy="false">‖</mo></mrow><mn>2</mn></msup><mo>,</mo><mspace width="1em"/><mi>E</mi><mo>=</mo><mo stretchy="false">{</mo><mi>π</mi><mo stretchy="false">(</mo><mn>1</mn><mo stretchy="false">)</mo><mo>,</mo><mo>…</mo><mo>,</mo><mi>π</mi><mo stretchy="false">(</mo><mi>K</mi><mo stretchy="false">)</mo><mo stretchy="false">}</mo></math>
+        ここで <math><mi>π</mi></math> は <math><msub><mi>d</mi><mi>j</mi></msub></math> の小さい順の並べ替え．</li>
+      <li><strong>文脈照合・等間隔：</strong>近い順の並べ替え <math><mi>π</mi></math> の順位を等間隔に K 件取る．近い窓から遠い窓まで同じ数だけ入る．ここでの距離は，各窓を自分の文脈で正規化した値（Chronos-2 が見る値）で測る．
+        <math display="block" class="eq"><mi>E</mi><mo>=</mo><mrow><mo stretchy="false">{</mo><mi>π</mi><mrow><mo stretchy="false">(</mo><mrow><mo>⌊</mo><mo stretchy="false">(</mo><mi>i</mi><mo>−</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo stretchy="false">)</mo><mfrac><mi>N</mi><mi>K</mi></mfrac><mo>⌋</mo><mo>+</mo><mn>1</mn></mrow><mo stretchy="false">)</mo></mrow><mo>:</mo><mi>i</mi><mo>=</mo><mn>1</mn><mo>,</mo><mo>…</mo><mo>,</mo><mi>K</mi><mo stretchy="false">}</mo></mrow></math></li>
+    </ul>
+    <p>クエリごとに選ぶ方法では，候補を予測の起点より 96 点以上前に終わる窓に限る．時刻をそろえる方法の式は 4 節にある．</p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 330" role="img">
+<text class="t-ink" x="158" y="36" text-anchor="end">文脈照合</text>
+<rect class="box" x="170" y="24" width="470" height="16" rx="2"/>
+<rect class="bar-ctx" x="169.3" y="21" width="2.2" height="22"/>
+<rect class="bar-ctx" x="169.9" y="21" width="2.2" height="22"/>
+<rect class="bar-ctx" x="170.6" y="21" width="2.2" height="22"/>
+<rect class="bar-ctx" x="171.2" y="21" width="2.2" height="22"/>
+<rect class="bar-ctx" x="171.8" y="21" width="2.2" height="22"/>
+<rect class="bar-ctx" x="172.5" y="21" width="2.2" height="22"/>
+<rect class="bar-ctx" x="173.1" y="21" width="2.2" height="22"/>
+<rect class="bar-ctx" x="173.7" y="21" width="2.2" height="22"/>
+<rect class="bar-ctx" x="174.4" y="21" width="2.2" height="22"/>
+<rect class="bar-ctx" x="175.0" y="21" width="2.2" height="22"/>
+<rect class="bar-ctx" x="175.6" y="21" width="2.2" height="22"/>
+<rect class="bar-ctx" x="176.3" y="21" width="2.2" height="22"/>
+<rect class="bar-ctx" x="176.9" y="21" width="2.2" height="22"/>
+<rect class="bar-ctx" x="177.5" y="21" width="2.2" height="22"/>
+<rect class="bar-ctx" x="178.1" y="21" width="2.2" height="22"/>
+<rect class="bar-ctx" x="178.8" y="21" width="2.2" height="22"/>
+<text class="t-ink" x="158" y="82" text-anchor="end">文脈照合・等間隔</text>
+<rect class="box" x="170" y="70" width="470" height="16" rx="2"/>
+<rect class="bar-ctx" x="183.8" y="67" width="2.2" height="22"/>
+<rect class="bar-ctx" x="212.8" y="67" width="2.2" height="22"/>
+<rect class="bar-ctx" x="242.5" y="67" width="2.2" height="22"/>
+<rect class="bar-ctx" x="271.5" y="67" width="2.2" height="22"/>
+<rect class="bar-ctx" x="301.2" y="67" width="2.2" height="22"/>
+<rect class="bar-ctx" x="330.8" y="67" width="2.2" height="22"/>
+<rect class="bar-ctx" x="359.8" y="67" width="2.2" height="22"/>
+<rect class="bar-ctx" x="389.5" y="67" width="2.2" height="22"/>
+<rect class="bar-ctx" x="418.5" y="67" width="2.2" height="22"/>
+<rect class="bar-ctx" x="448.2" y="67" width="2.2" height="22"/>
+<rect class="bar-ctx" x="477.2" y="67" width="2.2" height="22"/>
+<rect class="bar-ctx" x="506.8" y="67" width="2.2" height="22"/>
+<rect class="bar-ctx" x="536.5" y="67" width="2.2" height="22"/>
+<rect class="bar-ctx" x="565.5" y="67" width="2.2" height="22"/>
+<rect class="bar-ctx" x="595.2" y="67" width="2.2" height="22"/>
+<rect class="bar-ctx" x="624.2" y="67" width="2.2" height="22"/>
+<text x="170" y="132">近い</text><text x="640" y="132" text-anchor="end">遠い</text>
+<text x="405.0" y="132" text-anchor="middle">クエリの文脈との近さの順位（候補 745 件）</text>
+<line class="s-faint" x1="170.3" y1="140" x2="205.0" y2="160" stroke-dasharray="3 3"/>
+<text class="t-ink" x="205.0" y="172" text-anchor="middle">1 位</text>
+<rect class="box" x="130.0" y="178" width="150" height="110" rx="2"/>
+<polyline class="s-faint" points="134.0,224.3 135.5,229.3 137.0,224.0 138.5,221.5 140.0,222.4 141.5,234.0 143.0,224.0 144.5,227.2 146.0,236.8 147.5,250.3 148.9,248.9 150.4,257.9 151.9,240.8 153.4,234.2 154.9,226.9 156.4,231.2 157.9,228.5 159.4,233.1 160.9,232.2 162.4,216.1 163.9,210.8 165.4,219.0 166.9,217.1 168.4,220.8 169.9,216.0 171.4,215.9 172.9,212.2 174.4,216.8 175.9,216.2 177.3,213.8 178.8,211.3 180.3,212.6 181.8,214.2 183.3,215.2 184.8,215.5 186.3,216.1 187.8,218.2 189.3,210.5 190.8,211.9 192.3,216.2 193.8,217.2 195.3,219.2 196.8,218.0 198.3,218.4 199.8,211.4 201.3,214.2 202.8,213.9 204.3,213.3 205.7,210.2 207.2,211.0 208.7,206.5 210.2,211.0 211.7,211.9 213.2,212.1 214.7,205.8 216.2,206.2 217.7,202.6 219.2,207.8 220.7,209.2 222.2,209.1 223.7,213.2 225.2,211.6 226.7,208.6 228.2,217.3 229.7,219.7 231.2,221.0 232.7,220.8 234.1,218.6 235.6,210.5 237.1,218.4 238.6,219.8 240.1,220.6 241.6,213.8 243.1,216.4 244.6,215.5 246.1,221.9 247.6,223.3 249.1,225.1 250.6,216.5 252.1,213.3 253.6,211.3 255.1,219.1 256.6,219.9 258.1,219.6 259.6,210.5 261.1,206.4 262.5,207.3 264.0,218.8 265.5,216.4 267.0,216.7 268.5,207.6 270.0,206.3 271.5,207.4 273.0,216.9 274.5,219.7 276.0,223.4"/>
+<polyline class="s-ctx" points="134.0,258.5 135.5,257.4 137.0,259.6 138.5,264.2 140.0,265.0 141.5,262.8 143.0,260.0 144.5,256.0 146.0,267.7 147.5,261.6 148.9,259.1 150.4,256.5 151.9,252.6 153.4,245.4 154.9,245.6 156.4,246.9 157.9,244.8 159.4,246.7 160.9,243.2 162.4,234.3 163.9,230.1 165.4,238.3 166.9,243.6 168.4,244.7 169.9,232.8 171.4,223.3 172.9,215.4 174.4,227.3 175.9,234.4 177.3,235.9 178.8,231.0 180.3,225.9 181.8,217.6 183.3,223.8 184.8,224.3 186.3,221.6 187.8,218.6 189.3,208.4 190.8,206.6 192.3,212.1 193.8,215.4 195.3,221.7 196.8,214.3 198.3,210.6 199.8,211.8 201.3,219.6 202.8,238.6 204.3,251.2 205.7,241.6 207.2,226.1 208.7,216.6 210.2,217.5 211.7,223.3 213.2,230.1 214.7,231.6 216.2,223.4 217.7,214.8 219.2,220.4 220.7,227.1 222.2,233.2 223.7,229.5 225.2,220.1 226.7,217.1 228.2,220.8 229.7,239.8 231.2,244.4 232.7,239.5 234.1,232.2 235.6,227.1 237.1,226.3 238.6,228.5 240.1,231.6 241.6,231.3 243.1,233.8 244.6,230.8 246.1,235.8 247.6,243.5 249.1,246.8 250.6,228.7 252.1,225.9 253.6,218.7 255.1,231.8 256.6,234.8 258.1,235.3 259.6,224.2 261.1,215.6 262.5,210.6 264.0,225.5 265.5,230.5 267.0,237.9 268.5,225.2 270.0,213.9 271.5,207.7 273.0,217.9 274.5,222.3 276.0,226.8"/>
+<line class="s-faint" x1="405.0" y1="140" x2="405.0" y2="160" stroke-dasharray="3 3"/>
+<text class="t-ink" x="405.0" y="172" text-anchor="middle">373 位</text>
+<rect class="box" x="330.0" y="178" width="150" height="110" rx="2"/>
+<polyline class="s-faint" points="334.0,224.3 335.5,229.3 337.0,224.0 338.5,221.5 340.0,222.4 341.5,234.0 343.0,224.0 344.5,227.2 346.0,236.8 347.5,250.3 348.9,248.9 350.4,257.9 351.9,240.8 353.4,234.2 354.9,226.9 356.4,231.2 357.9,228.5 359.4,233.1 360.9,232.2 362.4,216.1 363.9,210.8 365.4,219.0 366.9,217.1 368.4,220.8 369.9,216.0 371.4,215.9 372.9,212.2 374.4,216.8 375.9,216.2 377.3,213.8 378.8,211.3 380.3,212.6 381.8,214.2 383.3,215.2 384.8,215.5 386.3,216.1 387.8,218.2 389.3,210.5 390.8,211.9 392.3,216.2 393.8,217.2 395.3,219.2 396.8,218.0 398.3,218.4 399.8,211.4 401.3,214.2 402.8,213.9 404.3,213.3 405.7,210.2 407.2,211.0 408.7,206.5 410.2,211.0 411.7,211.9 413.2,212.1 414.7,205.8 416.2,206.2 417.7,202.6 419.2,207.8 420.7,209.2 422.2,209.1 423.7,213.2 425.2,211.6 426.7,208.6 428.2,217.3 429.7,219.7 431.2,221.0 432.7,220.8 434.1,218.6 435.6,210.5 437.1,218.4 438.6,219.8 440.1,220.6 441.6,213.8 443.1,216.4 444.6,215.5 446.1,221.9 447.6,223.3 449.1,225.1 450.6,216.5 452.1,213.3 453.6,211.3 455.1,219.1 456.6,219.9 458.1,219.6 459.6,210.5 461.1,206.4 462.5,207.3 464.0,218.8 465.5,216.4 467.0,216.7 468.5,207.6 470.0,206.3 471.5,207.4 473.0,216.9 474.5,219.7 476.0,223.4"/>
+<polyline class="s-ctx" points="334.0,235.0 335.5,224.4 337.0,227.6 338.5,242.4 340.0,245.6 341.5,243.1 343.0,229.2 344.5,204.9 346.0,207.2 347.5,206.2 348.9,199.8 350.4,215.1 351.9,240.5 353.4,236.1 354.9,238.4 356.4,230.9 357.9,232.8 359.4,251.3 360.9,247.6 362.4,243.1 363.9,246.6 365.4,247.5 366.9,244.9 368.4,244.9 369.9,244.9 371.4,244.9 372.9,244.9 374.4,245.6 375.9,248.2 377.3,247.3 378.8,243.5 380.3,234.2 381.8,233.4 383.3,221.8 384.8,233.5 386.3,248.1 387.8,251.3 389.3,243.2 390.8,238.7 392.3,236.4 393.8,227.5 395.3,223.8 396.8,222.2 398.3,226.2 399.8,213.5 401.3,212.5 402.8,208.1 404.3,208.3 405.7,210.6 407.2,216.9 408.7,210.7 410.2,211.7 411.7,209.3 413.2,209.5 414.7,217.3 416.2,209.3 417.7,211.6 419.2,222.0 420.7,237.1 422.2,244.9 423.7,244.4 425.2,233.3 426.7,239.6 428.2,246.7 429.7,255.5 431.2,257.4 432.7,254.1 434.1,244.8 435.6,240.3 437.1,250.2 438.6,258.7 440.1,265.1 441.6,264.6 443.1,251.1 444.6,245.9 446.1,238.1 447.6,240.5 449.1,250.1 450.6,241.2 452.1,235.2 453.6,228.7 455.1,228.0 456.6,233.7 458.1,244.0 459.6,235.2 461.1,226.5 462.5,226.9 464.0,229.6 465.5,238.2 467.0,228.8 468.5,227.6 470.0,214.9 471.5,217.2 473.0,220.6 474.5,221.6 476.0,224.5"/>
+<line class="s-faint" x1="639.7" y1="140" x2="565.0" y2="160" stroke-dasharray="3 3"/>
+<text class="t-ink" x="565.0" y="172" text-anchor="middle">745 位</text>
+<rect class="box" x="490.0" y="178" width="150" height="110" rx="2"/>
+<polyline class="s-faint" points="494.0,224.3 495.5,229.3 497.0,224.0 498.5,221.5 500.0,222.4 501.5,234.0 503.0,224.0 504.5,227.2 506.0,236.8 507.5,250.3 508.9,248.9 510.4,257.9 511.9,240.8 513.4,234.2 514.9,226.9 516.4,231.2 517.9,228.5 519.4,233.1 520.9,232.2 522.4,216.1 523.9,210.8 525.4,219.0 526.9,217.1 528.4,220.8 529.9,216.0 531.4,215.9 532.9,212.2 534.4,216.8 535.9,216.2 537.3,213.8 538.8,211.3 540.3,212.6 541.8,214.2 543.3,215.2 544.8,215.5 546.3,216.1 547.8,218.2 549.3,210.5 550.8,211.9 552.3,216.2 553.8,217.2 555.3,219.2 556.8,218.0 558.3,218.4 559.8,211.4 561.3,214.2 562.8,213.9 564.3,213.3 565.7,210.2 567.2,211.0 568.7,206.5 570.2,211.0 571.7,211.9 573.2,212.1 574.7,205.8 576.2,206.2 577.7,202.6 579.2,207.8 580.7,209.2 582.2,209.1 583.7,213.2 585.2,211.6 586.7,208.6 588.2,217.3 589.7,219.7 591.2,221.0 592.7,220.8 594.1,218.6 595.6,210.5 597.1,218.4 598.6,219.8 600.1,220.6 601.6,213.8 603.1,216.4 604.6,215.5 606.1,221.9 607.6,223.3 609.1,225.1 610.6,216.5 612.1,213.3 613.6,211.3 615.1,219.1 616.6,219.9 618.1,219.6 619.6,210.5 621.1,206.4 622.5,207.3 624.0,218.8 625.5,216.4 627.0,216.7 628.5,207.6 630.0,206.3 631.5,207.4 633.0,216.9 634.5,219.7 636.0,223.4"/>
+<polyline class="s-ctx" points="494.0,208.0 495.5,217.2 497.0,224.7 498.5,230.1 500.0,218.9 501.5,206.8 503.0,202.8 504.5,211.0 506.0,213.4 507.5,215.5 508.9,204.2 510.4,200.9 511.9,201.7 513.4,209.0 514.9,207.6 516.4,211.1 517.9,205.7 519.4,211.8 520.9,220.0 522.4,237.2 523.9,238.0 525.4,237.2 526.9,229.5 528.4,222.5 529.9,226.5 531.4,237.2 532.9,236.3 534.4,227.4 535.9,241.8 537.3,229.2 538.8,234.9 540.3,241.9 541.8,241.2 543.3,243.0 544.8,233.0 546.3,220.9 547.8,216.5 549.3,227.5 550.8,234.7 552.3,241.4 553.8,232.0 555.3,218.9 556.8,214.2 558.3,229.0 559.8,239.3 561.3,242.1 562.8,223.5 564.3,214.2 565.7,213.5 567.2,226.7 568.7,235.5 570.2,243.9 571.7,242.7 573.2,240.0 574.7,247.7 576.2,257.3 577.7,255.8 579.2,255.7 580.7,247.4 582.2,236.2 583.7,241.0 585.2,251.8 586.7,256.6 588.2,261.0 589.7,247.6 591.2,235.4 592.7,229.2 594.1,247.3 595.6,253.1 597.1,256.0 598.6,245.6 600.1,233.3 601.6,236.1 603.1,250.4 604.6,252.5 606.1,251.2 607.6,241.6 609.1,229.0 610.6,230.1 612.1,249.3 613.6,249.7 615.1,249.7 616.6,249.7 618.1,249.7 619.6,249.7 621.1,249.7 622.5,246.4 624.0,249.4 625.5,238.8 627.0,228.5 628.5,225.3 630.0,237.4 631.5,245.1 633.0,251.5 634.5,242.0 636.0,224.7"/>
+<text x="340.0" y="322" text-anchor="middle">灰色：クエリの文脈 384 点，青：その順位の候補の文脈（どちらも自分の文脈で正規化）</text>
+</svg></div>
+      <div class="plate-cap"><b>文脈照合と文脈照合・等間隔が選ぶ窓（K=16 の例）</b>OT，予測の起点 2017-07-24 08:00 のクエリ．候補は train の窓を 11 点おきに切り出したもの（N=745）．青い線が選ばれる 16 件の順位．文脈照合は先頭の 16 件に固まり，等間隔は 47 位おきに散る．</div>
+    </div>
+    <div class="plate">
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 300" role="img">
+<line class="grid" x1="60" x2="530" y1="260.0" y2="260.0"/><text x="52" y="264.0" text-anchor="end">−6.0%</text>
+<line class="grid" x1="60" x2="530" y1="211.2" y2="211.2"/><text x="52" y="215.2" text-anchor="end">−4.0%</text>
+<line class="grid" x1="60" x2="530" y1="162.4" y2="162.4"/><text x="52" y="166.4" text-anchor="end">−2.0%</text>
+<line class="grid" x1="60" x2="530" y1="113.6" y2="113.6"/><text x="52" y="117.6" text-anchor="end">0</text>
+<line class="grid" x1="60" x2="530" y1="64.8" y2="64.8"/><text x="52" y="68.8" text-anchor="end">+2.0%</text>
+<line class="grid" x1="60" x2="530" y1="16.0" y2="16.0"/><text x="52" y="20.0" text-anchor="end">+4.0%</text>
+<line class="zero" x1="60" x2="530" y1="113.6" y2="113.6"/>
+<text x="60.0" y="286" text-anchor="middle">K=16</text>
+<text x="216.7" y="286" text-anchor="middle">K=32</text>
+<text x="530.0" y="286" text-anchor="middle">K=128</text>
+<polyline class="s-orc" points="60.0,33.1 216.7,123.4 530.0,233.2"/>
+<circle class="d-orc" cx="60.0" cy="33.1" r="3.5"/>
+<circle class="d-orc" cx="216.7" cy="123.4" r="3.5"/>
+<circle class="d-orc" cx="530.0" cy="233.2" r="3.5"/>
+<text class="lbl-orc" x="540.0" y="247.2">文脈照合</text>
+<polyline class="s-rnd" points="60.0,147.0 216.7,186.8 530.0,217.3"/>
+<circle class="d-rnd" cx="60.0" cy="147.0" r="3.5"/>
+<circle class="d-rnd" cx="216.7" cy="186.8" r="3.5"/>
+<circle class="d-rnd" cx="530.0" cy="217.3" r="3.5"/>
+<text class="t-ink" x="540.0" y="221.3">ランダム</text>
+<polyline class="s-ctx" points="60.0,179.5 216.7,199.0"/>
+<circle class="d-ctx" cx="60.0" cy="179.5" r="3.5"/>
+<circle class="d-ctx" cx="216.7" cy="199.0" r="3.5"/>
+<text class="lbl-ctx" x="226.7" y="215.0">文脈照合・等間隔</text>
+</svg></div>
+      <div class="plate-cap"><b>件数ごとの MSE の変化（val，参照なし比）</b>文脈照合は K=16 で +3.3%，K=32 で −0.4%，K=128 で −4.9%．ランダムは K=16 で seed 0〜2 の平均 −1.4%（+0.4〜−2.5%），K=32 で −3.0%，K=128 で −4.3%．文脈照合・等間隔は −2.7%，−3.5%．文脈照合は生の値の L2 距離，等間隔は各窓を自分の文脈で正規化してからの距離．どの手法も MAE と QL は参照なしより悪いか同じ．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <ul class="tight">
+      <li>似すぎた事例はむしろ害になる．少ない件数ほどはっきりする．</li>
+      <li>近さをばらけさせると，ランダムより少し良いが，seed のぶれの範囲に入る．</li>
+      <li>件数を増やすと選び方の差は消え，効き目の主は件数になる．</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">2</span><h2>効き目の多くはデータによらない</h2></div>
+    <p>行が「このクエリの未来」を教えているのかを確かめるため，事例を別のデータの train からランダムに取った．</p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 220" role="img">
+<line class="grid" x1="210.0" x2="210.0" y1="10" y2="194"/><text x="210.0" y="210" text-anchor="middle">−6.0%</text>
+<line class="grid" x1="312.5" x2="312.5" y1="10" y2="194"/><text x="312.5" y="210" text-anchor="middle">−4.0%</text>
+<line class="grid" x1="415.0" x2="415.0" y1="10" y2="194"/><text x="415.0" y="210" text-anchor="middle">−2.0%</text>
+<line class="grid" x1="517.5" x2="517.5" y1="10" y2="194"/><text x="517.5" y="210" text-anchor="middle">0</text>
+<line class="grid" x1="620.0" x2="620.0" y1="10" y2="194"/><text x="620.0" y="210" text-anchor="middle">+2.0%</text>
+<line class="zero" x1="517.5" x2="517.5" y1="10" y2="194"/>
+<text class="t-ink" x="200" y="40" text-anchor="end">同じデータ（ETTh1）</text>
+<rect class="bar-ctx" x="281.8" y="16" width="235.8" height="18" rx="2"/>
+<text class="t-ink t-small" x="275.8" y="29" text-anchor="end">MSE −4.6%</text>
+<rect class="bar-soft" x="507.2" y="38" width="10.2" height="18" rx="2"/>
+<text class="t-ink t-small" x="501.2" y="51" text-anchor="end">QL −0.2%</text>
+<text class="t-ink" x="200" y="98" text-anchor="end">別のデータ（ETTh2）</text>
+<rect class="bar-ctx" x="297.1" y="74" width="220.4" height="18" rx="2"/>
+<text class="t-ink t-small" x="291.1" y="87" text-anchor="end">MSE −4.3%</text>
+<rect class="bar-soft" x="471.4" y="96" width="46.1" height="18" rx="2"/>
+<text class="t-ink t-small" x="465.4" y="109" text-anchor="end">QL −0.9%</text>
+<text class="t-ink" x="200" y="156" text-anchor="end">別のデータ（Weather）</text>
+<rect class="bar-ctx" x="368.9" y="132" width="148.6" height="18" rx="2"/>
+<text class="t-ink t-small" x="362.9" y="145" text-anchor="end">MSE −2.9%</text>
+<rect class="bar-soft" x="517.5" y="154" width="51.2" height="18" rx="2"/>
+<text class="t-ink t-small" x="574.8" y="167">QL +1.0%</text>
+</svg></div>
+      <div class="plate-cap"><b>事例の出どころごとの MSE と QL の変化（K=128，seed 0）</b>同じデータ：−4.6% / −0.2%．ETTh2：−4.3% / −0.9%（MAE −0.5%）．Weather：−2.9% / +1.0%．80% 区間の幅はそれぞれ 1.31，1.23，1.51．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <ul class="tight">
+      <li>別のデータでも効き目の大部分が出る．行はクエリ固有の未来ではなく，水準と振幅の引き（10-14 の共通の引き）を主に渡している．</li>
+      <li>似た性質のデータほど効く．何を共有していれば効くのかが次の問いになる．</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">3</span><h2>区間は読み方を変えても直らない</h2></div>
+    <p>参照なしでは 80% 区間に 74% しか入らない．行の中身（クエリの文脈＋参照なしの予測＋他の窓の外れ方）や group attention の重み（一様，logit に一律の値を足す）を変えて，区間を直せるかを見た．</p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 320" role="img">
+<line class="grid" x1="60" x2="650" y1="276.0" y2="276.0"/><text x="52" y="280.0" text-anchor="end">50%</text>
+<line class="grid" x1="60" x2="650" y1="224.0" y2="224.0"/><text x="52" y="228.0" text-anchor="end">60%</text>
+<line class="grid" x1="60" x2="650" y1="172.0" y2="172.0"/><text x="52" y="176.0" text-anchor="end">70%</text>
+<line class="grid" x1="60" x2="650" y1="120.0" y2="120.0"/><text x="52" y="124.0" text-anchor="end">80%</text>
+<line class="grid" x1="60" x2="650" y1="68.0" y2="68.0"/><text x="52" y="72.0" text-anchor="end">90%</text>
+<line class="grid" x1="60" x2="650" y1="16.0" y2="16.0"/><text x="52" y="20.0" text-anchor="end">100%</text>
+<text x="60.0" y="296" text-anchor="middle">0.5</text>
+<text x="207.5" y="296" text-anchor="middle">1</text>
+<text x="355.0" y="296" text-anchor="middle">1.5</text>
+<text x="502.5" y="296" text-anchor="middle">2</text>
+<text x="650.0" y="296" text-anchor="middle">2.5</text>
+<text x="355.0" y="314" text-anchor="middle">80% 区間の幅（チャネルの標準偏差で割る）</text>
+<line class="zero" x1="60" x2="650" y1="120.0" y2="120.0"/><text x="646" y="114.0" text-anchor="end">目標 80%</text>
+<circle class="d-ink" cx="237.6" cy="151.7" r="4.5"/>
+<text class="t-ink" x="245.8" y="163.0" text-anchor="middle">参照なし</text>
+<line class="s-faint" x1="299.5" y1="108.6" x2="222.2" y2="91.6" stroke-width="1"/>
+<circle class="d-rnd" cx="299.5" cy="108.6" r="4.5"/>
+<text class="t-ink" x="222.2" y="87.6" text-anchor="end">ランダム K=128</text>
+<line class="s-faint" x1="314.3" y1="100.8" x2="313.7" y2="73.4" stroke-width="1"/>
+<circle class="d-ctx" cx="314.3" cy="100.8" r="4.5"/>
+<text class="t-ink" x="313.7" y="69.4" text-anchor="middle">時刻をそろえる</text>
+<line class="s-faint" x1="283.3" y1="118.4" x2="207.5" y2="128.2" stroke-width="1"/>
+<circle class="d-rnd" cx="283.3" cy="118.4" r="4.5"/>
+<text class="t-ink" x="207.5" y="142.2" text-anchor="end">全レイヤーを一様</text>
+<circle class="d-orc" cx="612.2" cy="46.7" r="4.5"/>
+<text class="t-ink" x="599.9" y="40.8" text-anchor="middle">残差の行</text>
+<line class="s-faint" x1="336.4" y1="108.6" x2="390.4" y2="91.6" stroke-width="1"/>
+<circle class="d-orc" cx="336.4" cy="108.6" r="4.5"/>
+<text class="t-ink" x="390.4" y="87.6" text-anchor="start">残差の行 0.5 倍</text>
+<circle class="d-orc" cx="194.2" cy="188.1" r="4.5"/>
+<text class="t-ink" x="203.1" y="196.8" text-anchor="middle">残差の行 0.3 倍</text>
+<circle class="d-orc" cx="119.0" cy="251.6" r="4.5"/>
+<text class="t-ink" x="127.8" y="259.2" text-anchor="middle">外れ方 0</text>
+</svg></div>
+      <div class="plate-cap"><b>80% 区間の幅と入る割合（val）</b>QL（参照なし比）：ランダム −0.2%，時刻をそろえる −0.6%，全レイヤーを一様 −0.5%，残差の行 +13.0%，0.5 倍 +3.1%，0.3 倍 +2.9%，外れ方 0 +4.6%．logit に +1 を足すと MSE −5.0% / QL −0.3%．後から残差を足す RACE-TF の再現は MSE +3.7%．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <ul class="tight">
+      <li>どの手法も 1 本の曲線に乗る．区間の幅は行の未来のばらつきでほぼ決まり，幅を合わせても QL は良くならない．</li>
+      <li>読み方の編集は MSE を少し動かすが，seed のぶれを超えない．後から残差を足す方法は悪化した．</li>
+      <li>区間を作り直す方向は捨て，<strong>行の未来に何を並べるか</strong>に戻る．</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">4</span><h2>時刻のそろえ方</h2></div>
+    <p>
+      Chronos-2 の group attention は，<strong>同じパッチ位置の行どうし</strong>を混ぜる．パッチ位置は予測の起点からの時間なので，起点の時刻が行ごとにばらばらだと，同じ位置に朝の行と夜の行が混ざり，日周の形が打ち消し合う．
+      そこで，事例の未来が始まる時刻（＝事例の予測の起点）をクエリの予測の起点と同じ時刻にそろえる．
+    </p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 300" role="img">
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<text class="t-ink" x="138" y="56" text-anchor="end">クエリ</text>
+<rect class="box-q" x="150" y="40" width="250" height="24" rx="2"/>
+<text x="275.0" y="56" text-anchor="middle">履歴 2032 点</text>
+<rect class="box-q" x="400" y="40" width="112" height="24" rx="2"/>
+<text x="456.0" y="56" text-anchor="middle">予測 64 点</text>
+<text class="t-small" x="520" y="56">2017-07-24 08:00</text>
+<text class="t-ink" x="138" y="94" text-anchor="end">事例 1</text>
+<rect class="box" x="150" y="78" width="250" height="24" rx="2"/>
+<text x="275.0" y="94" text-anchor="middle">文脈 384 点</text>
+<rect class="box-ctx" x="400" y="78" width="112" height="24" rx="2"/>
+<text x="456.0" y="94" text-anchor="middle">既知の未来</text>
+<text class="t-small" x="520" y="94">2016-08-13 08:00</text>
+<text class="t-ink" x="138" y="132" text-anchor="end">事例 2</text>
+<rect class="box" x="150" y="116" width="250" height="24" rx="2"/>
+<text x="275.0" y="132" text-anchor="middle">文脈 384 点</text>
+<rect class="box-ctx" x="400" y="116" width="112" height="24" rx="2"/>
+<text x="456.0" y="132" text-anchor="middle">既知の未来</text>
+<text class="t-small" x="520" y="132">2017-06-18 08:00</text>
+<text class="t-ink" x="138" y="170" text-anchor="end">⋮</text>
+<text class="t-ink" x="138" y="208" text-anchor="end">事例 K</text>
+<rect class="box" x="150" y="192" width="250" height="24" rx="2"/>
+<text x="275.0" y="208" text-anchor="middle">文脈 384 点</text>
+<rect class="box-ctx" x="400" y="192" width="112" height="24" rx="2"/>
+<text x="456.0" y="208" text-anchor="middle">既知の未来</text>
+<text class="t-small" x="520" y="208">2017-05-18 08:00</text>
+<text class="t-ink" x="138" y="246" text-anchor="end">ずらした事例</text>
+<rect class="box" x="150" y="230" width="250" height="24" rx="2"/>
+<text x="275.0" y="246" text-anchor="middle">文脈 384 点</text>
+<rect class="box-orc" x="400" y="230" width="112" height="24" rx="2"/>
+<text x="456.0" y="246" text-anchor="middle">既知の未来</text>
+<text class="t-small" x="520" y="246">2016-08-13 20:00</text>
+
+<rect class="patch" x="428" y="34" width="28" height="192" rx="2"/>
+
+
+<text class="lbl-ctx" x="445" y="26" text-anchor="middle">同じパッチ位置どうしで group attention</text>
+<text x="400" y="284" text-anchor="middle">予測の起点：事例 1〜K はクエリと同じ 8 時，ずらした事例は 20 時</text>
+</svg></div>
+      <div class="plate-cap"><b>時刻をそろえた並列の行</b>事例は train の窓を 1 点おきに切り出したもの．日付は下の図のクエリで実際に選ばれた窓の予測の起点．事例の文脈 384 点（16 日分），未来 64 点は既知の共変量として渡す．事例は予測の起点より 96 点以上前に終わるものに限る．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <p>候補 <math><mi>j</mi></math>（train の窓の先頭位置）を，その未来の先頭 <math><mi>j</mi><mo>+</mo><mi>S</mi></math> とクエリの予測の起点 <math><mi>o</mi></math> の差が周期 <math><mi>P</mi></math> の倍数になるものに絞る．</p>
+    <math display="block" class="eq"><msub><mi>𝒞</mi><mi>P</mi></msub><mo>(</mo><mi>o</mi><mo>)</mo><mo>=</mo><mo>{</mo><mi>j</mi><mo>:</mo><mo>(</mo><mi>j</mi><mo>+</mo><mi>S</mi><mo>−</mo><mi>o</mi><mo>)</mo><mspace width="0.3em"/><mo lspace="0" rspace="0">mod</mo><mspace width="0.3em"/><mi>P</mi><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="0.4em"/><mi>j</mi><mo>≤</mo><mtext>limit</mtext><mo>(</mo><mi>o</mi><mo>)</mo><mo>}</mo></math>
+    <ul class="tight">
+      <li><strong>使うのは位置（時刻）だけ．</strong>系列の値も類似度も見ない．ETTh1 は 1 時間おきで 0 時から始まるので，位置を 24 で割った余りが時刻になる．タイムスタンプがあれば「時」が同じ窓を取るのと同じ．</li>
+      <li><strong>その中はランダム．</strong><math><msub><mi>𝒞</mi><mi>P</mi></msub></math> から重複なしで K 件を一様に取る．日付，季節，水準はばらけたまま残る．</li>
+      <li><strong>対照は 12 時間ずらし．</strong>条件を <math><mo>(</mo><mi>j</mi><mo>+</mo><mi>S</mi><mo>−</mo><mi>o</mi><mo>−</mo><mi>P</mi><mo>/</mo><mn>2</mn><mo>)</mo></math> にすると，候補の数，データ，件数は同じで時刻だけがずれる．</li>
+    </ul>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 270" role="img">
+<text class="lbl-ctx" x="40" y="18">時刻をそろえた 128 件</text>
+<line class="grid" x1="40" x2="330" y1="217.0" y2="217.0"/>
+<text x="34" y="221.0" text-anchor="end">−2</text>
+<line class="grid" x1="40" x2="330" y1="174.5" y2="174.5"/>
+<text x="34" y="178.5" text-anchor="end">−1</text>
+<line class="grid" x1="40" x2="330" y1="132.0" y2="132.0"/>
+<text x="34" y="136.0" text-anchor="end">0</text>
+<line class="grid" x1="40" x2="330" y1="89.5" y2="89.5"/>
+<text x="34" y="93.5" text-anchor="end">1</text>
+<line class="grid" x1="40" x2="330" y1="47.0" y2="47.0"/>
+<text x="34" y="51.0" text-anchor="end">2</text>
+<line class="zero" x1="214.0" x2="214.0" y1="30" y2="234"/>
+<text x="40.0" y="250" text-anchor="middle">−96</text>
+<text x="214.0" y="250" text-anchor="middle">0</text>
+<text x="328.2" y="250" text-anchor="middle">63</text>
+<polygon class="band-ctx" points="214.0,97.6 215.8,93.5 217.6,83.3 219.4,80.3 221.2,74.2 223.1,66.1 224.9,44.0 226.7,42.9 228.5,43.6 230.3,45.5 232.1,53.5 233.9,70.7 235.8,75.6 237.6,70.2 239.4,78.2 241.2,92.4 243.0,92.3 244.8,95.4 246.6,90.9 248.4,91.3 250.2,103.4 252.1,103.2 253.9,111.7 255.7,107.1 257.5,98.4 259.3,92.2 261.1,87.4 262.9,79.8 264.8,78.3 266.6,67.8 268.4,51.5 270.2,44.3 272.0,45.4 273.8,48.8 275.6,57.3 277.4,72.8 279.2,74.8 281.1,73.2 282.9,84.6 284.7,94.3 286.5,94.3 288.3,101.1 290.1,97.8 291.9,103.2 293.8,107.2 295.6,107.0 297.4,106.6 299.2,106.1 301.0,101.6 302.8,91.7 304.6,89.3 306.4,83.7 308.2,81.8 310.1,68.9 311.9,52.7 313.7,56.7 315.5,50.7 317.3,53.1 319.1,57.8 320.9,72.0 322.8,80.0 324.6,80.0 326.4,76.5 328.2,88.4 328.2,199.7 326.4,199.2 324.6,194.5 322.8,191.3 320.9,188.9 319.1,181.4 317.3,181.6 315.5,182.8 313.7,174.0 311.9,173.2 310.1,186.6 308.2,191.9 306.4,190.2 304.6,198.8 302.8,205.7 301.0,212.0 299.2,211.6 297.4,216.0 295.6,213.0 293.8,215.8 291.9,213.3 290.1,212.7 288.3,210.0 286.5,207.1 284.7,201.5 282.9,197.2 281.1,197.4 279.2,197.2 277.4,184.9 275.6,179.5 273.8,183.2 272.0,186.8 270.2,182.6 268.4,181.6 266.6,190.8 264.8,187.6 262.9,192.0 261.1,199.3 259.3,208.1 257.5,204.6 255.7,208.0 253.9,210.9 252.1,211.5 250.2,205.2 248.4,211.4 246.6,206.2 244.8,206.3 243.0,202.7 241.2,197.6 239.4,195.7 237.6,196.8 235.8,195.1 233.9,190.5 232.1,181.9 230.3,184.4 228.5,180.8 226.7,180.8 224.9,181.3 223.1,185.9 221.2,188.1 219.4,187.9 217.6,198.8 215.8,205.2 214.0,218.1"/>
+<polyline class="s-ctx" points="214.0,156.9 215.8,154.0 217.6,146.8 219.4,140.2 221.2,133.9 223.1,128.4 224.9,117.6 226.7,122.8 228.5,117.6 230.3,120.0 232.1,124.9 233.9,130.9 235.8,135.1 237.6,138.4 239.4,145.1 241.2,146.7 243.0,148.4 244.8,150.8 246.6,150.7 248.4,148.8 250.2,153.9 252.1,154.8 253.9,157.2 255.7,158.9 257.5,153.4 259.3,151.3 261.1,141.9 262.9,137.3 264.8,132.2 266.6,124.9 268.4,117.9 270.2,119.0 272.0,118.3 273.8,120.9 275.6,123.8 277.4,131.3 279.2,135.4 281.1,135.5 282.9,139.2 284.7,144.6 286.5,145.4 288.3,148.6 290.1,150.2 291.9,151.4 293.8,156.3 295.6,156.6 297.4,159.6 299.2,153.5 301.0,148.6 302.8,150.8 304.6,141.7 306.4,135.0 308.2,132.4 310.1,121.1 311.9,116.3 313.7,116.1 315.5,110.6 317.3,113.5 319.1,122.8 320.9,125.7 322.8,128.9 324.6,132.4 326.4,139.3 328.2,138.9"/>
+<polyline class="s-faint" points="40.0,100.2 41.8,111.7 43.6,124.4 45.4,128.3 47.2,124.4 49.1,135.9 50.9,139.8 52.7,113.0 54.5,121.9 56.3,102.8 58.1,132.1 59.9,138.5 61.8,143.6 63.6,143.6 65.4,162.7 67.2,152.5 69.0,165.3 70.8,148.7 72.6,152.5 74.4,157.6 76.2,169.1 78.1,169.1 79.9,166.6 81.7,143.6 83.5,114.2 85.3,118.1 87.1,141.0 88.9,141.0 90.8,134.7 92.6,121.9 94.4,110.4 96.2,86.2 98.0,101.5 99.8,96.4 101.6,109.1 103.4,109.1 105.2,133.4 107.1,142.3 108.9,141.0 110.7,143.6 112.5,139.8 114.3,147.4 116.1,141.0 117.9,144.9 119.8,142.3 121.6,158.9 123.4,146.1 125.2,116.8 127.0,87.4 128.8,105.3 130.6,109.1 132.4,96.4 134.2,95.1 136.1,87.4 137.9,64.5 139.7,46.6 141.5,47.9 143.3,58.1 145.1,81.1 146.9,123.2 148.8,141.0 150.6,148.7 152.4,134.7 154.2,130.8 156.0,132.1 157.8,128.3 159.6,128.3 161.4,127.0 163.2,132.1 165.1,134.7 166.9,134.7 168.7,118.1 170.5,84.9 172.3,79.8 174.1,81.1 175.9,83.6 177.8,86.2 179.6,86.2 181.4,60.7 183.2,61.9 185.0,53.0 186.8,53.0 188.6,82.3 190.4,124.4 192.2,128.3 194.1,132.1 195.9,129.5 197.7,133.4 199.5,139.8 201.3,141.0 203.1,143.6 204.9,144.9 206.8,153.8 208.6,158.9 210.4,164.0 212.2,148.7"/>
+<polyline class="s-ink" points="214.0,124.4 215.8,134.7 217.6,130.8 219.4,130.8 221.2,119.4 223.1,116.8 224.9,93.8 226.7,88.7 228.5,74.7 230.3,64.5 232.1,91.3 233.9,114.2 235.8,125.7 237.6,134.7 239.4,139.8 241.2,139.8 243.0,147.4 244.8,155.1 246.6,152.5 248.4,157.6 250.2,161.5 252.1,169.1 253.9,178.1 255.7,161.5 257.5,130.8 259.3,127.0 261.1,124.4 262.9,119.4 264.8,115.5 266.6,100.2 268.4,86.2 270.2,68.3 272.0,60.7 273.8,58.1 275.6,100.2 277.4,123.2 279.2,132.1 281.1,143.6 282.9,148.7 284.7,139.8 286.5,143.6 288.3,143.6 290.1,146.1 291.9,157.6 293.8,160.2 295.6,172.9 297.4,181.9 299.2,180.6 301.0,178.1 302.8,164.0 304.6,162.7 306.4,151.2 308.2,141.0 310.1,128.3 311.9,100.2 313.7,82.3 315.5,61.9 317.3,88.7 319.1,106.6 320.9,132.1 322.8,138.5 324.6,147.4 326.4,152.5 328.2,147.4"/>
+<text class="lbl-orc" x="370" y="18">12 時間ずらした 128 件</text>
+<line class="grid" x1="370" x2="660" y1="217.0" y2="217.0"/>
+<line class="grid" x1="370" x2="660" y1="174.5" y2="174.5"/>
+<line class="grid" x1="370" x2="660" y1="132.0" y2="132.0"/>
+<line class="grid" x1="370" x2="660" y1="89.5" y2="89.5"/>
+<line class="grid" x1="370" x2="660" y1="47.0" y2="47.0"/>
+<line class="zero" x1="544.0" x2="544.0" y1="30" y2="234"/>
+<text x="370.0" y="250" text-anchor="middle">−96</text>
+<text x="544.0" y="250" text-anchor="middle">0</text>
+<text x="658.2" y="250" text-anchor="middle">63</text>
+<polygon class="band-orc" points="544.0,88.2 545.8,93.6 547.6,91.6 549.4,95.9 551.2,98.2 553.1,100.3 554.9,99.9 556.7,105.1 558.5,107.9 560.3,108.7 562.1,113.1 563.9,109.3 565.8,105.5 567.6,96.0 569.4,91.1 571.2,86.5 573.0,84.5 574.8,70.1 576.6,51.0 578.4,50.8 580.2,47.2 582.1,50.9 583.9,58.8 585.7,74.1 587.5,80.7 589.3,92.0 591.1,85.6 592.9,97.1 594.8,97.0 596.6,99.6 598.4,94.4 600.2,98.9 602.0,102.3 603.8,107.1 605.6,111.5 607.4,107.4 609.2,100.4 611.1,93.6 612.9,91.3 614.7,86.1 616.5,82.5 618.3,73.7 620.1,51.2 621.9,40.8 623.8,43.1 625.6,40.4 627.4,58.1 629.2,76.7 631.0,78.1 632.8,79.2 634.6,83.2 636.4,92.3 638.2,92.4 640.1,96.7 641.9,97.3 643.7,98.0 645.5,105.8 647.3,104.2 649.1,100.8 650.9,102.5 652.8,96.7 654.6,95.8 656.4,90.5 658.2,89.1 658.2,199.4 656.4,204.3 654.6,210.0 652.8,217.3 650.9,218.4 649.1,225.3 647.3,217.1 645.5,221.2 643.7,219.8 641.9,216.2 640.1,216.4 638.2,210.5 636.4,208.8 634.6,202.7 632.8,199.8 631.0,199.2 629.2,193.0 627.4,189.1 625.6,190.7 623.8,192.2 621.9,186.9 620.1,182.4 618.3,193.3 616.5,197.7 614.7,198.0 612.9,205.2 611.1,214.3 609.2,214.2 607.4,218.2 605.6,222.1 603.8,219.1 602.0,215.7 600.2,220.5 598.4,215.4 596.6,212.0 594.8,210.9 592.9,201.0 591.1,204.8 589.3,207.0 587.5,202.1 585.7,196.7 583.9,192.4 582.1,187.8 580.2,189.7 578.4,192.5 576.6,195.3 574.8,200.6 573.0,193.6 571.2,197.7 569.4,201.8 567.6,216.9 565.8,219.2 563.9,217.6 562.1,219.2 560.3,214.8 558.5,212.9 556.7,212.3 554.9,204.9 553.1,206.6 551.2,201.4 549.4,201.1 547.6,195.6 545.8,194.8 544.0,193.4"/>
+<polyline class="s-orc" points="544.0,140.1 545.8,142.6 547.6,146.4 549.4,151.2 551.2,152.7 553.1,156.8 554.9,157.9 556.7,162.1 558.5,163.9 560.3,163.2 562.1,166.3 563.9,163.6 565.8,159.5 567.6,159.9 569.4,146.5 571.2,143.3 573.0,139.0 574.8,133.3 576.6,118.8 578.4,123.6 580.2,119.3 582.1,125.9 583.9,128.6 585.7,134.2 587.5,139.7 589.3,142.1 591.1,144.5 592.9,150.8 594.8,151.2 596.6,153.2 598.4,156.8 600.2,159.1 602.0,161.4 603.8,161.8 605.6,162.3 607.4,160.4 609.2,158.1 611.1,155.0 612.9,147.0 614.7,144.1 616.5,137.6 618.3,131.2 620.1,119.4 621.9,121.9 623.8,119.5 625.6,122.9 627.4,131.3 629.2,134.5 631.0,136.7 632.8,136.5 634.6,143.2 636.4,146.6 638.2,148.0 640.1,152.1 641.9,150.9 643.7,155.1 645.5,159.5 647.3,161.2 649.1,163.3 650.9,163.8 652.8,159.5 654.6,156.2 656.4,149.2 658.2,142.3"/>
+<polyline class="s-faint" points="370.0,100.2 371.8,111.7 373.6,124.4 375.4,128.3 377.2,124.4 379.1,135.9 380.9,139.8 382.7,113.0 384.5,121.9 386.3,102.8 388.1,132.1 389.9,138.5 391.8,143.6 393.6,143.6 395.4,162.7 397.2,152.5 399.0,165.3 400.8,148.7 402.6,152.5 404.4,157.6 406.2,169.1 408.1,169.1 409.9,166.6 411.7,143.6 413.5,114.2 415.3,118.1 417.1,141.0 418.9,141.0 420.8,134.7 422.6,121.9 424.4,110.4 426.2,86.2 428.0,101.5 429.8,96.4 431.6,109.1 433.4,109.1 435.2,133.4 437.1,142.3 438.9,141.0 440.7,143.6 442.5,139.8 444.3,147.4 446.1,141.0 447.9,144.9 449.8,142.3 451.6,158.9 453.4,146.1 455.2,116.8 457.0,87.4 458.8,105.3 460.6,109.1 462.4,96.4 464.2,95.1 466.1,87.4 467.9,64.5 469.7,46.6 471.5,47.9 473.3,58.1 475.1,81.1 476.9,123.2 478.8,141.0 480.6,148.7 482.4,134.7 484.2,130.8 486.0,132.1 487.8,128.3 489.6,128.3 491.4,127.0 493.2,132.1 495.1,134.7 496.9,134.7 498.7,118.1 500.5,84.9 502.3,79.8 504.1,81.1 505.9,83.6 507.8,86.2 509.6,86.2 511.4,60.7 513.2,61.9 515.0,53.0 516.8,53.0 518.6,82.3 520.4,124.4 522.2,128.3 524.1,132.1 525.9,129.5 527.7,133.4 529.5,139.8 531.3,141.0 533.1,143.6 534.9,144.9 536.8,153.8 538.6,158.9 540.4,164.0 542.2,148.7"/>
+<polyline class="s-ink" points="544.0,124.4 545.8,134.7 547.6,130.8 549.4,130.8 551.2,119.4 553.1,116.8 554.9,93.8 556.7,88.7 558.5,74.7 560.3,64.5 562.1,91.3 563.9,114.2 565.8,125.7 567.6,134.7 569.4,139.8 571.2,139.8 573.0,147.4 574.8,155.1 576.6,152.5 578.4,157.6 580.2,161.5 582.1,169.1 583.9,178.1 585.7,161.5 587.5,130.8 589.3,127.0 591.1,124.4 592.9,119.4 594.8,115.5 596.6,100.2 598.4,86.2 600.2,68.3 602.0,60.7 603.8,58.1 605.6,100.2 607.4,123.2 609.2,132.1 611.1,143.6 612.9,148.7 614.7,139.8 616.5,143.6 618.3,143.6 620.1,146.1 621.9,157.6 623.8,160.2 625.6,172.9 627.4,181.9 629.2,180.6 631.0,178.1 632.8,164.0 634.6,162.7 636.4,151.2 638.2,141.0 640.1,128.3 641.9,100.2 643.7,82.3 645.5,61.9 647.3,88.7 649.1,106.6 650.9,132.1 652.8,138.5 654.6,147.4 656.4,152.5 658.2,147.4"/>
+<text x="340.0" y="266" text-anchor="middle">予測の起点からの時間（時間）</text>
+</svg></div>
+      <div class="plate-cap"><b>1 本のクエリと選ばれた行の未来（OT，予測の起点 2017-07-24 08:00）</b>各行の値は，その行自身の文脈 384 点の平均と標準偏差で正規化（Chronos-2 の行ごとの正規化と同じ）．薄い色の範囲は 128 行の 10〜90% 点，線は中央値．灰色はクエリの直前 96 点，黒は正解の未来．中央値と正解の相関は，そろえると 0.85，ずらすと −0.75．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <ul class="tight">
+      <li>そろえた行は，正解と同じ時刻に山と谷が来る．ずらした行は山と谷が入れ替わる．</li>
+      <li>どちらも範囲の幅（行のばらつき）は同じくらいで，違うのは形の向きだけ．</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">5</span><h2>時刻をそろえると何が変わるか</h2></div>
+    <p>全クエリで，行の未来の中央値と正解の未来の形の相関を測った．参照なしの予測とも比べる．</p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 182" role="img">
+<line class="grid" x1="286.9" x2="286.9" y1="10" y2="156"/>
+<text x="286.9" y="172" text-anchor="middle">−0.4</text>
+<line class="grid" x1="340.8" x2="340.8" y1="10" y2="156"/>
+<text x="340.8" y="172" text-anchor="middle">−0.2</text>
+<line class="grid" x1="394.6" x2="394.6" y1="10" y2="156"/>
+<text x="394.6" y="172" text-anchor="middle">0</text>
+<line class="grid" x1="448.5" x2="448.5" y1="10" y2="156"/>
+<text x="448.5" y="172" text-anchor="middle">0.2</text>
+<line class="grid" x1="502.3" x2="502.3" y1="10" y2="156"/>
+<text x="502.3" y="172" text-anchor="middle">0.4</text>
+<line class="grid" x1="556.2" x2="556.2" y1="10" y2="156"/>
+<text x="556.2" y="172" text-anchor="middle">0.6</text>
+<line class="grid" x1="610.0" x2="610.0" y1="10" y2="156"/>
+<text x="610.0" y="172" text-anchor="middle">0.8</text>
+<line class="zero" x1="394.6" x2="394.6" y1="10" y2="156"/>
+<text class="t-ink" x="250" y="30" text-anchor="end">参照なしの予測</text>
+<rect class="bar-rnd" x="394.6" y="16" width="174.5" height="20" rx="2"/>
+<text class="t-ink" x="575.1" y="30">0.65</text>
+<text class="t-ink" x="250" y="64" text-anchor="end">時刻をそろえた行</text>
+<rect class="bar-ctx" x="394.6" y="50" width="151.5" height="20" rx="2"/>
+<text class="t-ink" x="552.2" y="64">0.56</text>
+<text class="t-ink" x="250" y="98" text-anchor="end">ランダムな行</text>
+<rect class="bar-rnd" x="394.6" y="84" width="1.5" height="20" rx="2"/>
+<text class="t-ink" x="401.2" y="98">0.00</text>
+<text class="t-ink" x="250" y="132" text-anchor="end">12 時間ずらした行</text>
+<rect class="bar-orc" x="310.6" y="118" width="84.0" height="20" rx="2"/>
+<text class="t-ink" x="304.6" y="132" text-anchor="end">−0.31</text>
+</svg></div>
+      <div class="plate-cap"><b>行の合意と正解の未来の形の相関（全 1,162 本の平均）</b>それぞれ予測 64 点の平均を引いて相関をとる．行はその行の文脈で正規化．参照なしの予測 0.65，時刻をそろえた行 0.56，ランダム（各クエリで train の全窓から 128 件）0.00，12 時間ずらした行 −0.31．</div>
+    </div>
+    <div class="plate">
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 280" role="img">
+<line class="grid" x1="60" x2="560" y1="236.0" y2="236.0"/><text x="52" y="240.0" text-anchor="end">−12.0%</text>
+<line class="grid" x1="60" x2="560" y1="204.6" y2="204.6"/><text x="52" y="208.6" text-anchor="end">−8.0%</text>
+<line class="grid" x1="60" x2="560" y1="173.1" y2="173.1"/><text x="52" y="177.1" text-anchor="end">−4.0%</text>
+<line class="grid" x1="60" x2="560" y1="141.7" y2="141.7"/><text x="52" y="145.7" text-anchor="end">0</text>
+<line class="grid" x1="60" x2="560" y1="110.3" y2="110.3"/><text x="52" y="114.3" text-anchor="end">+4.0%</text>
+<line class="grid" x1="60" x2="560" y1="78.9" y2="78.9"/><text x="52" y="82.9" text-anchor="end">+8.0%</text>
+<line class="grid" x1="60" x2="560" y1="47.4" y2="47.4"/><text x="52" y="51.4" text-anchor="end">+12.0%</text>
+<line class="grid" x1="60" x2="560" y1="16.0" y2="16.0"/><text x="52" y="20.0" text-anchor="end">+16.0%</text>
+<line class="zero" x1="60" x2="560" y1="141.7" y2="141.7"/>
+<text x="60.0" y="256" text-anchor="middle">1</text>
+<text x="187.0" y="256" text-anchor="middle">17</text>
+<text x="314.0" y="256" text-anchor="middle">33</text>
+<text x="441.0" y="256" text-anchor="middle">49</text>
+<text x="560.0" y="256" text-anchor="middle">64</text>
+<text x="310.0" y="274" text-anchor="middle">何時間先か</text>
+<polyline class="s-rnd" points="60.0,73.3 67.9,29.1 75.9,64.2 83.8,72.7 91.7,92.2 99.7,53.3 107.6,112.0 115.6,92.5 123.5,105.1 131.4,78.6 139.4,93.4 147.3,112.9 155.2,133.6 163.2,143.5 171.1,112.4 179.0,153.3 187.0,172.5 194.9,174.9 202.9,176.8 210.8,136.5 218.7,155.3 226.7,165.1 234.6,134.6 242.5,167.8 250.5,149.2 258.4,154.2 266.3,121.4 274.3,164.7 282.2,159.1 290.2,186.0 298.1,185.9 306.0,149.6 314.0,170.1 321.9,169.4 329.8,165.4 337.8,182.1 345.7,166.4 353.7,167.0 361.6,189.9 369.5,157.5 377.5,186.9 385.4,161.7 393.3,141.0 401.3,125.1 409.2,168.1 417.1,163.8 425.1,195.8 433.0,197.8 441.0,178.3 448.9,173.7 456.8,175.3 464.8,171.0 472.7,174.6 480.6,165.3 488.6,167.2 496.5,185.5 504.4,169.3 512.4,207.1 520.3,189.7 528.3,183.2 536.2,177.6 544.1,200.1 552.1,181.2 560.0,217.0"/>
+<text class="t-ink" x="568" y="231.0">ランダム</text>
+<polyline class="s-orc" points="60.0,100.5 67.9,38.3 75.9,47.7 83.8,61.7 91.7,92.0 99.7,37.5 107.6,98.7 115.6,74.9 123.5,91.4 131.4,55.9 139.4,55.1 147.3,94.6 155.2,127.4 163.2,139.9 171.1,92.4 179.0,132.0 187.0,159.9 194.9,149.2 202.9,156.8 210.8,128.4 218.7,145.8 226.7,151.7 234.6,117.4 242.5,159.4 250.5,140.4 258.4,131.5 266.3,96.8 274.3,133.7 282.2,137.6 290.2,171.3 298.1,169.9 306.0,123.0 314.0,139.7 321.9,150.8 329.8,153.8 337.8,173.0 345.7,154.7 353.7,166.1 361.6,182.0 369.5,147.2 377.5,176.1 385.4,152.8 393.3,124.8 401.3,109.8 409.2,141.2 417.1,148.7 425.1,192.5 433.0,189.7 441.0,166.1 448.9,156.9 456.8,155.8 464.8,150.5 472.7,158.2 480.6,142.1 488.6,149.6 496.5,165.2 504.4,135.9 512.4,176.1 520.3,152.0 528.3,147.0 536.2,135.6 544.1,173.2 552.1,156.7 560.0,205.5"/>
+<text class="lbl-orc" x="568" y="201.5">ずらす</text>
+<polyline class="s-ctx" points="60.0,84.7 67.9,46.3 75.9,87.5 83.8,114.9 91.7,122.8 99.7,95.2 107.6,119.3 115.6,107.1 123.5,137.3 131.4,128.9 139.4,138.7 147.3,153.2 155.2,163.5 163.2,165.9 171.1,142.7 179.0,170.1 187.0,184.6 194.9,177.8 202.9,177.9 210.8,156.1 218.7,170.3 226.7,172.0 234.6,147.1 242.5,174.7 250.5,156.3 258.4,171.5 266.3,161.0 274.3,198.3 282.2,191.8 290.2,200.4 298.1,208.2 306.0,173.6 314.0,185.3 321.9,191.1 329.8,179.3 337.8,191.1 345.7,179.1 353.7,180.7 361.6,190.4 369.5,165.4 377.5,185.3 385.4,170.7 393.3,159.8 401.3,146.6 409.2,180.5 417.1,176.8 425.1,206.8 433.0,207.8 441.0,192.0 448.9,194.8 456.8,193.5 464.8,178.1 472.7,181.2 480.6,173.3 488.6,171.8 496.5,176.9 504.4,165.0 512.4,195.5 520.3,182.0 528.3,184.0 536.2,172.7 544.1,204.9 552.1,184.8 560.0,214.9"/>
+<text class="lbl-ctx" x="568" y="212.9">そろえる</text>
+</svg></div>
+      <div class="plate-cap"><b>何時間先かごとの MSE の変化（K=128，seed 0）</b>2 時間先が最も悪い（ランダム +14.3%，ずらす +13.2%，そろえる +12.1%）．参照なしより良くなるのは，そろえると 12 時間先から，ランダムは 45 時間先から，ずらすは 62 時間先から．64 時間先はランダム −9.6%，ずらす −8.1%，そろえる −9.3%．全体ではそろえる −5.1%，ずらす −3.1%，ランダム −4.6%．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <ul class="tight">
+      <li>時刻をそろえた行の合意は，参照なしの予測に近い形の情報を持つ．ランダムだと形は打ち消し合い，水準と振幅だけが残る．</li>
+      <li>12 時間ずらすと形は逆を向くが，効き目はなくならない．<strong>効き目は「データによらない引き」と「時刻がそろう部分」に分かれる</strong>（要約の図）．</li>
+      <li>直近の数時間はどの行でも悪くなる．そろえると早く戻り，差は中間の先で開く．直近の悪化はまだ説明できない．</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">6</span><h2>提案手法</h2></div>
+    <div class="algo">
+      <h4>時刻をそろえた many-shot 並列文脈内学習（学習なし）</h4>
+      <ol>
+        <li>クエリの予測の起点 <math><mi>o</mi></math> の時刻を求める（周期 <math><mi>P</mi></math>：1 時間おきなら 24，15 分おきなら 96，週なら 168）．</li>
+        <li>train の窓（1 点おき）のうち，未来の始まりが同じ時刻で，起点より十分前に終わるものを候補にする．</li>
+        <li>候補から K 件（数百件）をランダムに取る．類似度は使わない．</li>
+        <li>各窓の文脈 S 点を行の過去，未来を既知の共変量として，クエリと一緒に Chronos-2 に渡す．モデルは凍結のまま．</li>
+      </ol>
+    </div>
+    <p>先行研究との違いは次のとおり．</p>
+  </div>
+  <div class="prose">
+    <div class="vs">
+      <div class="k">Align-RAG</div><div>上位 10 件を連結で渡し，過去どうしの相互相関で窓ごとにずらす（中身で合わせる）．しかも似た窓の上位は同じ時刻の窓ばかりになるとして MMR で散らす．本提案は逆に，時刻だけをそろえ，それ以外を散らす．</div>
+      <div class="k">Pooling Helps</div><div>Chronos-2 の group attention は一様に混ぜるほうがよいと示すが，件数は扱わない．並列 many-shot では最初のレイヤーを一様にするとむしろ少し悪くなった．</div>
+      <div class="k">RACE・ECHO</div><div>近い窓の残差を後から足す．学習なし版の再現は悪化した．本提案はモデルの中で読ませる．</div>
+      <div class="k">TabPFN の文脈選び</div><div>ランダムが k-means と並び，平均を合わせると悪くなる．本提案と同じく「似せずに散らす」が，そろえる軸（時刻）を持つ．</div>
+    </div>
+    <h3>主張（案）</h3>
+    <ul class="tight">
+      <li>並列 many-shot では，事例を<strong>似せる</strong>より<strong>そろえる</strong>ほうが効く．そろえるべきは値ではなく，group attention が混ぜる軸（予測の起点からの時間）に乗る時刻である．</li>
+      <li>行の効き目は，データによらない引きと，時刻がそろう部分に分けられる．前者は別のデータでも出て，後者はずらすと逆向きになる．</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">7</span><h2>弱いところと次の検証</h2></div>
+    <ul class="tight">
+      <li><strong>seed が 1 本．</strong>ランダム K=128 は seed で −4.6% と −3.9% に分かれる．そろえる（−5.1%）との差はこのぶれと同じくらい．きれいな比較は「そろえる 対 ずらす」だけ．</li>
+      <li><strong>対照がそろっていない．</strong>今のランダムは全クエリ共通の 128 件（11 点おき）で，そろえる・ずらすはクエリごと（1 点おき）．クエリごとに全時刻からランダムに取る対照が要る．</li>
+      <li><strong>ETTh1 だけ．</strong>日周の強いデータでしか見ていない．</li>
+      <li><strong>区間は良くならない．</strong>MAE と QL はほぼ参照なしと同じ．主張は MSE と大きな外れに限られる．</li>
+    </ul>
+    <div class="flow">
+      <div class="step now">
+        <h4><span class="tag now">次</span>ETTh1 で固める（約 1 時間）</h4>
+        <p>そろえる・ずらすの seed 1・2，クエリごとの全時刻ランダム（seed 0）．</p>
+      </div>
+      <div class="down">↓</div>
+      <div class="fork">
+        <div class="step">
+          <h4><span class="tag next">並行</span>ほかのデータ</h4>
+          <p>ETTh2（P=24，約 45 分），ETTm1（P=96，約 3 時間）．週の周期 P=168 も試す．</p>
+        </div>
+        <div class="step">
+          <h4><span class="tag next">並行</span>別のデータで時刻をそろえる</h4>
+          <p>自分の履歴が無い場合を想定し，ETTh2 の窓を時刻でそろえて ETTh1 に渡す．2 節の引きと時刻の部分が足し合わさるかを見る．</p>
+        </div>
+      </div>
+      <div class="down">↓</div>
+      <div class="step">
+        <h4><span class="tag later">最後</span>標準設定と test</h4>
+        <p>履歴 512 点・予測 64 点で Align-RAG（Chronos-2 −3.8%）と比べる．val で決めた設定で test を出す．</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">条件</span><h2>実験条件</h2></div>
+    <ul class="tight">
+      <li>ETTh1，各チャネルを 1 変量として扱う．履歴 2032 点，予測 64 点，事例の文脈 384 点，Chronos-2 は凍結．val の予測起点は 17 時間おきに 1,162 本．</li>
+      <li>時刻をそろえる：<code>codes/run.py --select phase --top-k 128 --seq-len 384</code>，ずらす：<code>--select antiphase</code>（<code>--phase-period 24</code>）．各クエリの候補はチャネルあたり約 340 窓．選んだ窓は <code>results/ETTh1_val_phase_k128_parallel_s0_P24_sl384_selected.parquet</code>．</li>
+      <li>別のデータ：<code>--pool-dataset ETTh2|weather</code>．group attention の編集：<code>--group-edit uniform:0-11|bias1:0-11</code>．残差の行と RACE-TF は scratchpad の <code>resid.py</code>，<code>race_tf.py</code>．</li>
+      <li>4・5 節の図は scratchpad の <code>phase_fig.py</code>．コードは未コミット．</li>
+    </ul>
+  </div>
+</section>
+
+</div>
+</body>
+</html>

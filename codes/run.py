@@ -23,7 +23,7 @@ import numpy as np
 import pandas as pd
 
 from chronos2 import Chronos2Rows, concat_context, load_chronos2
-from dataset import TimeSeriesData
+from dataset import SPLITS, TimeSeriesData
 from selection import INSTANCE_LEVEL, TASK_LEVEL, ablate, instance_level, task_level
 
 DATASET = "ETTh1"
@@ -31,16 +31,22 @@ EVAL_SPLIT = "val"
 # coprime with 24 and 168 so forecast origins cover every hour of the day and week;
 # 16 hit only 00/08/16h and biased val MSE by +2.6% against all origins
 EVAL_STRIDE = 17
-SEQ_LEN = 96
+# K x seq_len grid on val at history 2032 (2026-10-11): l2 best at K=256 / 384 (-5.2%), random
+# K=128 / 384 -4.6%, oracle best at 384; to be re-chosen at history 8192
+SEQ_LEN = 384
 PRED_LEN = 64
-HISTORY = 2032
-TOP_K = 8
-# coprime with 24 and 168 like EVAL_STRIDE, so examples exist at every hour-of-week phase;
-# on val (l2, K=8) 5 / 7 / 8 / 11 were within noise, and 7 divides 168
-DB_STRIDE = 11
-# an example must end this many points before the forecast origin (the default seq_len), so the
-# usable windows stay the same when --seq-len changes
+# Chronos-2's full context; 2032 left room for 35 concatenated examples, which parallel rows do not need
+HISTORY = 8192
+TOP_K = 128
+# every train window, so all methods draw from one pool and phase matching has enough windows
+# per hour (11 left 31 per hour, fewer than K=128); 5 / 7 / 8 / 11 were within noise for l2 at K=8
+DB_STRIDE = 1
+# an example must end this many points before the forecast origin, fixed so the usable windows
+# stay the same when --seq-len changes
 GAP = 96
+# run names tag the settings that differ from these (the defaults before 2026-10-19), so the
+# names of earlier results keep their meaning
+NAME_DEFAULTS = {"sl": 96, "pl": 64, "h": 2032, "es": 17, "db": 11}
 ATTN_LAYERS = "0-11"
 SEED = 0
 SEP_LEN = 16
@@ -56,6 +62,10 @@ TOKEN_BUDGET = 24576
 # windows instead of embedding-space prefix tokens, so the official AdamW lr 1e-3 does not carry
 # over and CLG_LR (Adam, on the standardized latent) is still to be checked on the train loss
 CLG_LATENT = 8
+# CLG was set up before the 2026-10-19 defaults; concat needs room for the latent windows
+CLG_SEQ_LEN = 96
+CLG_HISTORY = 2032
+CLG_DB_STRIDE = 11
 CLG_EPOCHS = 10
 CLG_LR = 0.05
 CLG_BATCH = 64
@@ -78,7 +88,8 @@ def parse_args():
     p.add_argument("--pred-len", default=PRED_LEN, type=int)
     p.add_argument("--history", default=HISTORY, type=int, help="query history fed to the model")
     p.add_argument("--fusion", default="parallel", choices=["parallel", "concat"])
-    p.add_argument("--select", default="none", choices=("none",) + TASK_LEVEL + INSTANCE_LEVEL)
+    p.add_argument("--select", default="none",
+                   choices=("none",) + TASK_LEVEL + INSTANCE_LEVEL + ("phase", "antiphase"))
     p.add_argument("--top-k", default=TOP_K, type=int)
     p.add_argument("--ablation", default="none", choices=["none", "shuffle-future"])
     p.add_argument("--db-stride", default=DB_STRIDE, type=int,
@@ -100,6 +111,15 @@ def parse_args():
                    help="proxy: match futures on y + lambda * (no-reference forecast - y)")
     p.add_argument("--attn-layers", default=ATTN_LAYERS,
                    help="attn: encoder layers (first-last) whose group attention is averaged")
+    p.add_argument("--group-edit", default="",
+                   help="edit the group attention over the rows: uniform:<first>-<last> or "
+                        "bias<beta>:<first>-<last> (encoder blocks)")
+    p.add_argument("--phase-period", default=24, type=int,
+                   help="phase: examples are drawn at random among the stride-1 train windows "
+                        "whose future starts at the query's phase modulo this period")
+    p.add_argument("--pool-dataset", default="",
+                   help="random / strat: draw the examples from the train windows of every channel "
+                        "of this dataset instead of the query's own channel")
     p.add_argument("--overwrite", action="store_true", help="replace an existing result")
     a = p.parse_args()
     if a.select == "none" and a.ablation != "none":
@@ -108,6 +128,8 @@ def parse_args():
         p.error("--reverse-match / --match apply to clg / pclg only")
     if a.reverse_match and a.match == "cosine":
         p.error("--reverse-match reverses the mean matching only")
+    if a.pool_dataset and a.select not in ("random", "strat"):
+        p.error("--pool-dataset applies to random / strat only")
     a.match = "mean" if a.reverse_match else (a.match or DEFAULT_MATCH.get(a.select, "mean"))
     if a.recent and a.select not in ("clg", "pclg"):
         p.error("--recent applies to clg / pclg only")
@@ -140,9 +162,14 @@ def run_name(a) -> str:
             stem += f"_inst{a.inst_k}"
         if a.ablation != "none":
             stem += f"_{a.ablation}"
-    tags = [("sl", a.seq_len, SEQ_LEN), ("pl", a.pred_len, PRED_LEN), ("h", a.history, HISTORY),
-            ("es", a.eval_stride, EVAL_STRIDE), ("db", a.db_stride, DB_STRIDE)]
-    stem += "".join(f"_{t}{v}" for t, v, default in tags if v != default)
+        if a.pool_dataset:
+            stem += f"_pool{a.pool_dataset}"
+        if a.select in ("phase", "antiphase"):
+            stem += f"_s{a.seed}_P{a.phase_period}"
+        if a.group_edit:
+            stem += "_ge" + re.sub(r"[^0-9A-Za-z.-]", "", a.group_edit)
+    tags = [("sl", a.seq_len), ("pl", a.pred_len), ("h", a.history), ("es", a.eval_stride), ("db", a.db_stride)]
+    stem += "".join(f"_{t}{v}" for t, v in tags if v != NAME_DEFAULTS[t] and not (t == "sl" and a.select == "none"))
     if a.channels:
         stem += "_ch" + "+".join(re.sub(r"[^0-9A-Za-z]", "", c) for c in a.channels.split(","))
     return stem
@@ -200,10 +227,22 @@ def main():
                           ett_months=ETT_MONTHS, train_frac=TRAIN_FRAC, test_frac=TEST_FRAC)
     rows = Chronos2Rows(load_chronos2(MODEL_NAME, DEVICE, args.threads), args.seq_len,
                         args.pred_len, REPORT_QUANTILES, TOKEN_BUDGET)
+    if args.group_edit:
+        mode, span = args.group_edit.split(":")
+        lo, hi = map(int, span.split("-"))
+        rows.group_edit = {"layers": set(range(lo, hi + 1)),
+                           "mode": "uniform" if mode == "uniform" else "bias",
+                           "beta": 0.0 if mode == "uniform" else float(mode[4:])}
     if args.history > rows.context_length:
         raise SystemExit(f"--history {args.history} exceeds the model's "
                          f"{rows.context_length}-point context")
     s = args.seq_len
+    foreign = None
+    if args.pool_dataset:
+        pd_data = TimeSeriesData(args.root_path, args.pool_dataset, args.seq_len, args.pred_len,
+                                 ett_months=ETT_MONTHS, train_frac=TRAIN_FRAC, test_frac=TEST_FRAC)
+        foreign = np.concatenate([pd_data.windows("train", c, args.db_stride)
+                                  for c in range(pd_data.n_channels)])
 
     tables, logs, sets = [], [], {}
     for ch, name in enumerate(data.channels):
@@ -214,16 +253,16 @@ def main():
         futures = query[:, s:]
 
         ex = None
-        pool = data.windows("train", ch, args.db_stride)
+        pool = data.windows("train", ch, args.db_stride) if foreign is None else foreign
         if args.select in TASK_LEVEL:
-            grads = load_grads(args, name, len(pool)) if args.select != "random" else None
+            grads = load_grads(args, name, len(pool)) if args.select in ("clg", "pclg") else None
             target_idx = None
             if args.recent:
                 ends = np.arange(len(pool)) * args.db_stride + data.win_len + data.borders[0][0]
                 target_idx = np.where(ends > data.borders[1][0] - args.recent)[0]
             ex, idx = task_level(args.select, pool, args.top_k, rng, grads, CLG_SWAPS,
                                  args.reverse_match, args.match,
-                                 -(-data.win_len // args.db_stride), target_idx)
+                                 -(-data.win_len // args.db_stride), target_idx, s)
             sets[name] = idx.tolist()
             if args.inst_k:
                 limit = data.past_limit(args.eval_split, starts, args.db_stride, GAP)
@@ -233,6 +272,21 @@ def main():
                                           "window": np.repeat(np.arange(len(query)), args.inst_k),
                                           "rank": np.tile(np.arange(args.inst_k), len(query)),
                                           "db_index": iidx.reshape(-1)}))
+        elif args.select in ("phase", "antiphase"):
+            pool1 = data.windows("train", ch, 1)
+            limit = data.past_limit(args.eval_split, starts, 1, GAP)
+            origin = data.borders[0][SPLITS[args.eval_split]] + starts + s - data.borders[0][0]
+            shift = 0 if args.select == "phase" else args.phase_period // 2
+            j = np.arange(len(pool1))
+            idx = np.empty((len(query), args.top_k), dtype=np.int64)
+            for i in range(len(query)):
+                ok = j[((j + s - origin[i] - shift) % args.phase_period == 0) & (j <= limit[i])]
+                idx[i] = rng.choice(ok, size=args.top_k, replace=False)
+            ex = pool1[idx]
+            logs.append(pd.DataFrame({"channel": name,
+                                      "window": np.repeat(np.arange(len(query)), args.top_k),
+                                      "rank": np.tile(np.arange(args.top_k), len(query)),
+                                      "db_index": idx.reshape(-1)}))
         elif args.select == "attn":
             limit = data.past_limit(args.eval_split, starts, args.db_stride, GAP)
             valid = np.arange(len(pool))[None, :] <= limit[:, None]

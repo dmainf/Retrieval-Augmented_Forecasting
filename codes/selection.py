@@ -10,11 +10,18 @@ task-level (one set per channel)
             pool windows, with the latent windows spliced in front of the history
   pclg      the same with the latent windows as parallel covariate rows (Parallel-CLG);
             gradients come from clg.py
+  medoid    K medoids of the windows in the reader's view (each normed on its own context),
+            k-means++ start then alternating updates: representatives of the shapes
+  strat     stratified on the outcome, how the future departs from its own context: the
+            pool is cut into a x b equal-count cells by the future's mean shift and then
+            its log std ratio (both in context std units), one window drawn per cell
 
 instance-level (chosen per query among the pool windows that end before its context)
   l2        nearest contexts by raw L2 -- the RAF baseline
   l2rv      nearest contexts in the reader's view: each window instance-normed on its own
             context and the query on its history, as the rows reach Chronos-2
+  band      the l2rv ranking cut into K equal bands, the middle window of each: near,
+            middling and far contexts in equal number
   oracle    nearest futures to the TRUE future; a diagnostic bound, not a method
   oraclerv  the same in the reader's view; a diagnostic bound, not a method
   ar        nearest past->future relation: AR coefficients (lags AR_LAGS) fitted on each window's
@@ -48,8 +55,8 @@ hybrid (--inst-k)
 """
 import numpy as np
 
-TASK_LEVEL = ("random", "clg", "pclg")
-INSTANCE_LEVEL = ("l2", "l2rv", "oracle", "oraclerv", "ar", "aroracle", "proxy", "truth", "attn")
+TASK_LEVEL = ("random", "clg", "pclg", "medoid", "strat")
+INSTANCE_LEVEL = ("l2", "l2rv", "band", "oracle", "oraclerv", "ar", "aroracle", "proxy", "truth", "attn")
 AR_LAGS = (1, 2, 3, 24)
 AR_RIDGE = 1e-2
 
@@ -70,6 +77,59 @@ def nearest(keys_db: np.ndarray, keys_q: np.ndarray, k: int, limit: np.ndarray,
     idx = np.argpartition(d, k - 1, axis=1)[:, :k]
     order = np.take_along_axis(d, idx, 1).argsort(1)
     return np.take_along_axis(idx, order, 1)
+
+
+def banded(keys_db: np.ndarray, keys_q: np.ndarray, k: int, limit: np.ndarray) -> np.ndarray:
+    """(n, k) indices: rows <= limit[i] ranked by L2 to query i, the middle one of each of
+    k equal bands of the ranking."""
+    d = ((keys_q ** 2).sum(1)[:, None] + (keys_db ** 2).sum(1)[None, :]
+         - 2.0 * keys_q @ keys_db.T)
+    d[np.arange(len(keys_db))[None, :] > limit[:, None]] = np.inf
+    n_use = np.minimum(limit + 1, len(keys_db))
+    if (n_use < k).any():
+        raise ValueError("a query has fewer than k windows before it")
+    order = np.argsort(d, axis=1)
+    pos = ((np.arange(k)[None, :] + 0.5) * n_use[:, None] / k).astype(np.int64)
+    return np.take_along_axis(order, pos, 1)
+
+
+def kmedoids(x: np.ndarray, k: int, rng, iters: int = 100) -> np.ndarray:
+    d = np.sqrt(np.maximum((x ** 2).sum(1)[:, None] + (x ** 2).sum(1)[None, :] - 2 * x @ x.T, 0))
+    med = [int(rng.integers(len(x)))]
+    for _ in range(k - 1):
+        w = d[:, med].min(1) ** 2
+        med.append(int(rng.choice(len(x), p=w / w.sum())))
+    med = np.array(med)
+    for _ in range(iters):
+        lab = d[:, med].argmin(1)
+        new = med.copy()
+        for c in range(k):
+            m = np.where(lab == c)[0]
+            if len(m):
+                new[c] = m[d[np.ix_(m, m)].sum(1).argmin()]
+        if (new == med).all():
+            break
+        med = new
+    return med
+
+
+def outcome(pool: np.ndarray, s: int) -> np.ndarray:
+    """(N, 2) mean shift and log std ratio of each window's future against its context."""
+    c, f = pool[:, :s].astype(np.float64), pool[:, s:].astype(np.float64)
+    sd = c.std(1) + 1e-8
+    return np.stack([(f.mean(1) - c.mean(1)) / sd, np.log((f.std(1) + 1e-3 * sd) / sd)], 1)
+
+
+def stratified(z: np.ndarray, k: int, rng) -> np.ndarray:
+    a = int(round(np.sqrt(k)))
+    while k % a:
+        a -= 1
+    b = k // a
+    idx = []
+    for rows in np.array_split(np.argsort(z[:, 0], kind="stable"), a):
+        for cell in np.array_split(rows[np.argsort(z[rows, 1], kind="stable")], b):
+            idx.append(int(rng.choice(cell)))
+    return np.array(idx)
 
 
 def reader_view(x: np.ndarray, ref: np.ndarray) -> np.ndarray:
@@ -101,13 +161,15 @@ def instance_level(method: str, pool: np.ndarray, query: np.ndarray, limit: np.n
     if method == "truth":
         return np.repeat(query[:, None, :], k, axis=1), None
     p64, q64 = pool.astype(np.float64), query.astype(np.float64)
-    if method in ("l2rv", "oraclerv"):
+    if method in ("l2rv", "oraclerv", "band"):
         if history is None:
             raise ValueError(f"{method} needs the query history")
         h64 = history.astype(np.float64)
         p64, q64 = reader_view(p64, p64[:, :s]), reader_view(q64, h64)
     if method in ("l2", "l2rv"):
         idx = nearest(p64[:, :s], q64[:, :s], k, limit, exclude)
+    elif method == "band":
+        idx = banded(p64[:, :s], q64[:, :s], k, limit)
     elif method in ("oracle", "oraclerv"):
         idx = nearest(p64[:, s:], q64[:, s:], k, limit)
     elif method in ("ar", "aroracle"):
@@ -188,7 +250,7 @@ def align(grads: np.ndarray, k: int, max_gap: int, target: np.ndarray = None) ->
 
 def task_level(method: str, pool: np.ndarray, k: int, rng, grads: np.ndarray = None,
                swaps: int = 0, reverse: bool = False, match: str = "mean", max_gap: int = 1,
-               target_idx: np.ndarray = None):
+               target_idx: np.ndarray = None, seq_len: int = None):
     """grads (n_pool, d): curriculum latent gradients of the pool windows, for clg / pclg.
     match "mean" matches the mean gradient (CLG), "cosine" ranks by alignment (align);
     reverse picks the mismatching set (diagnostic). target_idx: pool windows whose mean
@@ -197,6 +259,11 @@ def task_level(method: str, pool: np.ndarray, k: int, rng, grads: np.ndarray = N
         raise ValueError(f"k={k} exceeds the {len(pool)} train windows")
     if method == "random":
         idx = rng.choice(len(pool), size=k, replace=False)
+    elif method == "medoid":
+        p64 = pool.astype(np.float64)
+        idx = kmedoids(reader_view(p64, p64[:, :seq_len]), k, rng)
+    elif method == "strat":
+        idx = stratified(outcome(pool, seq_len), k, rng)
     elif method in ("clg", "pclg"):
         if grads is None or len(grads) != len(pool):
             raise ValueError(f"{method} needs one gradient per pool window")

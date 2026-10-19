@@ -76,6 +76,11 @@ class Chronos2Rows:
         self.quantile_index = [cfg.quantiles.index(q) for q in quantiles]
         self.token_budget = token_budget
         self.context_length = cfg.context_length
+        # inference-time edit of the group attention over the rows: None, or
+        # {"layers": set of block indices, "mode": "uniform" | "bias", "beta": float}
+        # uniform pools the values of every valid row with equal weight (alpha = 1/V);
+        # bias adds beta to the logits of the example rows
+        self.group_edit = None
 
     def _embed(self, context, future=None):
         """(N, L) context with NaN for missing, (N, pred_len) future or None ->
@@ -129,7 +134,7 @@ class Chronos2Rows:
         tmask_q = self._invert(qmask)[:, None, None, :]
         alone = torch.zeros(1, 1, 1, 1, device=self.device)
 
-        for block in m.encoder.block:
+        for li, block in enumerate(m.encoder.block):
             tsa, gsa, ffn = block.layer
             q = tsa(q, attention_mask=tmask_q, position_ids=pos_q)[0]
             # group attention: the query row alone wherever no example has a token
@@ -144,7 +149,7 @@ class Chronos2Rows:
                 normed = gsa.layer_norm(rows)
                 if attn is not None:
                     attn.append(self._query_attention(gsa.self_attention, normed, gmask, b))
-                rows = rows + gsa.self_attention(normed, mask=gmask)[0]
+                rows = rows + self._group(gsa.self_attention, normed, gmask, li)
                 rows = rearrange(rows, "(b s) r d -> b r s d", b=b, s=self.s)
                 q = ffn(torch.cat([head, rows[:, 0]], dim=1))
                 e = ffn(rows[:, 1:].reshape(b * k, self.s, -1))
@@ -155,6 +160,18 @@ class Chronos2Rows:
         preds = rearrange(m.output_patch_embedding(h), "b n (q p) -> b q (n p)", n=self.n_out,
                           q=m.num_quantiles, p=m.chronos_config.output_patch_size)
         return preds, loc_scale
+
+    def _group(self, mha, normed, gmask, layer):
+        edit = self.group_edit
+        if edit is None or layer not in edit["layers"]:
+            return mha(normed, mask=gmask)[0]
+        if edit["mode"] == "bias":
+            bias = torch.full((normed.shape[1],), float(edit["beta"]), device=self.device)
+            bias[0] = 0
+            return mha(normed, mask=gmask + bias)[0]
+        valid = (gmask[:, 0, 0, :] == 0).to(normed.dtype)
+        pooled = torch.einsum("nr,nrd->nd", valid / valid.sum(1, keepdim=True), mha.v(normed))
+        return mha.o(pooled).unsqueeze(1).expand(-1, normed.shape[1], -1)
 
     def _query_attention(self, mha, normed, gmask, b):
         """Group attention weights of the query row (row 0) over the example rows at the

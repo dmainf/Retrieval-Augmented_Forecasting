@@ -40,9 +40,9 @@ import torch
 
 from chronos2 import Chronos2Rows, load_chronos2
 from dataset import TimeSeriesData
-from run import (CLG_BATCH, CLG_EPOCHS, CLG_LATENT, CLG_LR, CLG_MICRO_BATCH, DATASET, DB_STRIDE, DEVICE,
-                 ETT_MONTHS, HISTORY, MODEL_NAME, PRED_LEN, REPORT_QUANTILES, SEED, SEP_LEN,
-                 SEQ_LEN, TEST_FRAC, TOKEN_BUDGET, TRAIN_FRAC, channel_rng)
+from run import (CLG_BATCH, CLG_DB_STRIDE, CLG_EPOCHS, CLG_HISTORY, CLG_LATENT, CLG_LR,
+                 CLG_MICRO_BATCH, CLG_SEQ_LEN, DATASET, DEVICE, ETT_MONTHS, MODEL_NAME, PRED_LEN,
+                 REPORT_QUANTILES, SEED, SEP_LEN, TEST_FRAC, TOKEN_BUDGET, TRAIN_FRAC, channel_rng)
 
 METHODS = ("clg", "pclg")
 
@@ -136,10 +136,10 @@ def main():
     p.add_argument("--root-path", default="./Datasets/_parquet")
     p.add_argument("--dataset", default=DATASET)
     p.add_argument("--channels", default="", help="comma-separated; empty = every column")
-    p.add_argument("--seq-len", default=SEQ_LEN, type=int)
+    p.add_argument("--seq-len", default=CLG_SEQ_LEN, type=int)
     p.add_argument("--pred-len", default=PRED_LEN, type=int)
-    p.add_argument("--history", default=HISTORY, type=int)
-    p.add_argument("--db-stride", default=DB_STRIDE, type=int)
+    p.add_argument("--history", default=CLG_HISTORY, type=int)
+    p.add_argument("--db-stride", default=CLG_DB_STRIDE, type=int)
     p.add_argument("--seed", default=SEED, type=int)
     p.add_argument("--threads", default=0, type=int)
     p.add_argument("--output-dir", default="./results")
