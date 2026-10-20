@@ -476,10 +476,8 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
     <div class="sec-head"><span class="sec-num">要約</span><h2>ここまでの流れ</h2></div>
     <ol class="tight">
       <li><strong>選ぶ側で当てても伸びない．</strong>文脈照合は悪く，近さをばらけさせてもランダムと並ぶだけ．件数を増やすと，どれも同じところに集まる（1 節）．</li>
-      <li><strong>効き目の多くはデータによらない．</strong>別のデータの窓でも大部分が出る（2 節）．</li>
-      <li><strong>区間は行の未来のばらつきで決まり，読み方を変えても直らない（3 節）．</strong></li>
-      <li><strong>残る手がかりは時刻．</strong>予測の起点の時刻をそろえると，行の合意が未来の形を持つ．12 時間ずらすと形が逆になる（4・5 節）．</li>
-      <li><strong>提案：</strong>時刻だけで候補を絞り，その中はランダムにして数百件を並列に渡す．学習なし，類似度なし（6 節）．</li>
+      <li><strong>残る手がかりは時刻．</strong>予測の起点の時刻をそろえると，行の合意が未来の形を持つ．12 時間ずらすと形が逆になる（2・3 節）．</li>
+      <li><strong>提案：</strong>時刻だけで候補を絞り，その中はランダムにして数百件を並列に渡す．学習なし，類似度なし（4 節）．</li>
     </ol>
   </div>
   <div class="wide">
@@ -544,7 +542,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
       <li><strong>文脈照合・等間隔：</strong>近い順の並べ替え <math><mi>π</mi></math> の順位を等間隔に K 件取る．近い窓から遠い窓まで同じ数だけ入る．ここでの距離は，各窓を自分の文脈で正規化した値（Chronos-2 が見る値）で測る．
         <math display="block" class="eq"><mi>E</mi><mo>=</mo><mrow><mo stretchy="false">{</mo><mi>π</mi><mrow><mo stretchy="false">(</mo><mrow><mo>⌊</mo><mo stretchy="false">(</mo><mi>i</mi><mo>−</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo stretchy="false">)</mo><mfrac><mi>N</mi><mi>K</mi></mfrac><mo>⌋</mo><mo>+</mo><mn>1</mn></mrow><mo stretchy="false">)</mo></mrow><mo>:</mo><mi>i</mi><mo>=</mo><mn>1</mn><mo>,</mo><mo>…</mo><mo>,</mo><mi>K</mi><mo stretchy="false">}</mo></mrow></math></li>
     </ul>
-    <p>クエリごとに選ぶ方法では，候補を予測の起点より 96 点以上前に終わる窓に限る．時刻をそろえる方法の式は 4 節にある．</p>
+    <p>クエリごとに選ぶ方法では，候補を予測の起点より 96 点以上前に終わる窓に限る．時刻をそろえる方法の式は 2 節にある．</p>
   </div>
   <div class="wide">
     <div class="plate">
@@ -647,150 +645,576 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
 
 <section>
   <div class="prose">
-    <div class="sec-head"><span class="sec-num">2</span><h2>効き目の多くはデータによらない</h2></div>
-    <p>行が「このクエリの未来」を教えているのかを確かめるため，事例を別のデータの train からランダムに取った．</p>
+    <div class="sec-head"><span class="sec-num">2</span><h2>時刻のそろえ方</h2></div>
+    <p>時刻をそろえるとは，事例にする train の窓を「<strong>未来が始まる時刻が，クエリの予測の起点と同じ</strong>」ものに限ることである．値や類似度は見ない．手順は 3 つ．</p>
+    <ol class="tight">
+      <li><strong>クエリの起点の時刻を読む．</strong>下の例は 2017-07-24 08:00 なので 8 時．</li>
+      <li><strong>候補を集める．</strong>train の窓（文脈 384 点＋未来 64 点）のうち，未来が 8 時に始まるものをすべて取る．8 時は 1 日に 1 回なので，候補は 1 日 1 件になる．</li>
+      <li><strong>ランダムに K 件選ぶ．</strong>日付はばらばらだが，どれも 8 時に始まる．</li>
+    </ol>
   </div>
   <div class="wide">
     <div class="plate">
-      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 220" role="img">
-<line class="grid" x1="210.0" x2="210.0" y1="10" y2="194"/><text x="210.0" y="210" text-anchor="middle">−6.0%</text>
-<line class="grid" x1="312.5" x2="312.5" y1="10" y2="194"/><text x="312.5" y="210" text-anchor="middle">−4.0%</text>
-<line class="grid" x1="415.0" x2="415.0" y1="10" y2="194"/><text x="415.0" y="210" text-anchor="middle">−2.0%</text>
-<line class="grid" x1="517.5" x2="517.5" y1="10" y2="194"/><text x="517.5" y="210" text-anchor="middle">0</text>
-<line class="grid" x1="620.0" x2="620.0" y1="10" y2="194"/><text x="620.0" y="210" text-anchor="middle">+2.0%</text>
-<line class="zero" x1="517.5" x2="517.5" y1="10" y2="194"/>
-<text class="t-ink" x="200" y="40" text-anchor="end">同じデータ（ETTh1）</text>
-<rect class="bar-ctx" x="281.8" y="16" width="235.8" height="18" rx="2"/>
-<text class="t-ink t-small" x="275.8" y="29" text-anchor="end">MSE −4.6%</text>
-<rect class="bar-soft" x="507.2" y="38" width="10.2" height="18" rx="2"/>
-<text class="t-ink t-small" x="501.2" y="51" text-anchor="end">QL −0.2%</text>
-<text class="t-ink" x="200" y="98" text-anchor="end">別のデータ（ETTh2）</text>
-<rect class="bar-ctx" x="297.1" y="74" width="220.4" height="18" rx="2"/>
-<text class="t-ink t-small" x="291.1" y="87" text-anchor="end">MSE −4.3%</text>
-<rect class="bar-soft" x="471.4" y="96" width="46.1" height="18" rx="2"/>
-<text class="t-ink t-small" x="465.4" y="109" text-anchor="end">QL −0.9%</text>
-<text class="t-ink" x="200" y="156" text-anchor="end">別のデータ（Weather）</text>
-<rect class="bar-ctx" x="368.9" y="132" width="148.6" height="18" rx="2"/>
-<text class="t-ink t-small" x="362.9" y="145" text-anchor="end">MSE −2.9%</text>
-<rect class="bar-soft" x="517.5" y="154" width="51.2" height="18" rx="2"/>
-<text class="t-ink t-small" x="574.8" y="167">QL +1.0%</text>
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 130" role="img">
+<line class="axis-line" x1="40" x2="640" y1="70" y2="70"/>
+<line class="s-faint" x1="67.2" x2="67.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="68.9" x2="68.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="70.6" x2="70.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="72.2" x2="72.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="73.9" x2="73.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="75.6" x2="75.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="77.2" x2="77.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="78.9" x2="78.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="80.6" x2="80.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="82.2" x2="82.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="83.9" x2="83.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="85.6" x2="85.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="87.2" x2="87.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="88.9" x2="88.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="90.6" x2="90.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="92.2" x2="92.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="93.9" x2="93.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="95.6" x2="95.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="97.2" x2="97.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="98.9" x2="98.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="100.6" x2="100.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="102.2" x2="102.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="103.9" x2="103.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="105.6" x2="105.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="107.2" x2="107.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="108.9" x2="108.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="110.6" x2="110.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="112.2" x2="112.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="113.9" x2="113.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="115.6" x2="115.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="117.2" x2="117.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="118.9" x2="118.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="120.6" x2="120.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="122.2" x2="122.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="123.9" x2="123.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="125.6" x2="125.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="127.2" x2="127.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="128.9" x2="128.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="130.6" x2="130.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="132.2" x2="132.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="133.9" x2="133.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="135.6" x2="135.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="137.2" x2="137.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="138.9" x2="138.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="140.6" x2="140.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="142.2" x2="142.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="143.9" x2="143.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="145.6" x2="145.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="147.2" x2="147.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="148.9" x2="148.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="150.6" x2="150.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="152.2" x2="152.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="153.9" x2="153.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="155.6" x2="155.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="157.2" x2="157.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="158.9" x2="158.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="160.6" x2="160.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="162.2" x2="162.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="163.9" x2="163.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="165.6" x2="165.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="167.2" x2="167.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="168.9" x2="168.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="170.6" x2="170.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="172.2" x2="172.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="173.9" x2="173.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="175.6" x2="175.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="177.2" x2="177.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="178.9" x2="178.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="180.6" x2="180.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="182.2" x2="182.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="183.9" x2="183.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="185.6" x2="185.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="187.2" x2="187.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="188.9" x2="188.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="190.6" x2="190.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="192.2" x2="192.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="193.9" x2="193.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="195.6" x2="195.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="197.2" x2="197.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="198.9" x2="198.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="200.6" x2="200.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="202.2" x2="202.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="203.9" x2="203.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="205.6" x2="205.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="207.2" x2="207.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="208.9" x2="208.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="210.6" x2="210.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="212.2" x2="212.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="213.9" x2="213.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="215.6" x2="215.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="217.2" x2="217.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="218.9" x2="218.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="220.6" x2="220.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="222.2" x2="222.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="223.9" x2="223.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="225.6" x2="225.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="227.2" x2="227.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="228.9" x2="228.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="230.6" x2="230.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="232.2" x2="232.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="233.9" x2="233.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="235.6" x2="235.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="237.2" x2="237.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="238.9" x2="238.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="240.6" x2="240.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="242.2" x2="242.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="243.9" x2="243.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="245.6" x2="245.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="247.2" x2="247.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="248.9" x2="248.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="250.6" x2="250.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="252.2" x2="252.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="253.9" x2="253.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="255.6" x2="255.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="257.2" x2="257.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="258.9" x2="258.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="260.6" x2="260.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="262.2" x2="262.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="263.9" x2="263.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="265.6" x2="265.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="267.2" x2="267.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="268.9" x2="268.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="270.6" x2="270.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="272.2" x2="272.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="273.9" x2="273.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="275.6" x2="275.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="277.2" x2="277.2" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="278.9" x2="278.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="280.6" x2="280.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="282.3" x2="282.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="283.9" x2="283.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="285.6" x2="285.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="287.3" x2="287.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="288.9" x2="288.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="290.6" x2="290.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="292.3" x2="292.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="293.9" x2="293.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="295.6" x2="295.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="297.3" x2="297.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="298.9" x2="298.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="300.6" x2="300.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="302.3" x2="302.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="303.9" x2="303.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="305.6" x2="305.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="307.3" x2="307.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="308.9" x2="308.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="310.6" x2="310.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="312.3" x2="312.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="313.9" x2="313.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="315.6" x2="315.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="317.3" x2="317.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="318.9" x2="318.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="320.6" x2="320.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="322.3" x2="322.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="323.9" x2="323.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="325.6" x2="325.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="327.3" x2="327.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="328.9" x2="328.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="330.6" x2="330.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="332.3" x2="332.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="333.9" x2="333.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="335.6" x2="335.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="337.3" x2="337.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="338.9" x2="338.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="340.6" x2="340.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="342.3" x2="342.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="343.9" x2="343.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="345.6" x2="345.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="347.3" x2="347.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="348.9" x2="348.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="350.6" x2="350.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="352.3" x2="352.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="353.9" x2="353.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="355.6" x2="355.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="357.3" x2="357.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="358.9" x2="358.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="360.6" x2="360.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="362.3" x2="362.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="363.9" x2="363.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="365.6" x2="365.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="367.3" x2="367.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="368.9" x2="368.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="370.6" x2="370.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="372.3" x2="372.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="373.9" x2="373.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="375.6" x2="375.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="377.3" x2="377.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="378.9" x2="378.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="380.6" x2="380.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="382.3" x2="382.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="383.9" x2="383.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="385.6" x2="385.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="387.3" x2="387.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="388.9" x2="388.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="390.6" x2="390.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="392.3" x2="392.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="393.9" x2="393.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="395.6" x2="395.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="397.3" x2="397.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="398.9" x2="398.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="400.6" x2="400.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="402.3" x2="402.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="403.9" x2="403.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="405.6" x2="405.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="407.3" x2="407.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="408.9" x2="408.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="410.6" x2="410.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="412.3" x2="412.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="413.9" x2="413.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="415.6" x2="415.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="417.3" x2="417.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="418.9" x2="418.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="420.6" x2="420.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="422.3" x2="422.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="423.9" x2="423.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="425.6" x2="425.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="427.3" x2="427.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="428.9" x2="428.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="430.6" x2="430.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="432.3" x2="432.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="433.9" x2="433.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="435.6" x2="435.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="437.3" x2="437.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="438.9" x2="438.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="440.6" x2="440.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="442.3" x2="442.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="443.9" x2="443.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="445.6" x2="445.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="447.3" x2="447.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="448.9" x2="448.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="450.6" x2="450.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="452.3" x2="452.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="453.9" x2="453.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="455.6" x2="455.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="457.3" x2="457.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="458.9" x2="458.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="460.6" x2="460.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="462.3" x2="462.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="463.9" x2="463.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="465.6" x2="465.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="467.3" x2="467.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="468.9" x2="468.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="470.6" x2="470.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="472.3" x2="472.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="473.9" x2="473.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="475.6" x2="475.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="477.3" x2="477.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="478.9" x2="478.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="480.6" x2="480.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="482.3" x2="482.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="483.9" x2="483.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="485.6" x2="485.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="487.3" x2="487.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="488.9" x2="488.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="490.6" x2="490.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="492.3" x2="492.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="493.9" x2="493.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="495.6" x2="495.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="497.3" x2="497.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="498.9" x2="498.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="500.6" x2="500.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="502.3" x2="502.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="503.9" x2="503.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="505.6" x2="505.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="507.3" x2="507.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="508.9" x2="508.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="510.6" x2="510.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="512.3" x2="512.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="513.9" x2="513.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="515.6" x2="515.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="517.3" x2="517.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="518.9" x2="518.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="520.6" x2="520.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="522.3" x2="522.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="523.9" x2="523.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="525.6" x2="525.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="527.3" x2="527.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="528.9" x2="528.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="530.6" x2="530.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="532.3" x2="532.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="533.9" x2="533.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="535.6" x2="535.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="537.3" x2="537.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="538.9" x2="538.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="540.6" x2="540.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="542.3" x2="542.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="543.9" x2="543.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="545.6" x2="545.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="547.3" x2="547.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="548.9" x2="548.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="550.6" x2="550.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="552.3" x2="552.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="553.9" x2="553.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="555.6" x2="555.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="557.3" x2="557.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="558.9" x2="558.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="560.6" x2="560.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="562.3" x2="562.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="563.9" x2="563.9" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="565.6" x2="565.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="567.3" x2="567.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="569.0" x2="569.0" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="570.6" x2="570.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="572.3" x2="572.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="574.0" x2="574.0" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="575.6" x2="575.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="577.3" x2="577.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="579.0" x2="579.0" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="580.6" x2="580.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="582.3" x2="582.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="584.0" x2="584.0" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="585.6" x2="585.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="587.3" x2="587.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="589.0" x2="589.0" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="590.6" x2="590.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="592.3" x2="592.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="594.0" x2="594.0" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="595.6" x2="595.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="597.3" x2="597.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="599.0" x2="599.0" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="600.6" x2="600.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="602.3" x2="602.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="604.0" x2="604.0" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="605.6" x2="605.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="607.3" x2="607.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="609.0" x2="609.0" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="610.6" x2="610.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="612.3" x2="612.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="614.0" x2="614.0" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="615.6" x2="615.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="617.3" x2="617.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="619.0" x2="619.0" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="620.6" x2="620.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="622.3" x2="622.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="624.0" x2="624.0" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="625.6" x2="625.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="627.3" x2="627.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="629.0" x2="629.0" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="630.6" x2="630.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="632.3" x2="632.3" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="634.0" x2="634.0" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-faint" x1="635.6" x2="635.6" y1="52" y2="70" stroke-width="0.8"/>
+<line class="s-ctx" x1="112.2" x2="112.2" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="627.3" x2="627.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="610.6" x2="610.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="105.6" x2="105.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="392.3" x2="392.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="522.3" x2="522.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="513.9" x2="513.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="125.6" x2="125.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="582.3" x2="582.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="395.6" x2="395.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="283.9" x2="283.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="343.9" x2="343.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="565.6" x2="565.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="107.2" x2="107.2" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="108.9" x2="108.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="437.3" x2="437.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="467.3" x2="467.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="390.6" x2="390.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="127.2" x2="127.2" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="138.9" x2="138.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="552.3" x2="552.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="250.6" x2="250.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="228.9" x2="228.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="88.9" x2="88.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="507.3" x2="507.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="128.9" x2="128.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="103.9" x2="103.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="532.3" x2="532.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="557.3" x2="557.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="133.9" x2="133.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="574.0" x2="574.0" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="282.3" x2="282.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="165.6" x2="165.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="217.2" x2="217.2" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="340.6" x2="340.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="330.6" x2="330.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="589.0" x2="589.0" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="338.9" x2="338.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="203.9" x2="203.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="528.9" x2="528.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="270.6" x2="270.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="97.2" x2="97.2" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="342.3" x2="342.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="247.2" x2="247.2" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="475.6" x2="475.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="157.2" x2="157.2" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="278.9" x2="278.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="540.6" x2="540.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="458.9" x2="458.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="285.6" x2="285.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="380.6" x2="380.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="418.9" x2="418.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="290.6" x2="290.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="80.6" x2="80.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="473.9" x2="473.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="252.2" x2="252.2" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="562.3" x2="562.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="98.9" x2="98.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="597.3" x2="597.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="635.6" x2="635.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="553.9" x2="553.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="362.3" x2="362.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="438.9" x2="438.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="95.6" x2="95.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="420.6" x2="420.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="312.3" x2="312.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="232.2" x2="232.2" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="425.6" x2="425.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="153.9" x2="153.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="175.6" x2="175.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="370.6" x2="370.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="150.6" x2="150.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="592.3" x2="592.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="525.6" x2="525.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="373.9" x2="373.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="307.3" x2="307.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="382.3" x2="382.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="537.3" x2="537.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="178.9" x2="178.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="240.6" x2="240.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="629.0" x2="629.0" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="143.9" x2="143.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="604.0" x2="604.0" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="619.0" x2="619.0" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="550.6" x2="550.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="292.3" x2="292.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="452.3" x2="452.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="168.9" x2="168.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="218.9" x2="218.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="137.2" x2="137.2" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="208.9" x2="208.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="465.6" x2="465.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="367.3" x2="367.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="258.9" x2="258.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="170.6" x2="170.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="185.6" x2="185.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="455.6" x2="455.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="560.6" x2="560.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="202.2" x2="202.2" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="182.2" x2="182.2" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="482.3" x2="482.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="445.6" x2="445.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="388.9" x2="388.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="548.9" x2="548.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="567.3" x2="567.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="305.6" x2="305.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="147.2" x2="147.2" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="372.3" x2="372.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="215.6" x2="215.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="430.6" x2="430.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="317.3" x2="317.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="87.2" x2="87.2" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="527.3" x2="527.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="163.9" x2="163.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="432.3" x2="432.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="520.6" x2="520.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="230.6" x2="230.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="599.0" x2="599.0" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="605.6" x2="605.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="248.9" x2="248.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="387.3" x2="387.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="377.3" x2="377.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="110.6" x2="110.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="423.9" x2="423.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="542.3" x2="542.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="427.3" x2="427.3" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="213.9" x2="213.9" y1="42" y2="70" stroke-width="1.4"/>
+<line class="s-ctx" x1="575.6" x2="575.6" y1="42" y2="70" stroke-width="1.4"/>
+<line class="axis-line" x1="40.0" x2="40.0" y1="70" y2="76"/><text x="40.0" y="90" text-anchor="middle">2016-07</text>
+<line class="axis-line" x1="193.4" x2="193.4" y1="70" y2="76"/><text x="193.4" y="90" text-anchor="middle">2016-10</text>
+<line class="axis-line" x1="346.7" x2="346.7" y1="70" y2="76"/><text x="346.7" y="90" text-anchor="middle">2017-01</text>
+<line class="axis-line" x1="496.7" x2="496.7" y1="70" y2="76"/><text x="496.7" y="90" text-anchor="middle">2017-04</text>
+<line class="axis-line" x1="598.4" x2="598.4" y1="70" y2="76"/><text x="598.4" y="90" text-anchor="middle">2017-06</text>
+<text x="40" y="22">train（2016-07-01〜2017-06-25）の中で，未来が 8 時に始まる窓の位置</text>
+<line class="s-faint" x1="40" x2="58" y1="114" y2="114" stroke-width="2"/><text x="64" y="118">候補 342 件（1 日 1 件）</text>
+<line class="s-ctx" x1="230" x2="248" y1="114" y2="114" stroke-width="2"/><text x="254" y="118">ランダムに選んだ K=128 件</text>
 </svg></div>
-      <div class="plate-cap"><b>事例の出どころごとの MSE と QL の変化（K=128，seed 0）</b>同じデータ：−4.6% / −0.2%．ETTh2：−4.3% / −0.9%（MAE −0.5%）．Weather：−2.9% / +1.0%．80% 区間の幅はそれぞれ 1.31，1.23，1.51．</div>
+      <div class="plate-cap"><b>候補と選ばれた窓（OT，クエリの起点 2017-07-24 08:00）</b>線 1 本が窓 1 つの未来の始まり．候補は 2016-07-17 から 2017-06-23 までの毎日 8 時（342 件）．最初の候補が 7 月 17 日なのは，文脈 384 点（16 日）が train の始まりより前に出ないため．</div>
     </div>
   </div>
   <div class="prose">
-    <ul class="tight">
-      <li>別のデータでも効き目の大部分が出る．行はクエリ固有の未来ではなく，水準と振幅の引き（10-14 の共通の引き）を主に渡している．</li>
-      <li>似た性質のデータほど効く．何を共有していれば効くのかが次の問いになる．</li>
-    </ul>
-  </div>
-</section>
-
-<section>
-  <div class="prose">
-    <div class="sec-head"><span class="sec-num">3</span><h2>区間は読み方を変えても直らない</h2></div>
-    <p>参照なしでは 80% 区間に 74% しか入らない．行の中身（クエリの文脈＋参照なしの予測＋他の窓の外れ方）や group attention の重み（一様，logit に一律の値を足す）を変えて，区間を直せるかを見た．</p>
+    <p>選んだ窓をクエリと並べると，次のようになる．Chronos-2 は未来 64 点を 16 時間ずつのパッチに分け，group attention は<strong>同じパッチ位置の行どうし</strong>を混ぜる．時刻をそろえると，どの列でも全行の時間帯がクエリと同じになる．そろえないと，同じ列に朝の行と夜の行が混ざり，日周の形が打ち消し合う．</p>
   </div>
   <div class="wide">
     <div class="plate">
-      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 320" role="img">
-<line class="grid" x1="60" x2="650" y1="276.0" y2="276.0"/><text x="52" y="280.0" text-anchor="end">50%</text>
-<line class="grid" x1="60" x2="650" y1="224.0" y2="224.0"/><text x="52" y="228.0" text-anchor="end">60%</text>
-<line class="grid" x1="60" x2="650" y1="172.0" y2="172.0"/><text x="52" y="176.0" text-anchor="end">70%</text>
-<line class="grid" x1="60" x2="650" y1="120.0" y2="120.0"/><text x="52" y="124.0" text-anchor="end">80%</text>
-<line class="grid" x1="60" x2="650" y1="68.0" y2="68.0"/><text x="52" y="72.0" text-anchor="end">90%</text>
-<line class="grid" x1="60" x2="650" y1="16.0" y2="16.0"/><text x="52" y="20.0" text-anchor="end">100%</text>
-<text x="60.0" y="296" text-anchor="middle">0.5</text>
-<text x="207.5" y="296" text-anchor="middle">1</text>
-<text x="355.0" y="296" text-anchor="middle">1.5</text>
-<text x="502.5" y="296" text-anchor="middle">2</text>
-<text x="650.0" y="296" text-anchor="middle">2.5</text>
-<text x="355.0" y="314" text-anchor="middle">80% 区間の幅（チャネルの標準偏差で割る）</text>
-<line class="zero" x1="60" x2="650" y1="120.0" y2="120.0"/><text x="646" y="114.0" text-anchor="end">目標 80%</text>
-<circle class="d-ink" cx="237.6" cy="151.7" r="4.5"/>
-<text class="t-ink" x="245.8" y="163.0" text-anchor="middle">参照なし</text>
-<line class="s-faint" x1="299.5" y1="108.6" x2="222.2" y2="91.6" stroke-width="1"/>
-<circle class="d-rnd" cx="299.5" cy="108.6" r="4.5"/>
-<text class="t-ink" x="222.2" y="87.6" text-anchor="end">ランダム K=128</text>
-<line class="s-faint" x1="314.3" y1="100.8" x2="313.7" y2="73.4" stroke-width="1"/>
-<circle class="d-ctx" cx="314.3" cy="100.8" r="4.5"/>
-<text class="t-ink" x="313.7" y="69.4" text-anchor="middle">時刻をそろえる</text>
-<line class="s-faint" x1="283.3" y1="118.4" x2="207.5" y2="128.2" stroke-width="1"/>
-<circle class="d-rnd" cx="283.3" cy="118.4" r="4.5"/>
-<text class="t-ink" x="207.5" y="142.2" text-anchor="end">全レイヤーを一様</text>
-<circle class="d-orc" cx="612.2" cy="46.7" r="4.5"/>
-<text class="t-ink" x="599.9" y="40.8" text-anchor="middle">残差の行</text>
-<line class="s-faint" x1="336.4" y1="108.6" x2="390.4" y2="91.6" stroke-width="1"/>
-<circle class="d-orc" cx="336.4" cy="108.6" r="4.5"/>
-<text class="t-ink" x="390.4" y="87.6" text-anchor="start">残差の行 0.5 倍</text>
-<circle class="d-orc" cx="194.2" cy="188.1" r="4.5"/>
-<text class="t-ink" x="203.1" y="196.8" text-anchor="middle">残差の行 0.3 倍</text>
-<circle class="d-orc" cx="119.0" cy="251.6" r="4.5"/>
-<text class="t-ink" x="127.8" y="259.2" text-anchor="middle">外れ方 0</text>
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 336" role="img">
+<text x="318" y="16" text-anchor="middle">予測の起点</text>
+<line class="arrow" x1="318" x2="318" y1="22" y2="54"/>
+<text x="434.0" y="44" text-anchor="middle">未来 64 点（16 時間 × 4 パッチ）</text>
+<text x="558" y="44">未来の始まり</text>
+<rect class="patch" x="316" y="57" width="62" height="214" rx="3"/>
+<text class="t-ink" x="118" y="78" text-anchor="end">クエリ</text>
+<rect class="box-q" x="126" y="62" width="192" height="24" rx="2"/>
+<text x="222.0" y="78" text-anchor="middle">履歴 2032 点</text>
+<rect class="box-q" x="318" y="62" width="58" height="24" rx="2"/>
+<text class="t-small t-ink" x="347.0" y="78" text-anchor="middle">8–23 時</text>
+<rect class="box-q" x="376" y="62" width="58" height="24" rx="2"/>
+<text class="t-small" x="405.0" y="78" text-anchor="middle">0–15 時</text>
+<rect class="box-q" x="434" y="62" width="58" height="24" rx="2"/>
+<text class="t-small" x="463.0" y="78" text-anchor="middle">16–7 時</text>
+<rect class="box-q" x="492" y="62" width="58" height="24" rx="2"/>
+<text class="t-small" x="521.0" y="78" text-anchor="middle">8–23 時</text>
+<text class="t-small" x="558" y="78">2017-07-24 08:00</text>
+<text class="t-ink" x="118" y="114" text-anchor="end">事例 1</text>
+<rect class="box" x="126" y="98" width="192" height="24" rx="2"/>
+<text x="222.0" y="114" text-anchor="middle">文脈 384 点</text>
+<rect class="box-ctx" x="318" y="98" width="58" height="24" rx="2"/>
+<text class="t-small t-ink" x="347.0" y="114" text-anchor="middle">8–23 時</text>
+<rect class="box-ctx" x="376" y="98" width="58" height="24" rx="2"/>
+<text class="t-small" x="405.0" y="114" text-anchor="middle">0–15 時</text>
+<rect class="box-ctx" x="434" y="98" width="58" height="24" rx="2"/>
+<text class="t-small" x="463.0" y="114" text-anchor="middle">16–7 時</text>
+<rect class="box-ctx" x="492" y="98" width="58" height="24" rx="2"/>
+<text class="t-small" x="521.0" y="114" text-anchor="middle">8–23 時</text>
+<text class="t-small" x="558" y="114">2016-08-13 08:00</text>
+<text class="t-ink" x="118" y="150" text-anchor="end">事例 2</text>
+<rect class="box" x="126" y="134" width="192" height="24" rx="2"/>
+<text x="222.0" y="150" text-anchor="middle">文脈 384 点</text>
+<rect class="box-ctx" x="318" y="134" width="58" height="24" rx="2"/>
+<text class="t-small t-ink" x="347.0" y="150" text-anchor="middle">8–23 時</text>
+<rect class="box-ctx" x="376" y="134" width="58" height="24" rx="2"/>
+<text class="t-small" x="405.0" y="150" text-anchor="middle">0–15 時</text>
+<rect class="box-ctx" x="434" y="134" width="58" height="24" rx="2"/>
+<text class="t-small" x="463.0" y="150" text-anchor="middle">16–7 時</text>
+<rect class="box-ctx" x="492" y="134" width="58" height="24" rx="2"/>
+<text class="t-small" x="521.0" y="150" text-anchor="middle">8–23 時</text>
+<text class="t-small" x="558" y="150">2017-06-18 08:00</text>
+<text class="t-ink" x="118" y="186" text-anchor="end">⋮</text>
+<text class="t-ink" x="118" y="222" text-anchor="end">事例 K</text>
+<rect class="box" x="126" y="206" width="192" height="24" rx="2"/>
+<text x="222.0" y="222" text-anchor="middle">文脈 384 点</text>
+<rect class="box-ctx" x="318" y="206" width="58" height="24" rx="2"/>
+<text class="t-small t-ink" x="347.0" y="222" text-anchor="middle">8–23 時</text>
+<rect class="box-ctx" x="376" y="206" width="58" height="24" rx="2"/>
+<text class="t-small" x="405.0" y="222" text-anchor="middle">0–15 時</text>
+<rect class="box-ctx" x="434" y="206" width="58" height="24" rx="2"/>
+<text class="t-small" x="463.0" y="222" text-anchor="middle">16–7 時</text>
+<rect class="box-ctx" x="492" y="206" width="58" height="24" rx="2"/>
+<text class="t-small" x="521.0" y="222" text-anchor="middle">8–23 時</text>
+<text class="t-small" x="558" y="222">2017-05-18 08:00</text>
+<text class="t-ink" x="118" y="258" text-anchor="end">ずらした事例</text>
+<rect class="box" x="126" y="242" width="192" height="24" rx="2"/>
+<text x="222.0" y="258" text-anchor="middle">文脈 384 点</text>
+<rect class="box-orc" x="318" y="242" width="58" height="24" rx="2"/>
+<text class="t-small t-ink" x="347.0" y="258" text-anchor="middle">20–11 時</text>
+<rect class="box-orc" x="376" y="242" width="58" height="24" rx="2"/>
+<text class="t-small" x="405.0" y="258" text-anchor="middle">12–3 時</text>
+<rect class="box-orc" x="434" y="242" width="58" height="24" rx="2"/>
+<text class="t-small" x="463.0" y="258" text-anchor="middle">4–19 時</text>
+<rect class="box-orc" x="492" y="242" width="58" height="24" rx="2"/>
+<text class="t-small" x="521.0" y="258" text-anchor="middle">20–11 時</text>
+<text class="t-small" x="558" y="258">2016-08-13 20:00</text>
+<text class="lbl-ctx" x="347.0" y="296" text-anchor="middle">group attention はこの縦の列ごとに行を混ぜる</text>
+<text x="347.0" y="314" text-anchor="middle">事例 1〜K はクエリと同じ時間帯，ずらした事例だけ 12 時間ずれる</text>
 </svg></div>
-      <div class="plate-cap"><b>80% 区間の幅と入る割合（val）</b>QL（参照なし比）：ランダム −0.2%，時刻をそろえる −0.6%，全レイヤーを一様 −0.5%，残差の行 +13.0%，0.5 倍 +3.1%，0.3 倍 +2.9%，外れ方 0 +4.6%．logit に +1 を足すと MSE −5.0% / QL −0.3%．後から残差を足す RACE-TF の再現は MSE +3.7%．</div>
-    </div>
-  </div>
-  <div class="prose">
-    <ul class="tight">
-      <li>どの手法も 1 本の曲線に乗る．区間の幅は行の未来のばらつきでほぼ決まり，幅を合わせても QL は良くならない．</li>
-      <li>読み方の編集は MSE を少し動かすが，seed のぶれを超えない．後から残差を足す方法は悪化した．</li>
-      <li>区間を作り直す方向は捨て，<strong>行の未来に何を並べるか</strong>に戻る．</li>
-    </ul>
-  </div>
-</section>
-
-<section>
-  <div class="prose">
-    <div class="sec-head"><span class="sec-num">4</span><h2>時刻のそろえ方</h2></div>
-    <p>
-      Chronos-2 の group attention は，<strong>同じパッチ位置の行どうし</strong>を混ぜる．パッチ位置は予測の起点からの時間なので，起点の時刻が行ごとにばらばらだと，同じ位置に朝の行と夜の行が混ざり，日周の形が打ち消し合う．
-      そこで，事例の未来が始まる時刻（＝事例の予測の起点）をクエリの予測の起点と同じ時刻にそろえる．
-    </p>
-  </div>
-  <div class="wide">
-    <div class="plate">
-      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 300" role="img">
-<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
-<text class="t-ink" x="138" y="56" text-anchor="end">クエリ</text>
-<rect class="box-q" x="150" y="40" width="250" height="24" rx="2"/>
-<text x="275.0" y="56" text-anchor="middle">履歴 2032 点</text>
-<rect class="box-q" x="400" y="40" width="112" height="24" rx="2"/>
-<text x="456.0" y="56" text-anchor="middle">予測 64 点</text>
-<text class="t-small" x="520" y="56">2017-07-24 08:00</text>
-<text class="t-ink" x="138" y="94" text-anchor="end">事例 1</text>
-<rect class="box" x="150" y="78" width="250" height="24" rx="2"/>
-<text x="275.0" y="94" text-anchor="middle">文脈 384 点</text>
-<rect class="box-ctx" x="400" y="78" width="112" height="24" rx="2"/>
-<text x="456.0" y="94" text-anchor="middle">既知の未来</text>
-<text class="t-small" x="520" y="94">2016-08-13 08:00</text>
-<text class="t-ink" x="138" y="132" text-anchor="end">事例 2</text>
-<rect class="box" x="150" y="116" width="250" height="24" rx="2"/>
-<text x="275.0" y="132" text-anchor="middle">文脈 384 点</text>
-<rect class="box-ctx" x="400" y="116" width="112" height="24" rx="2"/>
-<text x="456.0" y="132" text-anchor="middle">既知の未来</text>
-<text class="t-small" x="520" y="132">2017-06-18 08:00</text>
-<text class="t-ink" x="138" y="170" text-anchor="end">⋮</text>
-<text class="t-ink" x="138" y="208" text-anchor="end">事例 K</text>
-<rect class="box" x="150" y="192" width="250" height="24" rx="2"/>
-<text x="275.0" y="208" text-anchor="middle">文脈 384 点</text>
-<rect class="box-ctx" x="400" y="192" width="112" height="24" rx="2"/>
-<text x="456.0" y="208" text-anchor="middle">既知の未来</text>
-<text class="t-small" x="520" y="208">2017-05-18 08:00</text>
-<text class="t-ink" x="138" y="246" text-anchor="end">ずらした事例</text>
-<rect class="box" x="150" y="230" width="250" height="24" rx="2"/>
-<text x="275.0" y="246" text-anchor="middle">文脈 384 点</text>
-<rect class="box-orc" x="400" y="230" width="112" height="24" rx="2"/>
-<text x="456.0" y="246" text-anchor="middle">既知の未来</text>
-<text class="t-small" x="520" y="246">2016-08-13 20:00</text>
-
-<rect class="patch" x="428" y="34" width="28" height="192" rx="2"/>
-
-
-<text class="lbl-ctx" x="445" y="26" text-anchor="middle">同じパッチ位置どうしで group attention</text>
-<text x="400" y="284" text-anchor="middle">予測の起点：事例 1〜K はクエリと同じ 8 時，ずらした事例は 20 時</text>
-</svg></div>
-      <div class="plate-cap"><b>時刻をそろえた並列の行</b>事例は train の窓を 1 点おきに切り出したもの．日付は下の図のクエリで実際に選ばれた窓の予測の起点．事例の文脈 384 点（16 日分），未来 64 点は既知の共変量として渡す．事例は予測の起点より 96 点以上前に終わるものに限る．</div>
+      <div class="plate-cap"><b>時刻をそろえた並列の行</b>マスの中の時刻は各パッチが覆う時間帯．日付は上の図で実際に選ばれた窓（事例 1，2，K）の未来の始まり．ずらした事例は対照で，未来が 20 時に始まる窓だけから選ぶ．事例は予測の起点より 96 点以上前に終わるものに限る．</div>
     </div>
   </div>
   <div class="prose">
@@ -798,7 +1222,6 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
     <math display="block" class="eq"><msub><mi>𝒞</mi><mi>P</mi></msub><mo>(</mo><mi>o</mi><mo>)</mo><mo>=</mo><mo>{</mo><mi>j</mi><mo>:</mo><mo>(</mo><mi>j</mi><mo>+</mo><mi>S</mi><mo>−</mo><mi>o</mi><mo>)</mo><mspace width="0.3em"/><mo lspace="0" rspace="0">mod</mo><mspace width="0.3em"/><mi>P</mi><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="0.4em"/><mi>j</mi><mo>≤</mo><mtext>limit</mtext><mo>(</mo><mi>o</mi><mo>)</mo><mo>}</mo></math>
     <ul class="tight">
       <li><strong>使うのは位置（時刻）だけ．</strong>系列の値も類似度も見ない．ETTh1 は 1 時間おきで 0 時から始まるので，位置を 24 で割った余りが時刻になる．タイムスタンプがあれば「時」が同じ窓を取るのと同じ．</li>
-      <li><strong>その中はランダム．</strong><math><msub><mi>𝒞</mi><mi>P</mi></msub></math> から重複なしで K 件を一様に取る．日付，季節，水準はばらけたまま残る．</li>
       <li><strong>対照は 12 時間ずらし．</strong>条件を <math><mo>(</mo><mi>j</mi><mo>+</mo><mi>S</mi><mo>−</mo><mi>o</mi><mo>−</mo><mi>P</mi><mo>/</mo><mn>2</mn><mo>)</mo></math> にすると，候補の数，データ，件数は同じで時刻だけがずれる．</li>
     </ul>
   </div>
@@ -853,7 +1276,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
 
 <section>
   <div class="prose">
-    <div class="sec-head"><span class="sec-num">5</span><h2>時刻をそろえると何が変わるか</h2></div>
+    <div class="sec-head"><span class="sec-num">3</span><h2>時刻をそろえると何が変わるか</h2></div>
     <p>全クエリで，行の未来の中央値と正解の未来の形の相関を測った．参照なしの予測とも比べる．</p>
   </div>
   <div class="wide">
@@ -927,7 +1350,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
 
 <section>
   <div class="prose">
-    <div class="sec-head"><span class="sec-num">6</span><h2>提案手法</h2></div>
+    <div class="sec-head"><span class="sec-num">4</span><h2>提案手法</h2></div>
     <div class="algo">
       <h4>時刻をそろえた many-shot 並列文脈内学習（学習なし）</h4>
       <ol>
@@ -942,8 +1365,8 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
   <div class="prose">
     <div class="vs">
       <div class="k">Align-RAG</div><div>上位 10 件を連結で渡し，過去どうしの相互相関で窓ごとにずらす（中身で合わせる）．しかも似た窓の上位は同じ時刻の窓ばかりになるとして MMR で散らす．本提案は逆に，時刻だけをそろえ，それ以外を散らす．</div>
-      <div class="k">Pooling Helps</div><div>Chronos-2 の group attention は一様に混ぜるほうがよいと示すが，件数は扱わない．並列 many-shot では最初のレイヤーを一様にするとむしろ少し悪くなった．</div>
-      <div class="k">RACE・ECHO</div><div>近い窓の残差を後から足す．学習なし版の再現は悪化した．本提案はモデルの中で読ませる．</div>
+      <div class="k">Pooling Helps</div><div>Chronos-2 の group attention は一様に混ぜるほうがよいと示すが，件数は扱わない．並列 many-shot では最初のレイヤーを一様にするとむしろ少し悪くなった（K=128 ランダムで MSE −4.6% → −3.9%）．</div>
+      <div class="k">RACE・ECHO</div><div>近い窓の残差を後から足す．学習なし版の再現は悪化した（MSE +3.7%）．本提案はモデルの中で読ませる．</div>
       <div class="k">TabPFN の文脈選び</div><div>ランダムが k-means と並び，平均を合わせると悪くなる．本提案と同じく「似せずに散らす」が，そろえる軸（時刻）を持つ．</div>
     </div>
     <h3>主張（案）</h3>
@@ -956,7 +1379,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
 
 <section>
   <div class="prose">
-    <div class="sec-head"><span class="sec-num">7</span><h2>弱いところと次の検証</h2></div>
+    <div class="sec-head"><span class="sec-num">5</span><h2>弱いところと次の検証</h2></div>
     <ul class="tight">
       <li><strong>seed が 1 本．</strong>ランダム K=128 は seed で −4.6% と −3.9% に分かれる．そろえる（−5.1%）との差はこのぶれと同じくらい．きれいな比較は「そろえる 対 ずらす」だけ．</li>
       <li><strong>対照がそろっていない．</strong>今のランダムは全クエリ共通の 128 件（11 点おき）で，そろえる・ずらすはクエリごと（1 点おき）．クエリごとに全時刻からランダムに取る対照が要る．</li>
@@ -976,7 +1399,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
         </div>
         <div class="step">
           <h4><span class="tag next">並行</span>別のデータで時刻をそろえる</h4>
-          <p>自分の履歴が無い場合を想定し，ETTh2 の窓を時刻でそろえて ETTh1 に渡す．2 節の引きと時刻の部分が足し合わさるかを見る．</p>
+          <p>自分の履歴が無い場合を想定し，ETTh2 の窓を時刻でそろえて ETTh1 に渡す．別のデータでも出る引きと時刻の部分が足し合わさるかを見る．</p>
         </div>
       </div>
       <div class="down">↓</div>
@@ -994,8 +1417,8 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
     <ul class="tight">
       <li>ETTh1，各チャネルを 1 変量として扱う．履歴 2032 点，予測 64 点，事例の文脈 384 点，Chronos-2 は凍結．val の予測起点は 17 時間おきに 1,162 本．</li>
       <li>時刻をそろえる：<code>codes/run.py --select phase --top-k 128 --seq-len 384</code>，ずらす：<code>--select antiphase</code>（<code>--phase-period 24</code>）．各クエリの候補はチャネルあたり約 340 窓．選んだ窓は <code>results/ETTh1_val_phase_k128_parallel_s0_P24_sl384_selected.parquet</code>．</li>
-      <li>別のデータ：<code>--pool-dataset ETTh2|weather</code>．group attention の編集：<code>--group-edit uniform:0-11|bias1:0-11</code>．残差の行と RACE-TF は scratchpad の <code>resid.py</code>，<code>race_tf.py</code>．</li>
-      <li>4・5 節の図は scratchpad の <code>phase_fig.py</code>．コードは未コミット．</li>
+      <li>別のデータ：<code>--pool-dataset ETTh2|weather</code>．RACE-TF の再現は scratchpad の <code>race_tf.py</code>．</li>
+      <li>2・3 節の図は scratchpad の <code>phase_fig.py</code>．</li>
     </ul>
   </div>
 </section>

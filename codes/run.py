@@ -1,7 +1,7 @@
 """Forecast every query window with a frozen Chronos-2 and save predictions with ground truth.
 
   --fusion   parallel (examples as covariate rows) or concat (examples spliced in front)
-  --select   none, a task-level set (random / clg / pclg) or an instance-level
+  --select   none, a task-level set (random / medoid / strat) or an instance-level
              choice (l2 / oracle / truth); see selection.py
 
 The output table is long: one row per channel, query window and horizon step h,
@@ -58,23 +58,6 @@ MODEL_NAME = "amazon/chronos-2"
 DEVICE = "mps"
 REPORT_QUANTILES = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 TOKEN_BUDGET = 24576
-# CLG / Parallel-CLG (clg.py). Epochs and batch follow Zhang et al.; the latent is K value-space
-# windows instead of embedding-space prefix tokens, so the official AdamW lr 1e-3 does not carry
-# over and CLG_LR (Adam, on the standardized latent) is still to be checked on the train loss
-CLG_LATENT = 8
-# CLG was set up before the 2026-10-19 defaults; concat needs room for the latent windows
-CLG_SEQ_LEN = 96
-CLG_HISTORY = 2032
-CLG_DB_STRIDE = 11
-CLG_EPOCHS = 10
-CLG_LR = 0.05
-CLG_BATCH = 64
-CLG_MICRO_BATCH = 8
-# the paper states 32 swap iterations; the official code iterates to convergence (up to 1000)
-CLG_SWAPS = 1000
-# Parallel-CLG ranks windows by gradient alignment: on val it beat mean matching on MAE / QL /
-# interval width at every K, which mean matching (and clg with cosine) did not; clg stays as published
-DEFAULT_MATCH = {"pclg": "cosine", "clg": "mean"}
 
 
 def parse_args():
@@ -100,13 +83,6 @@ def parse_args():
     p.add_argument("--run-name", default="")
     p.add_argument("--inst-k", default=0, type=int,
                    help="task-level select: also add this many l2 windows per query (hybrid)")
-    p.add_argument("--recent", default=0, type=int,
-                   help="clg / pclg: target the windows ending in the last RECENT points of train")
-    p.add_argument("--match", default=None, choices=["mean", "cosine"],
-                   help="clg / pclg: match the mean gradient, or rank windows by alignment with it "
-                        "(default: cosine for pclg, mean for clg)")
-    p.add_argument("--reverse-match", action="store_true",
-                   help="clg / pclg: pick the set farthest from the mean gradient (diagnostic)")
     p.add_argument("--proxy-lambda", default=1.0, type=float,
                    help="proxy: match futures on y + lambda * (no-reference forecast - y)")
     p.add_argument("--attn-layers", default=ATTN_LAYERS,
@@ -124,19 +100,10 @@ def parse_args():
     a = p.parse_args()
     if a.select == "none" and a.ablation != "none":
         p.error("--ablation needs examples; pick a --select other than none")
-    if (a.reverse_match or a.match) and a.select not in ("clg", "pclg"):
-        p.error("--reverse-match / --match apply to clg / pclg only")
-    if a.reverse_match and a.match == "cosine":
-        p.error("--reverse-match reverses the mean matching only")
     if a.pool_dataset and a.select not in ("random", "strat"):
         p.error("--pool-dataset applies to random / strat only")
-    a.match = "mean" if a.reverse_match else (a.match or DEFAULT_MATCH.get(a.select, "mean"))
-    if a.recent and a.select not in ("clg", "pclg"):
-        p.error("--recent applies to clg / pclg only")
-    if a.recent and a.eval_split != "val":
-        p.error("--recent needs gradients of the windows just before the split; only val has them")
     if a.inst_k and a.select not in TASK_LEVEL:
-        p.error("--inst-k adds l2 windows to a task-level set (random / clg / pclg)")
+        p.error("--inst-k adds l2 windows to a task-level set (random / medoid / strat)")
     return a
 
 
@@ -148,16 +115,10 @@ def run_name(a) -> str:
         stem += f"_k{a.top_k}_{a.fusion}"
         if a.select in TASK_LEVEL or a.ablation == "shuffle-future":
             stem += f"_s{a.seed}"
-        if a.reverse_match:
-            stem += "_reverse"
         if a.select == "proxy":
             stem += f"_lam{a.proxy_lambda:g}"
         if a.select == "attn" and a.attn_layers != ATTN_LAYERS:
             stem += f"_L{a.attn_layers}"
-        if a.select in DEFAULT_MATCH and not a.reverse_match and a.match != DEFAULT_MATCH[a.select]:
-            stem += f"_{a.match}"
-        if a.recent:
-            stem += f"_recent{a.recent}"
         if a.inst_k:
             stem += f"_inst{a.inst_k}"
         if a.ablation != "none":
@@ -200,23 +161,6 @@ def channel_rng(seed: int, channel: str):
     return np.random.default_rng([seed, zlib.crc32(channel.encode())])
 
 
-def load_grads(a, channel: str, n_pool: int) -> np.ndarray:
-    """Curriculum latent gradients written by clg.py, flattened to (n_pool, d)."""
-    from clg import grads_path
-    path = grads_path(a.output_dir, a.dataset, a.select, a.seed, channel)
-    if not os.path.exists(path):
-        raise SystemExit(f"{path} missing; run python3 codes/clg.py --method {a.select} first")
-    f = np.load(path)
-    meta = json.loads(str(f["meta"]))
-    for key in ("seq_len", "pred_len", "history", "db_stride"):
-        if meta[key] != getattr(a, key):
-            raise SystemExit(f"{path} was made with {key}={meta[key]}, not {getattr(a, key)}")
-    grads = f["grads"]
-    if len(grads) != n_pool:
-        raise SystemExit(f"{path} has {len(grads)} windows, the pool has {n_pool}")
-    return grads.reshape(n_pool, -1)
-
-
 def main():
     args = parse_args()
     stem = os.path.join(args.output_dir, run_name(args))
@@ -255,14 +199,7 @@ def main():
         ex = None
         pool = data.windows("train", ch, args.db_stride) if foreign is None else foreign
         if args.select in TASK_LEVEL:
-            grads = load_grads(args, name, len(pool)) if args.select in ("clg", "pclg") else None
-            target_idx = None
-            if args.recent:
-                ends = np.arange(len(pool)) * args.db_stride + data.win_len + data.borders[0][0]
-                target_idx = np.where(ends > data.borders[1][0] - args.recent)[0]
-            ex, idx = task_level(args.select, pool, args.top_k, rng, grads, CLG_SWAPS,
-                                 args.reverse_match, args.match,
-                                 -(-data.win_len // args.db_stride), target_idx, s)
+            ex, idx = task_level(args.select, pool, args.top_k, rng, s)
             sets[name] = idx.tolist()
             if args.inst_k:
                 limit = data.past_limit(args.eval_split, starts, args.db_stride, GAP)

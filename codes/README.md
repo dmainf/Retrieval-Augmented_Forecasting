@@ -10,9 +10,8 @@
 |---|---|
 | `codes/dataset.py` | parquet 読み込み，train/val/test 分割，窓の切り出し |
 | `codes/chronos2.py` | Chronos-2 の forward．並列（事例を共変量の行に）と連結（事例を時間軸の前に）．事例 1 件 11 トークンで計算するので many-shot が回る |
-| `codes/selection.py` | 事例の選び方．task-level：`random` / `clg` / `pclg`（Parallel-CLG，提案手法）/ `medoid`（形の代表点）/ `strat`（外れ方で層別）．instance-level：`l2` / `band`（類似度の順位を K 帯に分けて各帯の中央）/ `oracle` / `truth` |
+| `codes/selection.py` | 事例の選び方．task-level：`random` / `medoid`（形の代表点）/ `strat`（外れ方で層別）．instance-level：`l2` / `l2rv`（各窓を自分の文脈で正規化してからの距離）/ `band`（`l2rv` の順位を等間隔に K 件）/ `oracle` / `truth`．`--inst-k` で共通セットに文脈照合を足す（ハイブリッド） |
 | `codes/run.py` | 入口．予測と正解を `results/<名前>.parquet` に縦長で保存（1 行＝チャネル×クエリ×予測の何点目 `h`．列は `date` `true` `q0.1`〜`q0.9` など） |
-| `codes/clg.py` | CLG と Parallel-CLG の潜在の学習と勾配の軌跡．`--select clg|pclg` の前に実行する．選び方は pclg がコサイン，clg が L2（平均に合わせる）が既定で，`--match` で変えられる．`--inst-k` で共通セットに文脈照合を足す（ハイブリッド） |
 | `codes/evaluate.py` | MSE・MAE・分位点損失（QL）．主な指標は各チャネルを train の標準偏差で標準化した値（論文の慣例）．`eMSE` などは評価区間の正解の標準偏差で割った補助指標．以前の横長の表も読める |
 
 ## 準備
@@ -40,9 +39,9 @@ python3 codes/evaluate.py results/*.parquet
 | `--fusion` | `parallel` | `parallel`：事例を共変量の行に．`concat`：事例を履歴の前に連結（qmean 区切り 16 点） |
 | `--select` | `none` | 選び方（上の表） |
 | `--top-k` | `128` | 事例の数．連結は履歴 2032 なら 35 件まで |
-| `--history` | `8192` | クエリの履歴長（Chronos-2 の文脈の上限）．CLG（`clg.py`）は `2032` のまま |
-| `--seq-len` / `--pred-len` | `384` / `64` | 事例の文脈長 / 予測長．CLG は `96` / `64` |
-| `--db-stride` | `1` | 事例の候補となる窓の間隔（train の全窓）．CLG は `11` |
+| `--history` | `8192` | クエリの履歴長（Chronos-2 の文脈の上限） |
+| `--seq-len` / `--pred-len` | `384` / `64` | 事例の文脈長 / 予測長 |
+| `--db-stride` | `1` | 事例の候補となる窓の間隔（train の全窓） |
 | `--ablation` | `none` | `shuffle-future`：事例どうしで未来を入れ替える．選び方によらずかかる（`truth` は K 件が同じなので変化しない） |
 | `--eval-split` | `val` | `val` / `test`．ハイパーパラメータは val で決めてから，`--eval-split test` で test を出す |
 | `--overwrite` | なし | 同名の結果があると止まる．上書きするときに付ける |
