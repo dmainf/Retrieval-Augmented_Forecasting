@@ -1,0 +1,1388 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>事例の選び方</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root {
+  --ground: #F2F5F7;
+  --surface: #FFFFFF;
+  --surface-sunk: #E9EEF2;
+  --ink: #131A21;
+  --ink-soft: #5C6873;
+  --ink-faint: #8794A1;
+  --rule: #D6DEE5;
+  --rule-soft: #E5EBF0;
+  --accent: #2F5F8F;
+  --accent-tint: #D5E3F0;
+  --accent-wash: rgba(47, 95, 143, 0.10);
+  --oracle: #B0621C;
+  --oracle-tint: #F3DFC7;
+  --oracle-wash: rgba(176, 98, 28, 0.12);
+  --warn: #A03A2E;
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+
+  --f-display: "Zen Old Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --f-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --f-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0F141A;
+    --surface: #161E26;
+    --surface-sunk: #1C262F;
+    --ink: #E3EAF1;
+    --ink-soft: #97A5B3;
+    --ink-faint: #6E7D8C;
+    --rule: #2A3540;
+    --rule-soft: #222C36;
+    --accent: #7FB0DC;
+    --accent-tint: #24384B;
+    --accent-wash: rgba(127, 176, 220, 0.13);
+    --oracle: #E0A164;
+    --oracle-tint: #3A2B1B;
+    --oracle-wash: rgba(224, 161, 100, 0.14);
+    --warn: #E08476;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground: #0F141A;
+  --surface: #161E26;
+  --surface-sunk: #1C262F;
+  --ink: #E3EAF1;
+  --ink-soft: #97A5B3;
+  --ink-faint: #6E7D8C;
+  --rule: #2A3540;
+  --rule-soft: #222C36;
+  --accent: #7FB0DC;
+  --accent-tint: #24384B;
+  --accent-wash: rgba(127, 176, 220, 0.13);
+  --oracle: #E0A164;
+  --oracle-tint: #3A2B1B;
+  --oracle-wash: rgba(224, 161, 100, 0.14);
+  --warn: #E08476;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 16px;
+  line-height: 1.85;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page { padding: 0 20px 96px; }
+.prose { max-width: 40rem; margin-inline: auto; }
+.wide  { max-width: 66rem; margin-inline: auto; }
+
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+/* ---------- masthead ---------- */
+
+.masthead {
+  border-bottom: 1px solid var(--rule);
+  padding: 64px 0 40px;
+  margin-bottom: 56px;
+}
+.kicker {
+  font-family: var(--f-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0 0 18px;
+}
+h1 {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: clamp(2rem, 5.5vw, 2.9rem);
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+  margin: 0 0 20px;
+  text-wrap: balance;
+}
+.standfirst {
+  font-size: 1.03rem;
+  color: var(--ink-soft);
+  margin: 0;
+  max-width: 34rem;
+}
+
+/* ---------- section rhythm ---------- */
+
+section { margin-bottom: 72px; }
+
+.sec-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 10px;
+  margin-bottom: 28px;
+}
+.sec-num {
+  font-family: var(--f-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.06em;
+  flex: none;
+}
+h2 {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 1.42rem;
+  line-height: 1.45;
+  margin: 0;
+  text-wrap: balance;
+}
+h3 {
+  font-family: var(--f-body);
+  font-weight: 700;
+  font-size: 1.02rem;
+  margin: 38px 0 12px;
+  letter-spacing: 0.01em;
+}
+p { margin: 0 0 1.15em; }
+strong { font-weight: 700; }
+.em-blue { color: var(--accent); font-weight: 700; }
+.em-amber { color: var(--oracle); font-weight: 700; }
+
+code {
+  font-family: var(--f-mono);
+  font-size: 0.85em;
+  background: var(--surface-sunk);
+  padding: 0.12em 0.4em;
+  border-radius: 3px;
+}
+
+/* ---------- plates: figures, diagrams, tables ---------- */
+
+.plate {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  margin: 32px 0;
+  overflow: hidden;
+}
+.plate-body { padding: 22px 24px; }
+.plate-cap {
+  border-top: 1px solid var(--rule-soft);
+  padding: 12px 24px 14px;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  background: var(--surface-sunk);
+}
+.plate-cap b {
+  font-family: var(--f-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  display: block;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.shot { background: #FFFFFF; padding: 14px; }
+.shot-scroll { overflow-x: auto; }
+.shot img { display: block; width: 100%; min-width: 720px; height: auto; }
+.shot--narrow img { min-width: 420px; max-width: 560px; margin-inline: auto; }
+
+svg.diagram { display: block; width: 100%; height: auto; }
+
+/* ---------- tables ---------- */
+
+.table-scroll { overflow-x: auto; }
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 560px;
+  font-family: var(--f-mono);
+  font-size: 0.84rem;
+  font-variant-numeric: tabular-nums;
+}
+caption { display: none; }
+th, td {
+  padding: 9px 12px;
+  text-align: right;
+  border-bottom: 1px solid var(--rule-soft);
+  white-space: nowrap;
+}
+thead th {
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+  border-bottom: 1px solid var(--rule);
+}
+tbody th, td.lbl {
+  text-align: left;
+  font-family: var(--f-body);
+  font-weight: 500;
+  font-size: 0.86rem;
+  color: var(--ink);
+}
+tr.ctx td, tr.ctx th { background: var(--accent-wash); }
+tr.orc td, tr.orc th { background: var(--oracle-wash); }
+td.best { font-weight: 600; color: var(--oracle); }
+tbody tr:last-child td, tbody tr:last-child th { border-bottom: none; }
+
+/* ---------- callouts ---------- */
+
+.callout {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-wash);
+  padding: 16px 20px;
+  margin: 28px 0;
+  border-radius: 0 4px 4px 0;
+}
+.callout.amber { border-left-color: var(--oracle); background: var(--oracle-wash); }
+.callout p:last-child { margin-bottom: 0; }
+.callout .lead {
+  font-family: var(--f-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.badge {
+  display: inline-block;
+  font-family: var(--f-mono);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 3px;
+  vertical-align: 0.15em;
+  background: var(--warn);
+  color: var(--surface);
+}
+:root[data-theme="dark"] .badge,
+:root:not([data-theme="light"]) .badge { color: #12181F; }
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .badge { color: #FFFFFF; }
+}
+
+/* ---------- branch list ---------- */
+
+.branch {
+  display: grid;
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 28px 0;
+}
+.branch > div {
+  background: var(--surface);
+  padding: 16px 20px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 14px;
+  align-items: baseline;
+}
+.branch .cond {
+  font-family: var(--f-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-faint);
+  letter-spacing: 0.06em;
+}
+.branch .then { font-size: 0.94rem; line-height: 1.7; }
+.branch .then b { color: var(--accent); }
+
+/* ---------- axis cards ---------- */
+
+.axes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px;
+  margin: 28px 0;
+}
+.axis {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 18px 20px;
+}
+.axis h4 {
+  font-family: var(--f-mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 4px;
+  font-weight: 600;
+}
+.axis .q { font-size: 0.9rem; font-weight: 700; margin: 0 0 12px; }
+.axis dl { margin: 0; font-size: 0.84rem; line-height: 1.65; }
+.axis dt {
+  font-family: var(--f-mono);
+  font-size: 0.78rem;
+  color: var(--ink);
+  font-weight: 500;
+  margin-top: 8px;
+}
+.axis dt:first-child { margin-top: 0; }
+.axis dd { margin: 0; color: var(--ink-soft); font-size: 0.82rem; line-height: 1.6; }
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  margin: 0 0 16px;
+  font-family: var(--f-body);
+}
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.swatch { width: 22px; height: 10px; border-radius: 2px; flex: none; }
+
+.footnote {
+  border-top: 1px solid var(--rule);
+  padding-top: 22px;
+  font-size: 0.84rem;
+  color: var(--ink-soft);
+  line-height: 1.75;
+}
+.footnote p { margin-bottom: 0.6em; }
+
+math { font-size: 1.02em; color: var(--ink); }
+math[display="block"].eq {
+  display: block;
+  margin: 22px auto;
+  padding: 14px 18px;
+  background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 4px 4px 0;
+  overflow-x: auto;
+  font-size: 1.08em;
+}
+math mtext { font-family: var(--f-body); font-size: 0.78em; color: var(--ink-faint); }
+td math, .plate-cap math { font-size: 0.95em; }
+pre {
+  font-family: var(--f-mono);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 14px 16px;
+  margin: 0 0 1.15em;
+  overflow-x: auto;
+}
+</style>
+
+
+<style>
+.chart text { font-family: var(--f-mono); font-size: 11px; fill: var(--ink-soft); }
+.chart .axis-line { stroke: var(--rule); stroke-width: 1; }
+.chart .grid { stroke: var(--rule-soft); stroke-width: 1; }
+.chart .zero { stroke: var(--ink-faint); stroke-width: 1; stroke-dasharray: 4 3; }
+.chart .s-ctx { stroke: var(--accent); fill: none; stroke-width: 2; }
+.chart .s-ctxrv { stroke: var(--accent); fill: none; stroke-width: 2; stroke-dasharray: 5 4; }
+.chart .s-orc { stroke: var(--oracle); fill: none; stroke-width: 2; }
+.chart .s-orcrv { stroke: var(--oracle); fill: none; stroke-width: 2; stroke-dasharray: 5 4; }
+.chart .d-ctx { fill: var(--accent); } .chart .d-orc { fill: var(--oracle); }
+.chart .d-ref { fill: var(--surface); stroke: var(--accent); stroke-width: 2; }
+.chart .lbl-ctx { fill: var(--accent); } .chart .lbl-orc { fill: var(--oracle); }
+math[display="block"].eq { display: block math; text-align: center; }
+li math[display="block"].eq { margin: 12px 0; }
+td.wrap, th.wrap { text-align: left; white-space: normal; min-width: 14rem; }
+tr.neg td { color: var(--warn); }
+ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.tight li { margin-bottom: 0.35em; }
+
+.chart .bar-ctx { fill: var(--accent); } .chart .bar-orc { fill: var(--oracle); }
+.chart .bar-rnd { fill: var(--ink-faint); } .chart .bar-soft { fill: var(--accent-tint); }
+.chart .t-ink { fill: var(--ink); } .chart .t-big { font-size: 13px; }
+.chart .box { fill: var(--surface-sunk); stroke: var(--rule); }
+.chart .box-ctx { fill: var(--accent-wash); stroke: var(--accent); }
+.chart .box-orc { fill: var(--oracle-wash); stroke: var(--oracle); }
+.chart .box-q { fill: none; stroke: var(--ink-faint); stroke-dasharray: 4 3; }
+.chart .arrow { stroke: var(--ink-soft); stroke-width: 1.5; fill: none; }
+.chart .ah { fill: var(--ink-soft); }
+.flow { display: grid; gap: 0; margin: 28px 0; }
+.flow .step { border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); padding: 14px 18px; }
+.flow .step.done { background: var(--surface-sunk); }
+.flow .step.now { border: 2px solid var(--accent); }
+.flow .step h4 { margin: 0 0 6px; font-size: 1rem; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.flow .step p { margin: 0; font-size: 0.92rem; line-height: 1.7; }
+.flow .tag { font-family: var(--f-mono); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; padding: 1px 8px; border-radius: 99px; border: 1px solid currentColor; }
+.flow .tag.done { color: var(--ink-faint); } .flow .tag.now { color: var(--accent); } .flow .tag.next { color: var(--oracle); } .flow .tag.later { color: var(--ink-faint); }
+.flow .down { text-align: center; color: var(--ink-faint); font-size: 1.1rem; line-height: 1; padding: 6px 0; }
+.flow .fork { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 10px; }
+.flow .result { margin-top: 6px; font-size: 0.88rem; color: var(--ink-soft); }
+</style>
+
+<style>
+.chart .s-rnd { stroke: var(--ink-faint); fill: none; stroke-width: 2; }
+.chart .s-ink { stroke: var(--ink); fill: none; stroke-width: 2; }
+.chart .s-faint { stroke: var(--ink-faint); fill: none; stroke-width: 1.5; }
+.chart .band-ctx { fill: var(--accent-wash); stroke: none; }
+.chart .band-orc { fill: var(--oracle-wash); stroke: none; }
+.chart .d-rnd { fill: var(--ink-faint); } .chart .d-ink { fill: var(--ink); }
+.chart .t-small { font-size: 10px; }
+.chart .patch { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 3 3; }
+.algo { background: var(--surface); border: 1px solid var(--rule); border-radius: 4px; padding: 18px 22px 8px; margin: 28px 0; }
+.algo h4 { margin: 0 0 10px; font-size: 0.95rem; }
+.algo ol { margin: 0 0 10px; padding-left: 1.4em; font-size: 0.93rem; line-height: 1.75; }
+.vs { display: grid; grid-template-columns: 9rem 1fr; gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; margin: 24px 0; }
+.vs > div { background: var(--surface); padding: 10px 14px; font-size: 0.88rem; line-height: 1.65; }
+.vs > div.k { font-weight: 700; background: var(--surface-sunk); }
+</style>
+
+</head>
+<body>
+<div class="page">
+
+<header class="masthead">
+  <div class="prose">
+    <p class="kicker"><a href="raf-note.html">RAF 研究ノート</a> · 選び方 · 2026-10-20 · ETTh1 / Chronos-2（凍結） · すべて val</p>
+    <h1>事例の選び方</h1>
+    <p class="standfirst">
+      正しい事例を選べれば，凍結した Chronos-2 の予測は大きく良くなる（K=128 で MSE −9.3%，K=16 なら −13.9%）．
+      しかし<strong>正解を使わない選び方は，どれもランダムとほぼ同じ</strong>だった．
+      理由は，鍵がクエリの文脈から作られていて，モデルの予測がその文脈をすでに使い切っているからである．
+      数値はどれも既定を変える（10-19）前の履歴 2032 点で取った．差は末尾の「実験条件」にまとめた．
+    </p>
+  </div>
+</header>
+
+<!-- ============================== 要約 -->
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">要約</span><h2>分かったこと</h2></div>
+    <ul class="tight">
+      <li><strong>選び方で埋められる余地は大きい．</strong>正しい事例なら少ない件数で効く（1 節）．</li>
+      <li><strong>今の改善の大半は件数と長さから来ていて，選び方によらない（1 節）．</strong></li>
+      <li><strong>正解なしの鍵は，どれもランダムと区別できない．</strong>文脈，予測，活性，逆予測など（2 節）．</li>
+      <li><strong>理由：文脈から作った鍵は，未来−予測と相関しない．</strong>選び方の上乗せは，モデル自身が最良からどれだけずれているかで頭打ちになる（3 節）．</li>
+    </ul>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 210" role="img" aria-label="MSE の改善幅の比較（K=128，事例の文脈 384 点）">
+<line class="grid" x1="230.0" x2="230.0" y1="10" y2="184"/>
+<text x="230.0" y="200" text-anchor="middle">0</text>
+<line class="grid" x1="302.5" x2="302.5" y1="10" y2="184"/>
+<text x="302.5" y="200" text-anchor="middle">3.5 pt</text>
+<line class="grid" x1="375.0" x2="375.0" y1="10" y2="184"/>
+<text x="375.0" y="200" text-anchor="middle">7.0 pt</text>
+<line class="grid" x1="447.5" x2="447.5" y1="10" y2="184"/>
+<text x="447.5" y="200" text-anchor="middle">10.5 pt</text>
+<line class="grid" x1="520.0" x2="520.0" y1="10" y2="184"/>
+<text x="520.0" y="200" text-anchor="middle">14.0 pt</text>
+<text class="t-ink" x="220" y="31" text-anchor="end">参照なし</text>
+<rect class="bar-rnd" x="230" y="17" width="1.5" height="20" rx="2"><title>参照なし：0.0 pt</title></rect>
+<text class="t-ink" x="237.5" y="31">0</text>
+<text class="t-ink" x="220" y="65" text-anchor="end">ランダム（3 seed の平均）</text>
+<rect class="bar-rnd" x="230" y="51" width="85.3" height="20" rx="2"><title>ランダム（3 seed の平均）：4.1 pt</title></rect>
+<text class="t-ink" x="321.3" y="65">−4.1%</text>
+<text class="t-ink" x="220" y="99" text-anchor="end">文脈＝文脈照合</text>
+<rect class="bar-ctx" x="230" y="85" width="100.9" height="20" rx="2"><title>文脈＝文脈照合：4.9 pt</title></rect>
+<text class="t-ink" x="336.9" y="99">−4.9%</text>
+<text class="t-ink" x="220" y="133" text-anchor="end">予測＝予測照合</text>
+<rect class="bar-ctx" x="230" y="119" width="99.4" height="20" rx="2"><title>予測＝予測照合：4.8 pt</title></rect>
+<text class="t-ink" x="335.4" y="133">−4.8%</text>
+<text class="t-ink" x="220" y="167" text-anchor="end">未来＝未来照合（診断）</text>
+<rect class="bar-orc" x="230" y="153" width="193.5" height="20" rx="2"><title>未来＝未来照合（診断）：9.3 pt</title></rect>
+<text class="t-ink" x="429.5" y="167">−9.3%　正解を使う上限</text>
+</svg></div>
+      <div class="plate-cap"><b>参照なしからの MSE の改善幅（val）</b>どれも K=128，事例の文脈 384 点にそろえた（既定と同じ件数と長さ）．2 つの照合はランダムと 1 pt も違わず，正解を使う上限とは 4 pt 以上離れている．件数と長さを選び直すと上限は K=16 で −13.9% まで伸びる（1 節）．予測＝予測照合は scratchpad の別実装（3 節と同じ）．ETTh1 全 7 チャネル，履歴 2032 点，予測 64 点，事例は並列，候補は 11 点おき．参照なしの val MSE は 0.5254．</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 1 -->
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">1</span><h2>件数と長さ</h2></div>
+    <p>
+      並列では事例 1 件が 1 行なので，件数と事例の文脈の長さは自由に選べる（連結では 35 件まで．<a href="how-to-fuse.html">渡し方</a>）．3 つの選び方で両方を変えた．
+      <strong>未来＝未来照合</strong>は未来が正解に近い窓を選ぶ診断である（実際には使えない）．<strong>文脈＝文脈照合</strong>は従来の RAF の検索である．名前は「クエリの側＝データベースの窓の側」で付ける．
+      <strong>ランダム</strong>はチャネルごとに 1 セットを全クエリに渡す．
+    </p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 336" role="img" aria-label="件数 K ごとの MSE の参照なし比">
+<line x1="52" x2="78" y1="18" y2="18" stroke="var(--oracle)" stroke-width="2.5"/>
+<text class="t-ink" x="84" y="22">未来＝未来照合（診断）</text>
+<line x1="232" x2="258" y1="18" y2="18" stroke="var(--accent)" stroke-width="2.5"/>
+<text class="t-ink" x="264" y="22">文脈＝文脈照合</text>
+<line x1="362" x2="388" y1="18" y2="18" stroke="var(--ink-faint)" stroke-width="2.5"/>
+<text class="t-ink" x="394" y="22">ランダム</text>
+<text class="t-ink" x="205.0" y="56" text-anchor="middle">事例の文脈 96 点</text>
+<line class="grid" x1="70" x2="340" y1="268.0" y2="268.0"/>
+<text x="62" y="272.0" text-anchor="end">−12%</text>
+<line class="grid" x1="70" x2="340" y1="232.0" y2="232.0"/>
+<text x="62" y="236.0" text-anchor="end">−8%</text>
+<line class="grid" x1="70" x2="340" y1="196.0" y2="196.0"/>
+<text x="62" y="200.0" text-anchor="end">−4%</text>
+<line class="zero" x1="70" x2="340" y1="160.0" y2="160.0"/>
+<text x="62" y="164.0" text-anchor="end">0</text>
+<line class="grid" x1="70" x2="340" y1="124.0" y2="124.0"/>
+<text x="62" y="128.0" text-anchor="end">+4%</text>
+<line class="grid" x1="70" x2="340" y1="88.0" y2="88.0"/>
+<text x="62" y="92.0" text-anchor="end">+8%</text>
+<text x="78.0" y="304" text-anchor="middle">1</text>
+<text x="109.8" y="304" text-anchor="middle">2</text>
+<text x="141.5" y="304" text-anchor="middle">4</text>
+<text x="173.2" y="304" text-anchor="middle">8</text>
+<text x="205.0" y="304" text-anchor="middle">16</text>
+<text x="236.8" y="304" text-anchor="middle">32</text>
+<text x="268.5" y="304" text-anchor="middle">64</text>
+<text x="300.2" y="304" text-anchor="middle">128</text>
+<text x="332.0" y="304" text-anchor="middle">256</text>
+<text x="205.0" y="324" text-anchor="middle">事例の件数 K</text>
+<polyline points="78.0,193.6 109.8,215.0 141.5,246.7 173.2,259.7 205.0,258.4 236.8,242.6 268.5,233.4 300.2,217.7 332.0,205.5" fill="none" stroke="var(--oracle)" stroke-width="2"/>
+<circle cx="78.0" cy="193.6" r="3.5" fill="var(--oracle)"><title>未来＝未来照合（診断） K=1・96 点：MSE −3.7%</title></circle>
+<circle cx="109.8" cy="215.0" r="3.5" fill="var(--oracle)"><title>未来＝未来照合（診断） K=2・96 点：MSE −6.1%</title></circle>
+<circle cx="141.5" cy="246.7" r="3.5" fill="var(--oracle)"><title>未来＝未来照合（診断） K=4・96 点：MSE −9.6%</title></circle>
+<circle cx="173.2" cy="259.7" r="3.5" fill="var(--oracle)"><title>未来＝未来照合（診断） K=8・96 点：MSE −11.1%</title></circle>
+<circle cx="205.0" cy="258.4" r="3.5" fill="var(--oracle)"><title>未来＝未来照合（診断） K=16・96 点：MSE −10.9%</title></circle>
+<circle cx="236.8" cy="242.6" r="3.5" fill="var(--oracle)"><title>未来＝未来照合（診断） K=32・96 点：MSE −9.2%</title></circle>
+<circle cx="268.5" cy="233.4" r="3.5" fill="var(--oracle)"><title>未来＝未来照合（診断） K=64・96 点：MSE −8.2%</title></circle>
+<circle cx="300.2" cy="217.7" r="3.5" fill="var(--oracle)"><title>未来＝未来照合（診断） K=128・96 点：MSE −6.4%</title></circle>
+<circle cx="332.0" cy="205.5" r="3.5" fill="var(--oracle)"><title>未来＝未来照合（診断） K=256・96 点：MSE −5.1%</title></circle>
+<polyline points="78.0,155.9 109.8,149.9 141.5,155.8 173.2,171.7 205.0,181.5 236.8,183.1 268.5,189.2 300.2,187.3 332.0,185.2" fill="none" stroke="var(--accent)" stroke-width="2"/>
+<circle cx="78.0" cy="155.9" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=1・96 点：MSE +0.5%</title></circle>
+<circle cx="109.8" cy="149.9" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=2・96 点：MSE +1.1%</title></circle>
+<circle cx="141.5" cy="155.8" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=4・96 点：MSE +0.5%</title></circle>
+<circle cx="173.2" cy="171.7" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=8・96 点：MSE −1.3%</title></circle>
+<circle cx="205.0" cy="181.5" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=16・96 点：MSE −2.4%</title></circle>
+<circle cx="236.8" cy="183.1" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=32・96 点：MSE −2.6%</title></circle>
+<circle cx="268.5" cy="189.2" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=64・96 点：MSE −3.2%</title></circle>
+<circle cx="300.2" cy="187.3" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=128・96 点：MSE −3.0%</title></circle>
+<circle cx="332.0" cy="185.2" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=256・96 点：MSE −2.8%</title></circle>
+<polyline points="78.0,167.5 109.8,165.7 141.5,171.1 173.2,171.0 205.0,172.4 236.8,174.4 268.5,176.9 300.2,179.9 332.0,178.6" fill="none" stroke="var(--ink-faint)" stroke-width="2"/>
+<line x1="78.0" x2="78.0" y1="173.1" y2="161.6" stroke="var(--ink-faint)" stroke-width="1.5"/>
+<circle cx="78.0" cy="167.5" r="3.5" fill="var(--ink-faint)"><title>ランダム K=1・96 点：MSE −0.8%，5 seed の平均</title></circle>
+<line x1="109.8" x2="109.8" y1="170.6" y2="159.6" stroke="var(--ink-faint)" stroke-width="1.5"/>
+<circle cx="109.8" cy="165.7" r="3.5" fill="var(--ink-faint)"><title>ランダム K=2・96 点：MSE −0.6%，5 seed の平均</title></circle>
+<line x1="141.5" x2="141.5" y1="176.1" y2="164.7" stroke="var(--ink-faint)" stroke-width="1.5"/>
+<circle cx="141.5" cy="171.1" r="3.5" fill="var(--ink-faint)"><title>ランダム K=4・96 点：MSE −1.2%，5 seed の平均</title></circle>
+<line x1="173.2" x2="173.2" y1="179.6" y2="160.2" stroke="var(--ink-faint)" stroke-width="1.5"/>
+<circle cx="173.2" cy="171.0" r="3.5" fill="var(--ink-faint)"><title>ランダム K=8・96 点：MSE −1.2%，5 seed の平均</title></circle>
+<line x1="205.0" x2="205.0" y1="175.4" y2="168.5" stroke="var(--ink-faint)" stroke-width="1.5"/>
+<circle cx="205.0" cy="172.4" r="3.5" fill="var(--ink-faint)"><title>ランダム K=16・96 点：MSE −1.4%，5 seed の平均</title></circle>
+<line x1="236.8" x2="236.8" y1="182.5" y2="166.5" stroke="var(--ink-faint)" stroke-width="1.5"/>
+<circle cx="236.8" cy="174.4" r="3.5" fill="var(--ink-faint)"><title>ランダム K=32・96 点：MSE −1.6%，25 seed の平均</title></circle>
+<line x1="268.5" x2="268.5" y1="180.1" y2="174.4" stroke="var(--ink-faint)" stroke-width="1.5"/>
+<circle cx="268.5" cy="176.9" r="3.5" fill="var(--ink-faint)"><title>ランダム K=64・96 点：MSE −1.9%，5 seed の平均</title></circle>
+<line x1="300.2" x2="300.2" y1="183.2" y2="178.1" stroke="var(--ink-faint)" stroke-width="1.5"/>
+<circle cx="300.2" cy="179.9" r="3.5" fill="var(--ink-faint)"><title>ランダム K=128・96 点：MSE −2.2%，5 seed の平均</title></circle>
+<line x1="332.0" x2="332.0" y1="180.0" y2="176.1" stroke="var(--ink-faint)" stroke-width="1.5"/>
+<circle cx="332.0" cy="178.6" r="3.5" fill="var(--ink-faint)"><title>ランダム K=256・96 点：MSE −2.1%，5 seed の平均</title></circle>
+<text class="t-ink" x="525.0" y="56" text-anchor="middle">事例の文脈 384 点</text>
+<line class="grid" x1="390" x2="660" y1="268.0" y2="268.0"/>
+<line class="grid" x1="390" x2="660" y1="232.0" y2="232.0"/>
+<line class="grid" x1="390" x2="660" y1="196.0" y2="196.0"/>
+<line class="zero" x1="390" x2="660" y1="160.0" y2="160.0"/>
+<line class="grid" x1="390" x2="660" y1="124.0" y2="124.0"/>
+<line class="grid" x1="390" x2="660" y1="88.0" y2="88.0"/>
+<text x="398.0" y="304" text-anchor="middle">1</text>
+<text x="429.8" y="304" text-anchor="middle">2</text>
+<text x="461.5" y="304" text-anchor="middle">4</text>
+<text x="493.2" y="304" text-anchor="middle">8</text>
+<text x="525.0" y="304" text-anchor="middle">16</text>
+<text x="556.8" y="304" text-anchor="middle">32</text>
+<text x="588.5" y="304" text-anchor="middle">64</text>
+<text x="620.2" y="304" text-anchor="middle">128</text>
+<text x="652.0" y="304" text-anchor="middle">256</text>
+<text x="525.0" y="324" text-anchor="middle">事例の件数 K</text>
+<polyline points="398.0,202.4 429.8,218.2 461.5,238.9 493.2,270.4 525.0,285.5 556.8,271.8 588.5,256.6 620.2,244.1 652.0,228.3" fill="none" stroke="var(--oracle)" stroke-width="2"/>
+<circle cx="398.0" cy="202.4" r="3.5" fill="var(--oracle)"><title>未来＝未来照合（診断） K=1・384 点：MSE −4.7%</title></circle>
+<circle cx="429.8" cy="218.2" r="3.5" fill="var(--oracle)"><title>未来＝未来照合（診断） K=2・384 点：MSE −6.5%</title></circle>
+<circle cx="461.5" cy="238.9" r="3.5" fill="var(--oracle)"><title>未来＝未来照合（診断） K=4・384 点：MSE −8.8%</title></circle>
+<circle cx="493.2" cy="270.4" r="3.5" fill="var(--oracle)"><title>未来＝未来照合（診断） K=8・384 点：MSE −12.3%</title></circle>
+<circle cx="525.0" cy="285.5" r="3.5" fill="var(--oracle)"><title>未来＝未来照合（診断） K=16・384 点：MSE −13.9%</title></circle>
+<circle cx="556.8" cy="271.8" r="3.5" fill="var(--oracle)"><title>未来＝未来照合（診断） K=32・384 点：MSE −12.4%</title></circle>
+<circle cx="588.5" cy="256.6" r="3.5" fill="var(--oracle)"><title>未来＝未来照合（診断） K=64・384 点：MSE −10.7%</title></circle>
+<circle cx="620.2" cy="244.1" r="3.5" fill="var(--oracle)"><title>未来＝未来照合（診断） K=128・384 点：MSE −9.3%</title></circle>
+<circle cx="652.0" cy="228.3" r="3.5" fill="var(--oracle)"><title>未来＝未来照合（診断） K=256・384 点：MSE −7.6%</title></circle>
+<polyline points="398.0,146.9 429.8,129.8 461.5,118.9 493.2,116.3 525.0,130.1 556.8,163.9 588.5,188.2 620.2,203.8 652.0,206.7" fill="none" stroke="var(--accent)" stroke-width="2"/>
+<circle cx="398.0" cy="146.9" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=1・384 点：MSE +1.5%</title></circle>
+<circle cx="429.8" cy="129.8" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=2・384 点：MSE +3.4%</title></circle>
+<circle cx="461.5" cy="118.9" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=4・384 点：MSE +4.6%</title></circle>
+<circle cx="493.2" cy="116.3" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=8・384 点：MSE +4.9%</title></circle>
+<circle cx="525.0" cy="130.1" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=16・384 点：MSE +3.3%</title></circle>
+<circle cx="556.8" cy="163.9" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=32・384 点：MSE −0.4%</title></circle>
+<circle cx="588.5" cy="188.2" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=64・384 点：MSE −3.1%</title></circle>
+<circle cx="620.2" cy="203.8" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=128・384 点：MSE −4.9%</title></circle>
+<circle cx="652.0" cy="206.7" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=256・384 点：MSE −5.2%</title></circle>
+<polyline points="398.0,178.3 429.8,169.4 461.5,170.3 493.2,151.9 525.0,172.3 556.8,189.0 588.5,187.0 620.2,197.1 652.0,197.6" fill="none" stroke="var(--ink-faint)" stroke-width="2"/>
+<line x1="398.0" x2="398.0" y1="187.0" y2="167.6" stroke="var(--ink-faint)" stroke-width="1.5"/>
+<circle cx="398.0" cy="178.3" r="3.5" fill="var(--ink-faint)"><title>ランダム K=1・384 点：MSE −2.0%，3 seed の平均</title></circle>
+<line x1="429.8" x2="429.8" y1="176.7" y2="165.7" stroke="var(--ink-faint)" stroke-width="1.5"/>
+<circle cx="429.8" cy="169.4" r="3.5" fill="var(--ink-faint)"><title>ランダム K=2・384 点：MSE −1.0%，3 seed の平均</title></circle>
+<line x1="461.5" x2="461.5" y1="178.9" y2="156.3" stroke="var(--ink-faint)" stroke-width="1.5"/>
+<circle cx="461.5" cy="170.3" r="3.5" fill="var(--ink-faint)"><title>ランダム K=4・384 点：MSE −1.1%，3 seed の平均</title></circle>
+<line x1="493.2" x2="493.2" y1="152.2" y2="151.7" stroke="var(--ink-faint)" stroke-width="1.5"/>
+<circle cx="493.2" cy="151.9" r="3.5" fill="var(--ink-faint)"><title>ランダム K=8・384 点：MSE +0.9%，3 seed の平均</title></circle>
+<line x1="525.0" x2="525.0" y1="182.4" y2="156.4" stroke="var(--ink-faint)" stroke-width="1.5"/>
+<circle cx="525.0" cy="172.3" r="3.5" fill="var(--ink-faint)"><title>ランダム K=16・384 点：MSE −1.4%，3 seed の平均</title></circle>
+<line x1="556.8" x2="556.8" y1="192.9" y2="186.4" stroke="var(--ink-faint)" stroke-width="1.5"/>
+<circle cx="556.8" cy="189.0" r="3.5" fill="var(--ink-faint)"><title>ランダム K=32・384 点：MSE −3.2%，3 seed の平均</title></circle>
+<line x1="588.5" x2="588.5" y1="192.5" y2="183.5" stroke="var(--ink-faint)" stroke-width="1.5"/>
+<circle cx="588.5" cy="187.0" r="3.5" fill="var(--ink-faint)"><title>ランダム K=64・384 点：MSE −3.0%，3 seed の平均</title></circle>
+<line x1="620.2" x2="620.2" y1="201.5" y2="194.5" stroke="var(--ink-faint)" stroke-width="1.5"/>
+<circle cx="620.2" cy="197.1" r="3.5" fill="var(--ink-faint)"><title>ランダム K=128・384 点：MSE −4.1%，3 seed の平均</title></circle>
+<line x1="652.0" x2="652.0" y1="200.9" y2="195.1" stroke="var(--ink-faint)" stroke-width="1.5"/>
+<circle cx="652.0" cy="197.6" r="3.5" fill="var(--ink-faint)"><title>ランダム K=256・384 点：MSE −4.2%，3 seed の平均</title></circle>
+</svg></div>
+      <div class="plate-cap"><b>件数 K と MSE の参照なし比（val）</b>点にカーソルを合わせると値が出る．ランダムは seed の平均で，ひげは seed の範囲（seed 数は 96 点が 5 個（K=32 だけ 25 個），384 点が 3 個で，値と一緒に出る）．test（K=8，96 点）でも同じ傾向で，未来＝未来照合 −18.7%，文脈＝文脈照合 −4.5%．</div>
+    </div>
+    <div class="plate">
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 336" role="img" aria-label="事例の文脈の長さごとの MSE の参照なし比">
+<line x1="52" x2="78" y1="18" y2="18" stroke="var(--oracle)" stroke-width="2.5"/>
+<text class="t-ink" x="84" y="22">未来＝未来照合（診断）</text>
+<line x1="232" x2="258" y1="18" y2="18" stroke="var(--accent)" stroke-width="2.5"/>
+<text class="t-ink" x="264" y="22">文脈＝文脈照合</text>
+<line x1="362" x2="388" y1="18" y2="18" stroke="var(--ink-faint)" stroke-width="2.5"/>
+<text class="t-ink" x="394" y="22">ランダム</text>
+<text class="t-ink" x="205.0" y="56" text-anchor="middle">K=8</text>
+<line class="grid" x1="70" x2="340" y1="268.0" y2="268.0"/>
+<text x="62" y="272.0" text-anchor="end">−12%</text>
+<line class="grid" x1="70" x2="340" y1="232.0" y2="232.0"/>
+<text x="62" y="236.0" text-anchor="end">−8%</text>
+<line class="grid" x1="70" x2="340" y1="196.0" y2="196.0"/>
+<text x="62" y="200.0" text-anchor="end">−4%</text>
+<line class="zero" x1="70" x2="340" y1="160.0" y2="160.0"/>
+<text x="62" y="164.0" text-anchor="end">0</text>
+<line class="grid" x1="70" x2="340" y1="124.0" y2="124.0"/>
+<text x="62" y="128.0" text-anchor="end">+4%</text>
+<line class="grid" x1="70" x2="340" y1="88.0" y2="88.0"/>
+<text x="62" y="92.0" text-anchor="end">+8%</text>
+<text x="78.0" y="304" text-anchor="middle">96</text>
+<text x="141.5" y="304" text-anchor="middle">192</text>
+<text x="205.0" y="304" text-anchor="middle">384</text>
+<text x="268.5" y="304" text-anchor="middle">768</text>
+<text x="332.0" y="304" text-anchor="middle">1536</text>
+<text x="205.0" y="324" text-anchor="middle">事例の文脈の長さ（点）</text>
+<polyline points="78.0,259.7 141.5,267.6 205.0,270.4 268.5,262.0 332.0,200.8" fill="none" stroke="var(--oracle)" stroke-width="2"/>
+<circle cx="78.0" cy="259.7" r="3.5" fill="var(--oracle)"><title>未来＝未来照合（診断） K=8・96 点：MSE −11.1%</title></circle>
+<circle cx="141.5" cy="267.6" r="3.5" fill="var(--oracle)"><title>未来＝未来照合（診断） K=8・192 点：MSE −12.0%</title></circle>
+<circle cx="205.0" cy="270.4" r="3.5" fill="var(--oracle)"><title>未来＝未来照合（診断） K=8・384 点：MSE −12.3%</title></circle>
+<circle cx="268.5" cy="262.0" r="3.5" fill="var(--oracle)"><title>未来＝未来照合（診断） K=8・768 点：MSE −11.3%</title></circle>
+<circle cx="332.0" cy="200.8" r="3.5" fill="var(--oracle)"><title>未来＝未来照合（診断） K=8・1536 点：MSE −4.5%</title></circle>
+<polyline points="78.0,171.7 141.5,161.8 205.0,116.3 268.5,78.3 332.0,83.6" fill="none" stroke="var(--accent)" stroke-width="2"/>
+<circle cx="78.0" cy="171.7" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=8・96 点：MSE −1.3%</title></circle>
+<circle cx="141.5" cy="161.8" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=8・192 点：MSE −0.2%</title></circle>
+<circle cx="205.0" cy="116.3" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=8・384 点：MSE +4.9%</title></circle>
+<circle cx="268.5" cy="78.3" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=8・768 点：MSE +9.1%</title></circle>
+<circle cx="332.0" cy="83.6" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=8・1536 点：MSE +8.5%</title></circle>
+<polyline points="78.0,171.0 141.5,159.0 205.0,151.9 268.5,162.6 332.0,118.5" fill="none" stroke="var(--ink-faint)" stroke-width="2"/>
+<line x1="78.0" x2="78.0" y1="179.6" y2="160.2" stroke="var(--ink-faint)" stroke-width="1.5"/>
+<circle cx="78.0" cy="171.0" r="3.5" fill="var(--ink-faint)"><title>ランダム K=8・96 点：MSE −1.2%，5 seed の平均</title></circle>
+<line x1="141.5" x2="141.5" y1="163.3" y2="154.6" stroke="var(--ink-faint)" stroke-width="1.5"/>
+<circle cx="141.5" cy="159.0" r="3.5" fill="var(--ink-faint)"><title>ランダム K=8・192 点：MSE +0.1%，3 seed の平均</title></circle>
+<line x1="205.0" x2="205.0" y1="152.2" y2="151.7" stroke="var(--ink-faint)" stroke-width="1.5"/>
+<circle cx="205.0" cy="151.9" r="3.5" fill="var(--ink-faint)"><title>ランダム K=8・384 点：MSE +0.9%，3 seed の平均</title></circle>
+<line x1="268.5" x2="268.5" y1="166.4" y2="159.3" stroke="var(--ink-faint)" stroke-width="1.5"/>
+<circle cx="268.5" cy="162.6" r="3.5" fill="var(--ink-faint)"><title>ランダム K=8・768 点：MSE −0.3%，3 seed の平均</title></circle>
+<line x1="332.0" x2="332.0" y1="127.4" y2="102.7" stroke="var(--ink-faint)" stroke-width="1.5"/>
+<circle cx="332.0" cy="118.5" r="3.5" fill="var(--ink-faint)"><title>ランダム K=8・1536 点：MSE +4.6%，3 seed の平均</title></circle>
+<text class="t-ink" x="525.0" y="56" text-anchor="middle">K=128</text>
+<line class="grid" x1="390" x2="660" y1="268.0" y2="268.0"/>
+<line class="grid" x1="390" x2="660" y1="232.0" y2="232.0"/>
+<line class="grid" x1="390" x2="660" y1="196.0" y2="196.0"/>
+<line class="zero" x1="390" x2="660" y1="160.0" y2="160.0"/>
+<line class="grid" x1="390" x2="660" y1="124.0" y2="124.0"/>
+<line class="grid" x1="390" x2="660" y1="88.0" y2="88.0"/>
+<text x="398.0" y="304" text-anchor="middle">96</text>
+<text x="461.5" y="304" text-anchor="middle">192</text>
+<text x="525.0" y="304" text-anchor="middle">384</text>
+<text x="588.5" y="304" text-anchor="middle">768</text>
+<text x="652.0" y="304" text-anchor="middle">1536</text>
+<text x="525.0" y="324" text-anchor="middle">事例の文脈の長さ（点）</text>
+<polyline points="398.0,217.7 461.5,227.1 525.0,244.1 588.5,245.0 652.0,220.5" fill="none" stroke="var(--oracle)" stroke-width="2"/>
+<circle cx="398.0" cy="217.7" r="3.5" fill="var(--oracle)"><title>未来＝未来照合（診断） K=128・96 点：MSE −6.4%</title></circle>
+<circle cx="461.5" cy="227.1" r="3.5" fill="var(--oracle)"><title>未来＝未来照合（診断） K=128・192 点：MSE −7.5%</title></circle>
+<circle cx="525.0" cy="244.1" r="3.5" fill="var(--oracle)"><title>未来＝未来照合（診断） K=128・384 点：MSE −9.3%</title></circle>
+<circle cx="588.5" cy="245.0" r="3.5" fill="var(--oracle)"><title>未来＝未来照合（診断） K=128・768 点：MSE −9.4%</title></circle>
+<circle cx="652.0" cy="220.5" r="3.5" fill="var(--oracle)"><title>未来＝未来照合（診断） K=128・1536 点：MSE −6.7%</title></circle>
+<polyline points="398.0,187.3 461.5,193.7 525.0,203.8 588.5,189.3 652.0,174.1" fill="none" stroke="var(--accent)" stroke-width="2"/>
+<circle cx="398.0" cy="187.3" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=128・96 点：MSE −3.0%</title></circle>
+<circle cx="461.5" cy="193.7" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=128・192 点：MSE −3.7%</title></circle>
+<circle cx="525.0" cy="203.8" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=128・384 点：MSE −4.9%</title></circle>
+<circle cx="588.5" cy="189.3" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=128・768 点：MSE −3.3%</title></circle>
+<circle cx="652.0" cy="174.1" r="3.5" fill="var(--accent)"><title>文脈＝文脈照合 K=128・1536 点：MSE −1.6%</title></circle>
+<polyline points="398.0,179.9 461.5,184.3 525.0,197.1 588.5,181.8 652.0,173.6" fill="none" stroke="var(--ink-faint)" stroke-width="2"/>
+<line x1="398.0" x2="398.0" y1="183.2" y2="178.1" stroke="var(--ink-faint)" stroke-width="1.5"/>
+<circle cx="398.0" cy="179.9" r="3.5" fill="var(--ink-faint)"><title>ランダム K=128・96 点：MSE −2.2%，5 seed の平均</title></circle>
+<line x1="461.5" x2="461.5" y1="186.9" y2="182.0" stroke="var(--ink-faint)" stroke-width="1.5"/>
+<circle cx="461.5" cy="184.3" r="3.5" fill="var(--ink-faint)"><title>ランダム K=128・192 点：MSE −2.7%，3 seed の平均</title></circle>
+<line x1="525.0" x2="525.0" y1="201.5" y2="194.5" stroke="var(--ink-faint)" stroke-width="1.5"/>
+<circle cx="525.0" cy="197.1" r="3.5" fill="var(--ink-faint)"><title>ランダム K=128・384 点：MSE −4.1%，3 seed の平均</title></circle>
+<line x1="588.5" x2="588.5" y1="194.8" y2="173.2" stroke="var(--ink-faint)" stroke-width="1.5"/>
+<circle cx="588.5" cy="181.8" r="3.5" fill="var(--ink-faint)"><title>ランダム K=128・768 点：MSE −2.4%，3 seed の平均</title></circle>
+<line x1="652.0" x2="652.0" y1="177.6" y2="165.9" stroke="var(--ink-faint)" stroke-width="1.5"/>
+<circle cx="652.0" cy="173.6" r="3.5" fill="var(--ink-faint)"><title>ランダム K=128・1536 点：MSE −1.5%，3 seed の平均</title></circle>
+</svg></div>
+      <div class="plate-cap"><b>事例の文脈の長さと MSE の参照なし比（val）</b>ランダムの seed は 96 点が 5 個，それ以外は 3 個．seed だけで値が動く（K=128・384 点では −4.6%，−3.9%，−3.8% で 0.8 pt）．文脈＝文脈照合とランダムの MAE は，どの件数と長さでも参照なしより悪い．K と長さは val で選んだので，test での確認が要る．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <h3>分かったこと</h3>
+    <ul class="tight">
+      <li><strong>選び方で埋められる余地は大きい．</strong>読み手は正しい事例なら少ない件数で使いこなし，件数を増やすと合わない事例で薄まる．</li>
+      <li><strong>文脈が長いほど，モデルは事例を強く信じる．</strong>件数が少ないと合わない事例の害が大きく，文脈＝文脈照合はランダムより悪くなる．文脈が似た窓ほど違う未来を強く信じ込ませるからで，「文脈が似ていても未来は似ない」の直接の証拠である．</li>
+      <li><strong>件数を増やすと害が薄まり，長い文脈が生きる．</strong>ただしランダムでもほぼ同じだけ効くので，効いているのは選び方ではなく件数と長さである．</li>
+      <li><strong>長すぎる文脈は，正しい事例でも効き目を落とす．</strong></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================== 2 -->
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">2</span><h2>正解なしで選べるか</h2></div>
+    <p>
+      事例を入れた予測と参照なしの予測の差を <math><mi>d</mi></math>，未来−予測を <math><mi>r</mi></math> とする．
+      <strong>動いた量</strong> <math><mi>m</mi><mo>=</mo><mo>‖</mo><mi>d</mi><mo>‖</mo><mo>/</mo><mo>‖</mo><mi>r</mi><mo>‖</mo></math> と<strong>向きの一致</strong> <math><mi>cos</mi><mo>&#x2061;</mo><mi>θ</mi></math>（<math><mi>d</mi></math> と <math><mi>r</mi></math> の cos）で，MSE の変化が決まる．
+    </p>
+    <math display="block" class="eq"><mfrac><msup><mrow><mo>‖</mo><mi>r</mi><mo>−</mo><mi>d</mi><mo>‖</mo></mrow><mn>2</mn></msup><msup><mrow><mo>‖</mo><mi>r</mi><mo>‖</mo></mrow><mn>2</mn></msup></mfrac><mo>=</mo><mn>1</mn><mo>−</mo><mn>2</mn><mi>m</mi><mspace width="0.17em"/><mi>cos</mi><mo>&#x2061;</mo><mi>θ</mi><mo>+</mo><msup><mi>m</mi><mn>2</mn></msup></math>
+    <p>
+      <math><mi>m</mi></math> はどの選び方でも 0.2 前後なので，正解を見ずに <math><mi>r</mi></math> の向きへ動かす窓を選べるかが問題になる．
+      新しい鍵の代表は<strong>予測＝予測照合</strong>で，クエリの予測と，窓の履歴から出した予測が近い窓を選ぶ（気象の analog ensemble と同じ考え方）．
+    </p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body"><div class="legend">
+          <span><span class="swatch" style="background:var(--ink-faint);height:2px"></span>実際の値</span>
+          <span><svg width="22" height="8" style="vertical-align:middle"><line x1="0" x2="22" y1="4" y2="4" stroke="var(--ink-faint)" stroke-width="2" stroke-dasharray="5 3"/></svg>参照なしの予測（その系列の履歴から出す）</span>
+          <span><span class="swatch" style="background:var(--oracle);height:4px"></span>比べるもの</span>
+        </div>
+<svg class="diagram chart" viewBox="0 0 680 744" role="img" aria-label="選び方ごとに，候補の窓とクエリの何を比べるか">
+<text class="t-ink t-big" x="505.0" y="18" text-anchor="middle">データベースの窓（train なので未来も分かる）</text>
+<text class="t-ink t-big" x="165.0" y="18" text-anchor="middle">クエリ（未来は分からない）</text>
+<text x="20" y="50"><tspan class="t-ink t-big" font-weight="600">文脈＝文脈照合</tspan><tspan dx="10">履歴が似た窓を選ぶ</tspan></text>
+<rect x="20" y="62" width="182.4" height="64" fill="var(--oracle-wash)"/>
+<rect x="20" y="62" width="290" height="64" fill="none" stroke="var(--rule)"/>
+<line x1="202.4" x2="202.4" y1="62" y2="126" stroke="var(--rule)" stroke-dasharray="2 2"/>
+<polyline points="20.0,72.9 24.7,73.1 29.4,75.1 34.0,78.5 38.7,83.1 43.4,88.4 48.1,93.5 52.7,98.1 57.4,101.5 62.1,103.6 66.8,104.5 71.5,104.5 76.1,104.1 80.8,103.9 85.5,104.2 90.2,105.3 94.8,107.2 99.5,109.7 104.2,112.3 108.9,114.5 113.5,115.7 118.2,115.4 122.9,113.5 127.6,110.1 132.3,105.4 136.9,100.1 141.6,94.7 146.3,90.0 151.0,86.4 155.6,84.2 160.3,83.2 165.0,83.2 169.7,83.8 174.4,84.3 179.0,84.4 183.7,83.7 188.4,82.1 193.1,80.0 197.7,77.7 202.4,75.7" fill="none" stroke="var(--oracle)" stroke-width="2.6"/>
+<polyline points="202.4,75.7 207.1,74.6 211.8,74.9 216.5,76.8 221.1,80.3 225.8,85.0 230.5,90.4 235.2,95.8 239.8,100.6 244.5,104.4 249.2,106.8 253.9,107.8 258.5,107.8 263.2,107.1 267.9,106.2 272.6,105.8 277.3,106.1 281.9,107.2 286.6,109.0 291.3,111.0 296.0,112.8 300.6,113.7 305.3,113.4 310.0,111.5" fill="none" stroke="var(--ink-faint)" stroke-width="1.4" opacity="0.45"/>
+<polyline points="202.4,75.7 207.1,74.3 211.8,74.2 216.5,75.6 221.1,78.4 225.8,82.5 230.5,87.3 235.2,92.0 239.8,96.1 244.5,99.2 249.2,100.8 253.9,101.0 258.5,100.2 263.2,98.6 267.9,96.9 272.6,95.6 277.3,95.0 281.9,95.2 286.6,96.1 291.3,97.2 296.0,98.0 300.6,98.0 305.3,96.6 310.0,93.8" fill="none" stroke="var(--ink-faint)" stroke-width="1.4" stroke-dasharray="5 3"/>
+<rect x="360" y="62" width="182.4" height="64" fill="var(--oracle-wash)"/>
+<rect x="360" y="62" width="290" height="64" fill="none" stroke="var(--rule)"/>
+<line x1="542.4" x2="542.4" y1="62" y2="126" stroke="var(--rule)" stroke-dasharray="2 2"/>
+<polyline points="360.0,86.6 364.7,80.9 369.4,76.4 374.0,73.7 378.7,73.1 383.4,74.1 388.1,76.0 392.7,77.9 397.4,79.0 402.1,79.3 406.8,79.0 411.5,78.7 416.1,79.4 420.8,81.5 425.5,85.5 430.2,91.0 434.8,97.3 439.5,103.2 444.2,108.0 448.9,111.1 453.5,112.3 458.2,112.1 462.9,111.3 467.6,110.8 472.3,111.0 476.9,112.1 481.6,113.6 486.3,114.8 491.0,114.9 495.6,113.1 500.3,109.3 505.0,104.0 509.7,97.8 514.4,92.0 519.0,87.2 523.7,84.1 528.4,82.5 533.1,82.0 537.7,81.8 542.4,81.1" fill="none" stroke="var(--oracle)" stroke-width="2.6"/>
+<polyline points="542.4,81.1 547.1,79.5 551.8,77.1 556.5,74.3 561.1,72.1 565.8,71.2 570.5,72.4 575.2,75.7 579.8,80.6 584.5,86.2 589.2,91.6 593.9,96.0 598.5,98.9 603.2,100.5 607.9,101.4 612.6,102.4 617.3,104.2 621.9,107.0 626.6,110.8 631.3,114.7 636.0,117.9 640.6,119.6 645.3,119.2 650.0,116.6" fill="none" stroke="var(--ink-faint)" stroke-width="1.4"/>
+<polyline points="542.4,81.1 547.1,79.2 551.8,76.2 556.5,72.8 561.1,69.9 565.8,68.4 570.5,68.8 575.2,71.3 579.8,75.3 584.5,80.1 589.2,84.6 593.9,88.0 598.5,90.0 603.2,90.6 607.9,90.5 612.6,90.5 617.3,91.3 621.9,93.0 626.6,95.7 631.3,98.5 636.0,100.7 640.6,101.2 645.3,99.6 650.0,95.9" fill="none" stroke="var(--ink-faint)" stroke-width="1.4" stroke-dasharray="5 3"/>
+<path class="arrow" d="M322 94.0 L348 94.0"/>
+<path class="ah" d="M323 90.0 L316 94.0 L323 98.0 Z"/><path class="ah" d="M347 90.0 L354 94.0 L347 98.0 Z"/>
+<text x="335.0" y="87.0" text-anchor="middle">比べる</text>
+<text x="20" y="162"><tspan class="t-ink t-big" font-weight="600">予測＝未来照合</tspan><tspan dx="10">未来がクエリの予測に近い窓を選ぶ</tspan></text>
+<rect x="202.4" y="174" width="107.6" height="64" fill="var(--oracle-wash)"/>
+<rect x="20" y="174" width="290" height="64" fill="none" stroke="var(--rule)"/>
+<line x1="202.4" x2="202.4" y1="174" y2="238" stroke="var(--rule)" stroke-dasharray="2 2"/>
+<polyline points="20.0,184.9 24.7,185.1 29.4,187.1 34.0,190.5 38.7,195.1 43.4,200.4 48.1,205.5 52.7,210.1 57.4,213.5 62.1,215.6 66.8,216.5 71.5,216.5 76.1,216.1 80.8,215.9 85.5,216.2 90.2,217.3 94.8,219.2 99.5,221.7 104.2,224.3 108.9,226.5 113.5,227.7 118.2,227.4 122.9,225.5 127.6,222.1 132.3,217.4 136.9,212.1 141.6,206.7 146.3,202.0 151.0,198.4 155.6,196.2 160.3,195.2 165.0,195.2 169.7,195.8 174.4,196.3 179.0,196.4 183.7,195.7 188.4,194.1 193.1,192.0 197.7,189.7 202.4,187.7" fill="none" stroke="var(--ink-faint)" stroke-width="1.4"/>
+<polyline points="202.4,187.7 207.1,186.6 211.8,186.9 216.5,188.8 221.1,192.3 225.8,197.0 230.5,202.4 235.2,207.8 239.8,212.6 244.5,216.4 249.2,218.8 253.9,219.8 258.5,219.8 263.2,219.1 267.9,218.2 272.6,217.8 277.3,218.1 281.9,219.2 286.6,221.0 291.3,223.0 296.0,224.8 300.6,225.7 305.3,225.4 310.0,223.5" fill="none" stroke="var(--ink-faint)" stroke-width="1.4" opacity="0.45"/>
+<polyline points="202.4,187.7 207.1,186.3 211.8,186.2 216.5,187.6 221.1,190.4 225.8,194.5 230.5,199.3 235.2,204.0 239.8,208.1 244.5,211.2 249.2,212.8 253.9,213.0 258.5,212.2 263.2,210.6 267.9,208.9 272.6,207.6 277.3,207.0 281.9,207.2 286.6,208.1 291.3,209.2 296.0,210.0 300.6,210.0 305.3,208.6 310.0,205.8" fill="none" stroke="var(--oracle)" stroke-width="2.6" stroke-dasharray="5 3"/>
+<rect x="542.4" y="174" width="107.6" height="64" fill="var(--oracle-wash)"/>
+<rect x="360" y="174" width="290" height="64" fill="none" stroke="var(--rule)"/>
+<line x1="542.4" x2="542.4" y1="174" y2="238" stroke="var(--rule)" stroke-dasharray="2 2"/>
+<polyline points="360.0,198.6 364.7,192.9 369.4,188.4 374.0,185.7 378.7,185.1 383.4,186.1 388.1,188.0 392.7,189.9 397.4,191.0 402.1,191.3 406.8,191.0 411.5,190.7 416.1,191.4 420.8,193.5 425.5,197.5 430.2,203.0 434.8,209.3 439.5,215.2 444.2,220.0 448.9,223.1 453.5,224.3 458.2,224.1 462.9,223.3 467.6,222.8 472.3,223.0 476.9,224.1 481.6,225.6 486.3,226.8 491.0,226.9 495.6,225.1 500.3,221.3 505.0,216.0 509.7,209.8 514.4,204.0 519.0,199.2 523.7,196.1 528.4,194.5 533.1,194.0 537.7,193.8 542.4,193.1" fill="none" stroke="var(--ink-faint)" stroke-width="1.4"/>
+<polyline points="542.4,193.1 547.1,191.5 551.8,189.1 556.5,186.3 561.1,184.1 565.8,183.2 570.5,184.4 575.2,187.7 579.8,192.6 584.5,198.2 589.2,203.6 593.9,208.0 598.5,210.9 603.2,212.5 607.9,213.4 612.6,214.4 617.3,216.2 621.9,219.0 626.6,222.8 631.3,226.7 636.0,229.9 640.6,231.6 645.3,231.2 650.0,228.6" fill="none" stroke="var(--oracle)" stroke-width="2.6"/>
+<polyline points="542.4,193.1 547.1,191.2 551.8,188.2 556.5,184.8 561.1,181.9 565.8,180.4 570.5,180.8 575.2,183.3 579.8,187.3 584.5,192.1 589.2,196.6 593.9,200.0 598.5,202.0 603.2,202.6 607.9,202.5 612.6,202.5 617.3,203.3 621.9,205.0 626.6,207.7 631.3,210.5 636.0,212.7 640.6,213.2 645.3,211.6 650.0,207.9" fill="none" stroke="var(--ink-faint)" stroke-width="1.4" stroke-dasharray="5 3"/>
+<path class="arrow" d="M322 206.0 L348 206.0"/>
+<path class="ah" d="M323 202.0 L316 206.0 L323 210.0 Z"/><path class="ah" d="M347 202.0 L354 206.0 L347 210.0 Z"/>
+<text x="335.0" y="199.0" text-anchor="middle">比べる</text>
+<text x="20" y="274"><tspan class="t-ink t-big" font-weight="600">予測＝予測照合</tspan><tspan dx="10">モデルがクエリと似た予測をした窓を選ぶ</tspan></text>
+<rect x="202.4" y="286" width="107.6" height="64" fill="var(--oracle-wash)"/>
+<rect x="20" y="286" width="290" height="64" fill="none" stroke="var(--rule)"/>
+<line x1="202.4" x2="202.4" y1="286" y2="350" stroke="var(--rule)" stroke-dasharray="2 2"/>
+<polyline points="20.0,296.9 24.7,297.1 29.4,299.1 34.0,302.5 38.7,307.1 43.4,312.4 48.1,317.5 52.7,322.1 57.4,325.5 62.1,327.6 66.8,328.5 71.5,328.5 76.1,328.1 80.8,327.9 85.5,328.2 90.2,329.3 94.8,331.2 99.5,333.7 104.2,336.3 108.9,338.5 113.5,339.7 118.2,339.4 122.9,337.5 127.6,334.1 132.3,329.4 136.9,324.1 141.6,318.7 146.3,314.0 151.0,310.4 155.6,308.2 160.3,307.2 165.0,307.2 169.7,307.8 174.4,308.3 179.0,308.4 183.7,307.7 188.4,306.1 193.1,304.0 197.7,301.7 202.4,299.7" fill="none" stroke="var(--ink-faint)" stroke-width="1.4"/>
+<polyline points="202.4,299.7 207.1,298.6 211.8,298.9 216.5,300.8 221.1,304.3 225.8,309.0 230.5,314.4 235.2,319.8 239.8,324.6 244.5,328.4 249.2,330.8 253.9,331.8 258.5,331.8 263.2,331.1 267.9,330.2 272.6,329.8 277.3,330.1 281.9,331.2 286.6,333.0 291.3,335.0 296.0,336.8 300.6,337.7 305.3,337.4 310.0,335.5" fill="none" stroke="var(--ink-faint)" stroke-width="1.4" opacity="0.45"/>
+<polyline points="202.4,299.7 207.1,298.3 211.8,298.2 216.5,299.6 221.1,302.4 225.8,306.5 230.5,311.3 235.2,316.0 239.8,320.1 244.5,323.2 249.2,324.8 253.9,325.0 258.5,324.2 263.2,322.6 267.9,320.9 272.6,319.6 277.3,319.0 281.9,319.2 286.6,320.1 291.3,321.2 296.0,322.0 300.6,322.0 305.3,320.6 310.0,317.8" fill="none" stroke="var(--oracle)" stroke-width="2.6" stroke-dasharray="5 3"/>
+<rect x="542.4" y="286" width="107.6" height="64" fill="var(--oracle-wash)"/>
+<rect x="360" y="286" width="290" height="64" fill="none" stroke="var(--rule)"/>
+<line x1="542.4" x2="542.4" y1="286" y2="350" stroke="var(--rule)" stroke-dasharray="2 2"/>
+<polyline points="360.0,310.6 364.7,304.9 369.4,300.4 374.0,297.7 378.7,297.1 383.4,298.1 388.1,300.0 392.7,301.9 397.4,303.0 402.1,303.3 406.8,303.0 411.5,302.7 416.1,303.4 420.8,305.5 425.5,309.5 430.2,315.0 434.8,321.3 439.5,327.2 444.2,332.0 448.9,335.1 453.5,336.3 458.2,336.1 462.9,335.3 467.6,334.8 472.3,335.0 476.9,336.1 481.6,337.6 486.3,338.8 491.0,338.9 495.6,337.1 500.3,333.3 505.0,328.0 509.7,321.8 514.4,316.0 519.0,311.2 523.7,308.1 528.4,306.5 533.1,306.0 537.7,305.8 542.4,305.1" fill="none" stroke="var(--ink-faint)" stroke-width="1.4"/>
+<polyline points="542.4,305.1 547.1,303.5 551.8,301.1 556.5,298.3 561.1,296.1 565.8,295.2 570.5,296.4 575.2,299.7 579.8,304.6 584.5,310.2 589.2,315.6 593.9,320.0 598.5,322.9 603.2,324.5 607.9,325.4 612.6,326.4 617.3,328.2 621.9,331.0 626.6,334.8 631.3,338.7 636.0,341.9 640.6,343.6 645.3,343.2 650.0,340.6" fill="none" stroke="var(--ink-faint)" stroke-width="1.4"/>
+<polyline points="542.4,305.1 547.1,303.2 551.8,300.2 556.5,296.8 561.1,293.9 565.8,292.4 570.5,292.8 575.2,295.3 579.8,299.3 584.5,304.1 589.2,308.6 593.9,312.0 598.5,314.0 603.2,314.6 607.9,314.5 612.6,314.5 617.3,315.3 621.9,317.0 626.6,319.7 631.3,322.5 636.0,324.7 640.6,325.2 645.3,323.6 650.0,319.9" fill="none" stroke="var(--oracle)" stroke-width="2.6" stroke-dasharray="5 3"/>
+<path d="M633.0 324.7 L636.0 324.7 L636.0 341.9 L633.0 341.9" fill="none" stroke="var(--ink)" stroke-width="1.2"/>
+<text x="650" y="364" text-anchor="end" style="fill:var(--ink);font-size:11px">実線と点線の差（白い印）が，この窓の未来−予測</text>
+<path class="arrow" d="M322 318.0 L348 318.0"/>
+<path class="ah" d="M323 314.0 L316 318.0 L323 322.0 Z"/><path class="ah" d="M347 314.0 L354 318.0 L347 322.0 Z"/>
+<text x="335.0" y="311.0" text-anchor="middle">比べる</text>
+<text x="20" y="386"><tspan class="t-ink t-big" font-weight="600">未来＝未来照合</tspan><tspan dx="10">未来がクエリの正解に近い窓を選ぶ（正解を使う診断）</tspan></text>
+<rect x="202.4" y="398" width="107.6" height="64" fill="var(--oracle-wash)"/>
+<rect x="20" y="398" width="290" height="64" fill="none" stroke="var(--rule)"/>
+<line x1="202.4" x2="202.4" y1="398" y2="462" stroke="var(--rule)" stroke-dasharray="2 2"/>
+<polyline points="20.0,408.9 24.7,409.1 29.4,411.1 34.0,414.5 38.7,419.1 43.4,424.4 48.1,429.5 52.7,434.1 57.4,437.5 62.1,439.6 66.8,440.5 71.5,440.5 76.1,440.1 80.8,439.9 85.5,440.2 90.2,441.3 94.8,443.2 99.5,445.7 104.2,448.3 108.9,450.5 113.5,451.7 118.2,451.4 122.9,449.5 127.6,446.1 132.3,441.4 136.9,436.1 141.6,430.7 146.3,426.0 151.0,422.4 155.6,420.2 160.3,419.2 165.0,419.2 169.7,419.8 174.4,420.3 179.0,420.4 183.7,419.7 188.4,418.1 193.1,416.0 197.7,413.7 202.4,411.7" fill="none" stroke="var(--ink-faint)" stroke-width="1.4"/>
+<polyline points="202.4,411.7 207.1,410.6 211.8,410.9 216.5,412.8 221.1,416.3 225.8,421.0 230.5,426.4 235.2,431.8 239.8,436.6 244.5,440.4 249.2,442.8 253.9,443.8 258.5,443.8 263.2,443.1 267.9,442.2 272.6,441.8 277.3,442.1 281.9,443.2 286.6,445.0 291.3,447.0 296.0,448.8 300.6,449.7 305.3,449.4 310.0,447.5" fill="none" stroke="var(--oracle)" stroke-width="2.6"/>
+<polyline points="202.4,411.7 207.1,410.3 211.8,410.2 216.5,411.6 221.1,414.4 225.8,418.5 230.5,423.3 235.2,428.0 239.8,432.1 244.5,435.2 249.2,436.8 253.9,437.0 258.5,436.2 263.2,434.6 267.9,432.9 272.6,431.6 277.3,431.0 281.9,431.2 286.6,432.1 291.3,433.2 296.0,434.0 300.6,434.0 305.3,432.6 310.0,429.8" fill="none" stroke="var(--ink-faint)" stroke-width="1.4" stroke-dasharray="5 3"/>
+<text x="306" y="411" text-anchor="end" style="fill:var(--oracle);font-size:11px">本番では見えない</text>
+<rect x="542.4" y="398" width="107.6" height="64" fill="var(--oracle-wash)"/>
+<rect x="360" y="398" width="290" height="64" fill="none" stroke="var(--rule)"/>
+<line x1="542.4" x2="542.4" y1="398" y2="462" stroke="var(--rule)" stroke-dasharray="2 2"/>
+<polyline points="360.0,422.6 364.7,416.9 369.4,412.4 374.0,409.7 378.7,409.1 383.4,410.1 388.1,412.0 392.7,413.9 397.4,415.0 402.1,415.3 406.8,415.0 411.5,414.7 416.1,415.4 420.8,417.5 425.5,421.5 430.2,427.0 434.8,433.3 439.5,439.2 444.2,444.0 448.9,447.1 453.5,448.3 458.2,448.1 462.9,447.3 467.6,446.8 472.3,447.0 476.9,448.1 481.6,449.6 486.3,450.8 491.0,450.9 495.6,449.1 500.3,445.3 505.0,440.0 509.7,433.8 514.4,428.0 519.0,423.2 523.7,420.1 528.4,418.5 533.1,418.0 537.7,417.8 542.4,417.1" fill="none" stroke="var(--ink-faint)" stroke-width="1.4"/>
+<polyline points="542.4,417.1 547.1,415.5 551.8,413.1 556.5,410.3 561.1,408.1 565.8,407.2 570.5,408.4 575.2,411.7 579.8,416.6 584.5,422.2 589.2,427.6 593.9,432.0 598.5,434.9 603.2,436.5 607.9,437.4 612.6,438.4 617.3,440.2 621.9,443.0 626.6,446.8 631.3,450.7 636.0,453.9 640.6,455.6 645.3,455.2 650.0,452.6" fill="none" stroke="var(--oracle)" stroke-width="2.6"/>
+<polyline points="542.4,417.1 547.1,415.2 551.8,412.2 556.5,408.8 561.1,405.9 565.8,404.4 570.5,404.8 575.2,407.3 579.8,411.3 584.5,416.1 589.2,420.6 593.9,424.0 598.5,426.0 603.2,426.6 607.9,426.5 612.6,426.5 617.3,427.3 621.9,429.0 626.6,431.7 631.3,434.5 636.0,436.7 640.6,437.2 645.3,435.6 650.0,431.9" fill="none" stroke="var(--ink-faint)" stroke-width="1.4" stroke-dasharray="5 3"/>
+<path class="arrow" d="M322 430.0 L348 430.0"/>
+<path class="ah" d="M323 426.0 L316 430.0 L323 434.0 Z"/><path class="ah" d="M347 426.0 L354 430.0 L347 434.0 Z"/>
+<text x="335.0" y="423.0" text-anchor="middle">比べる</text>
+<text x="20" y="498"><tspan class="t-ink t-big" font-weight="600">未来＝予測照合</tspan><tspan dx="10">モデルの予測がクエリの正解に近い窓を選ぶ（正解を使う診断）</tspan></text>
+<rect x="202.4" y="510" width="107.6" height="64" fill="var(--oracle-wash)"/>
+<rect x="20" y="510" width="290" height="64" fill="none" stroke="var(--rule)"/>
+<line x1="202.4" x2="202.4" y1="510" y2="574" stroke="var(--rule)" stroke-dasharray="2 2"/>
+<polyline points="20.0,520.9 24.7,521.1 29.4,523.1 34.0,526.5 38.7,531.1 43.4,536.4 48.1,541.5 52.7,546.1 57.4,549.5 62.1,551.6 66.8,552.5 71.5,552.5 76.1,552.1 80.8,551.9 85.5,552.2 90.2,553.3 94.8,555.2 99.5,557.7 104.2,560.3 108.9,562.5 113.5,563.7 118.2,563.4 122.9,561.5 127.6,558.1 132.3,553.4 136.9,548.1 141.6,542.7 146.3,538.0 151.0,534.4 155.6,532.2 160.3,531.2 165.0,531.2 169.7,531.8 174.4,532.3 179.0,532.4 183.7,531.7 188.4,530.1 193.1,528.0 197.7,525.7 202.4,523.7" fill="none" stroke="var(--ink-faint)" stroke-width="1.4"/>
+<polyline points="202.4,523.7 207.1,522.6 211.8,522.9 216.5,524.8 221.1,528.3 225.8,533.0 230.5,538.4 235.2,543.8 239.8,548.6 244.5,552.4 249.2,554.8 253.9,555.8 258.5,555.8 263.2,555.1 267.9,554.2 272.6,553.8 277.3,554.1 281.9,555.2 286.6,557.0 291.3,559.0 296.0,560.8 300.6,561.7 305.3,561.4 310.0,559.5" fill="none" stroke="var(--oracle)" stroke-width="2.6"/>
+<polyline points="202.4,523.7 207.1,522.3 211.8,522.2 216.5,523.6 221.1,526.4 225.8,530.5 230.5,535.3 235.2,540.0 239.8,544.1 244.5,547.2 249.2,548.8 253.9,549.0 258.5,548.2 263.2,546.6 267.9,544.9 272.6,543.6 277.3,543.0 281.9,543.2 286.6,544.1 291.3,545.2 296.0,546.0 300.6,546.0 305.3,544.6 310.0,541.8" fill="none" stroke="var(--ink-faint)" stroke-width="1.4" stroke-dasharray="5 3"/>
+<text x="306" y="523" text-anchor="end" style="fill:var(--oracle);font-size:11px">本番では見えない</text>
+<rect x="542.4" y="510" width="107.6" height="64" fill="var(--oracle-wash)"/>
+<rect x="360" y="510" width="290" height="64" fill="none" stroke="var(--rule)"/>
+<line x1="542.4" x2="542.4" y1="510" y2="574" stroke="var(--rule)" stroke-dasharray="2 2"/>
+<polyline points="360.0,534.6 364.7,528.9 369.4,524.4 374.0,521.7 378.7,521.1 383.4,522.1 388.1,524.0 392.7,525.9 397.4,527.0 402.1,527.3 406.8,527.0 411.5,526.7 416.1,527.4 420.8,529.5 425.5,533.5 430.2,539.0 434.8,545.3 439.5,551.2 444.2,556.0 448.9,559.1 453.5,560.3 458.2,560.1 462.9,559.3 467.6,558.8 472.3,559.0 476.9,560.1 481.6,561.6 486.3,562.8 491.0,562.9 495.6,561.1 500.3,557.3 505.0,552.0 509.7,545.8 514.4,540.0 519.0,535.2 523.7,532.1 528.4,530.5 533.1,530.0 537.7,529.8 542.4,529.1" fill="none" stroke="var(--ink-faint)" stroke-width="1.4"/>
+<polyline points="542.4,529.1 547.1,527.5 551.8,525.1 556.5,522.3 561.1,520.1 565.8,519.2 570.5,520.4 575.2,523.7 579.8,528.6 584.5,534.2 589.2,539.6 593.9,544.0 598.5,546.9 603.2,548.5 607.9,549.4 612.6,550.4 617.3,552.2 621.9,555.0 626.6,558.8 631.3,562.7 636.0,565.9 640.6,567.6 645.3,567.2 650.0,564.6" fill="none" stroke="var(--ink-faint)" stroke-width="1.4"/>
+<polyline points="542.4,529.1 547.1,527.2 551.8,524.2 556.5,520.8 561.1,517.9 565.8,516.4 570.5,516.8 575.2,519.3 579.8,523.3 584.5,528.1 589.2,532.6 593.9,536.0 598.5,538.0 603.2,538.6 607.9,538.5 612.6,538.5 617.3,539.3 621.9,541.0 626.6,543.7 631.3,546.5 636.0,548.7 640.6,549.2 645.3,547.6 650.0,543.9" fill="none" stroke="var(--oracle)" stroke-width="2.6" stroke-dasharray="5 3"/>
+<path class="arrow" d="M322 542.0 L348 542.0"/>
+<path class="ah" d="M323 538.0 L316 542.0 L323 546.0 Z"/><path class="ah" d="M347 538.0 L354 542.0 L347 546.0 Z"/>
+<text x="335.0" y="535.0" text-anchor="middle">比べる</text>
+<text x="20" y="610"><tspan class="t-ink t-big" font-weight="600">（未来−予測）＝（未来−予測）照合</tspan><tspan dx="10">未来−予測がクエリと似た窓を選ぶ（正解を使う診断）</tspan></text>
+<rect x="202.4" y="622" width="107.6" height="64" fill="var(--oracle-wash)"/>
+<rect x="20" y="622" width="290" height="64" fill="none" stroke="var(--rule)"/>
+<line x1="202.4" x2="202.4" y1="622" y2="686" stroke="var(--rule)" stroke-dasharray="2 2"/>
+<polygon points="202.4,635.7 207.1,634.6 211.8,634.9 216.5,636.8 221.1,640.3 225.8,645.0 230.5,650.4 235.2,655.8 239.8,660.6 244.5,664.4 249.2,666.8 253.9,667.8 258.5,667.8 263.2,667.1 267.9,666.2 272.6,665.8 277.3,666.1 281.9,667.2 286.6,669.0 291.3,671.0 296.0,672.8 300.6,673.7 305.3,673.4 310.0,671.5 310.0,653.8 305.3,656.6 300.6,658.0 296.0,658.0 291.3,657.2 286.6,656.1 281.9,655.2 277.3,655.0 272.6,655.6 267.9,656.9 263.2,658.6 258.5,660.2 253.9,661.0 249.2,660.8 244.5,659.2 239.8,656.1 235.2,652.0 230.5,647.3 225.8,642.5 221.1,638.4 216.5,635.6 211.8,634.2 207.1,634.3 202.4,635.7" fill="var(--oracle)" opacity="0.35"/>
+<polyline points="20.0,632.9 24.7,633.1 29.4,635.1 34.0,638.5 38.7,643.1 43.4,648.4 48.1,653.5 52.7,658.1 57.4,661.5 62.1,663.6 66.8,664.5 71.5,664.5 76.1,664.1 80.8,663.9 85.5,664.2 90.2,665.3 94.8,667.2 99.5,669.7 104.2,672.3 108.9,674.5 113.5,675.7 118.2,675.4 122.9,673.5 127.6,670.1 132.3,665.4 136.9,660.1 141.6,654.7 146.3,650.0 151.0,646.4 155.6,644.2 160.3,643.2 165.0,643.2 169.7,643.8 174.4,644.3 179.0,644.4 183.7,643.7 188.4,642.1 193.1,640.0 197.7,637.7 202.4,635.7" fill="none" stroke="var(--ink-faint)" stroke-width="1.4"/>
+<polyline points="202.4,635.7 207.1,634.6 211.8,634.9 216.5,636.8 221.1,640.3 225.8,645.0 230.5,650.4 235.2,655.8 239.8,660.6 244.5,664.4 249.2,666.8 253.9,667.8 258.5,667.8 263.2,667.1 267.9,666.2 272.6,665.8 277.3,666.1 281.9,667.2 286.6,669.0 291.3,671.0 296.0,672.8 300.6,673.7 305.3,673.4 310.0,671.5" fill="none" stroke="var(--oracle)" stroke-width="2.6"/>
+<polyline points="202.4,635.7 207.1,634.3 211.8,634.2 216.5,635.6 221.1,638.4 225.8,642.5 230.5,647.3 235.2,652.0 239.8,656.1 244.5,659.2 249.2,660.8 253.9,661.0 258.5,660.2 263.2,658.6 267.9,656.9 272.6,655.6 277.3,655.0 281.9,655.2 286.6,656.1 291.3,657.2 296.0,658.0 300.6,658.0 305.3,656.6 310.0,653.8" fill="none" stroke="var(--oracle)" stroke-width="2.6" stroke-dasharray="5 3"/>
+<text x="306" y="635" text-anchor="end" style="fill:var(--oracle);font-size:11px">本番では見えない</text>
+<rect x="542.4" y="622" width="107.6" height="64" fill="var(--oracle-wash)"/>
+<rect x="360" y="622" width="290" height="64" fill="none" stroke="var(--rule)"/>
+<line x1="542.4" x2="542.4" y1="622" y2="686" stroke="var(--rule)" stroke-dasharray="2 2"/>
+<polygon points="542.4,641.1 547.1,639.5 551.8,637.1 556.5,634.3 561.1,632.1 565.8,631.2 570.5,632.4 575.2,635.7 579.8,640.6 584.5,646.2 589.2,651.6 593.9,656.0 598.5,658.9 603.2,660.5 607.9,661.4 612.6,662.4 617.3,664.2 621.9,667.0 626.6,670.8 631.3,674.7 636.0,677.9 640.6,679.6 645.3,679.2 650.0,676.6 650.0,655.9 645.3,659.6 640.6,661.2 636.0,660.7 631.3,658.5 626.6,655.7 621.9,653.0 617.3,651.3 612.6,650.5 607.9,650.5 603.2,650.6 598.5,650.0 593.9,648.0 589.2,644.6 584.5,640.1 579.8,635.3 575.2,631.3 570.5,628.8 565.8,628.4 561.1,629.9 556.5,632.8 551.8,636.2 547.1,639.2 542.4,641.1" fill="var(--oracle)" opacity="0.35"/>
+<polyline points="360.0,646.6 364.7,640.9 369.4,636.4 374.0,633.7 378.7,633.1 383.4,634.1 388.1,636.0 392.7,637.9 397.4,639.0 402.1,639.3 406.8,639.0 411.5,638.7 416.1,639.4 420.8,641.5 425.5,645.5 430.2,651.0 434.8,657.3 439.5,663.2 444.2,668.0 448.9,671.1 453.5,672.3 458.2,672.1 462.9,671.3 467.6,670.8 472.3,671.0 476.9,672.1 481.6,673.6 486.3,674.8 491.0,674.9 495.6,673.1 500.3,669.3 505.0,664.0 509.7,657.8 514.4,652.0 519.0,647.2 523.7,644.1 528.4,642.5 533.1,642.0 537.7,641.8 542.4,641.1" fill="none" stroke="var(--ink-faint)" stroke-width="1.4"/>
+<polyline points="542.4,641.1 547.1,639.5 551.8,637.1 556.5,634.3 561.1,632.1 565.8,631.2 570.5,632.4 575.2,635.7 579.8,640.6 584.5,646.2 589.2,651.6 593.9,656.0 598.5,658.9 603.2,660.5 607.9,661.4 612.6,662.4 617.3,664.2 621.9,667.0 626.6,670.8 631.3,674.7 636.0,677.9 640.6,679.6 645.3,679.2 650.0,676.6" fill="none" stroke="var(--oracle)" stroke-width="2.6"/>
+<polyline points="542.4,641.1 547.1,639.2 551.8,636.2 556.5,632.8 561.1,629.9 565.8,628.4 570.5,628.8 575.2,631.3 579.8,635.3 584.5,640.1 589.2,644.6 593.9,648.0 598.5,650.0 603.2,650.6 607.9,650.5 612.6,650.5 617.3,651.3 621.9,653.0 626.6,655.7 631.3,658.5 636.0,660.7 640.6,661.2 645.3,659.6 650.0,655.9" fill="none" stroke="var(--oracle)" stroke-width="2.6" stroke-dasharray="5 3"/>
+<path class="arrow" d="M322 654.0 L348 654.0"/>
+<path class="ah" d="M323 650.0 L316 654.0 L323 658.0 Z"/><path class="ah" d="M347 650.0 L354 654.0 L347 658.0 Z"/>
+<text x="335.0" y="647.0" text-anchor="middle">比べる</text>
+<text x="111.2" y="720" text-anchor="middle">履歴</text>
+<text x="256.2" y="720" text-anchor="middle">未来 64 点</text>
+<text x="451.2" y="720" text-anchor="middle">履歴</text>
+<text x="596.2" y="720" text-anchor="middle">未来 64 点</text>
+</svg></div>
+      <div class="plate-cap"><b>照合ごとに比べるもの（模式図）</b>色の付いた線どうしを比べて，近い窓を選ぶ．点線の予測は系列ごとに，その系列の履歴から出すので，窓の点線とクエリの点線は別の曲線である．候補の窓は train なので，実線（実際の未来）と点線（予測）の差，つまりその窓の未来−予測が分かる．予測＝予測照合はこの未来−予測を借りるために，点線どうしを比べる．最後の行は，実線と点線の間（塗った部分）の形どうしを比べる．</div>
+    </div>
+    <div class="plate">
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 280" role="img" aria-label="選び方ごとの MSE と予測の動き">
+<text class="t-ink" x="260" y="18">MSE の改善</text>
+<text class="t-ink" x="470" y="18">動いた量 m</text>
+<text class="t-ink" x="585" y="18">向きの一致 cos</text>
+<line class="zero" x1="290" x2="290" y1="26" y2="276"/>
+<text class="t-ink" x="232" y="51" text-anchor="end">予測＝予測照合</text>
+<rect class="bar-ctx" x="290.0" y="39" width="11.7" height="17" rx="2"><title>予測＝予測照合：MSE -1.7%</title></rect>
+<text x="306.7" y="51">−1.7%</text>
+<rect class="bar-rnd" x="470" y="39" width="51.3" height="17" rx="2"/>
+<text x="525.3" y="51">0.22</text>
+<rect class="bar-ctx" x="585" y="39" width="18.3" height="17" rx="2"/>
+<text x="607.3" y="51">+0.15</text>
+<text class="t-ink" x="232" y="83" text-anchor="end">文脈＝文脈照合</text>
+<rect class="bar-ctx" x="290.0" y="71" width="8.9" height="17" rx="2"><title>文脈＝文脈照合：MSE -1.3%</title></rect>
+<text x="303.9" y="83">−1.3%</text>
+<rect class="bar-rnd" x="470" y="71" width="56.0" height="17" rx="2"/>
+<text x="530.0" y="83">0.24</text>
+<rect class="bar-ctx" x="585" y="71" width="18.3" height="17" rx="2"/>
+<text x="607.3" y="83">+0.15</text>
+<text class="t-ink" x="232" y="115" text-anchor="end">予測＝未来照合</text>
+<rect class="bar-ctx" x="288.5" y="103" width="1.5" height="17" rx="2"><title>予測＝未来照合：MSE +0.1%</title></rect>
+<text x="295.0" y="115">+0.1%</text>
+<rect class="bar-rnd" x="470" y="103" width="42.0" height="17" rx="2"/>
+<text x="516.0" y="115">0.18</text>
+<rect class="bar-ctx" x="585" y="103" width="11.0" height="17" rx="2"/>
+<text x="600.0" y="115">+0.09</text>
+<text class="t-ink" x="232" y="147" text-anchor="end">ランダム（8 seed の平均）</text>
+<rect class="bar-rnd" x="290.0" y="135" width="6.9" height="17" rx="2"><title>ランダム（8 seed の平均）：MSE -1.0%</title></rect>
+<text x="301.9" y="147">−1.0%</text>
+<rect class="bar-rnd" x="470" y="135" width="51.3" height="17" rx="2"/>
+<text x="525.3" y="147">0.22</text>
+<rect class="bar-rnd" x="585" y="135" width="15.9" height="17" rx="2"/>
+<text x="604.9" y="147">+0.13</text>
+<line class="grid" x1="20" x2="670" y1="167.0" y2="167.0"/>
+<text class="t-ink" x="232" y="193" text-anchor="end">未来＝未来照合（診断）</text>
+<rect class="bar-orc" x="290.0" y="181" width="76.3" height="17" rx="2"><title>未来＝未来照合（診断）：MSE -11.1%</title></rect>
+<text x="371.3" y="193">−11.1%</text>
+<rect class="bar-rnd" x="470" y="181" width="49.0" height="17" rx="2"/>
+<text x="523.0" y="193">0.21</text>
+<rect class="bar-orc" x="585" y="181" width="45.2" height="17" rx="2"/>
+<text x="634.2" y="193">+0.37</text>
+<text class="t-ink" x="232" y="225" text-anchor="end">未来＝予測照合（診断）</text>
+<rect class="bar-orc" x="287.2" y="213" width="2.8" height="17" rx="2"><title>未来＝予測照合（診断）：MSE +0.4%</title></rect>
+<text x="295.0" y="225">+0.4%</text>
+<rect class="bar-rnd" x="470" y="213" width="53.7" height="17" rx="2"/>
+<text x="527.7" y="225">0.23</text>
+<rect class="bar-orc" x="585" y="213" width="13.4" height="17" rx="2"/>
+<text x="602.4" y="225">+0.11</text>
+<text class="t-ink" x="232" y="257" text-anchor="end">（未来−予測）＝（未来−予測）照合（診断）</text>
+<rect class="bar-orc" x="290.0" y="245" width="107.9" height="17" rx="2"><title>（未来−予測）＝（未来−予測）照合（診断）：MSE -15.7%</title></rect>
+<text x="402.9" y="257">−15.7%</text>
+<rect class="bar-rnd" x="470" y="245" width="60.7" height="17" rx="2"/>
+<text x="534.7" y="257">0.26</text>
+<rect class="bar-orc" x="585" y="245" width="52.6" height="17" rx="2"/>
+<text x="641.6" y="257">+0.43</text>
+</svg></div>
+      <div class="plate-cap"><b>選び方ごとの結果（K=8，事例の文脈 96 点，val）</b>線より下は正解を使う診断．ランダムは 8 seed の平均で，MSE は −2.2〜0.0%，cos θ は 0.11〜0.16 に散らばる．活性，逆予測，9 分位点の予測で選んでも cos θ は 0.11〜0.15．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <h3>分かったこと</h3>
+    <ul class="tight">
+      <li><strong>足りないのは窓ではなく鍵である．</strong>役に立つ窓は候補の中にあり，読み手もそれを使えるが，正解なしではどの鍵でも見分けられない．</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================== 3 -->
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">3</span><h2>なぜ鍵では差が出ないか</h2></div>
+    <p>
+      クエリの文脈を <math><mi>x</mi></math>，参照なしの予測を <math><mover><mi>y</mi><mo>^</mo></mover><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></math> とする．
+      予測が文脈から作れる最良の予測に近ければ，未来−予測は文脈から作れるどんな量 <math><mi>g</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></math> とも相関しない．
+    </p>
+    <math display="block" class="eq"><mover><mi>y</mi><mo>^</mo></mover><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo>≈</mo><mi>E</mi><mo stretchy="false">[</mo><mi>y</mi><mo>∣</mo><mi>x</mi><mo stretchy="false">]</mo><mspace width="1em"/><mo>⟹</mo><mspace width="1em"/><mi>E</mi><mo stretchy="false">[</mo><mi>r</mi><mspace width="0.17em"/><mi>g</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo stretchy="false">]</mo><mo>=</mo><mi>E</mi><mo stretchy="false">[</mo><mi>E</mi><mo stretchy="false">[</mo><mi>r</mi><mo>∣</mo><mi>x</mi><mo stretchy="false">]</mo><mspace width="0.17em"/><mi>g</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo stretchy="false">]</mo><mo>≈</mo><mn>0</mn></math>
+    <p>
+      文脈で予測できる分は，予測がすでに使っているからである．2 節の鍵はどれも文脈から作っているので，当たらないのは偶然ではない．
+      これを many-shot で 2 つの面から確かめた．
+    </p>
+    <h3>新しい情報の無い窓でも効くか</h3>
+    <p>文脈の外の情報だけが上乗せになるなら，クエリ自身の履歴から切った窓は効かないはずである．その窓を事例にした（データベースなし）．</p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 216" role="img" aria-label="事例の中身ごとの MSE の改善">
+<line class="grid" x1="250.0" x2="250.0" y1="10" y2="188"/>
+<text x="250.0" y="206" text-anchor="middle">0</text>
+<line class="grid" x1="306.7" x2="306.7" y1="10" y2="188"/>
+<text x="306.7" y="206" text-anchor="middle">−1%</text>
+<line class="grid" x1="363.3" x2="363.3" y1="10" y2="188"/>
+<text x="363.3" y="206" text-anchor="middle">−2%</text>
+<line class="grid" x1="420.0" x2="420.0" y1="10" y2="188"/>
+<text x="420.0" y="206" text-anchor="middle">−3%</text>
+<line class="grid" x1="476.7" x2="476.7" y1="10" y2="188"/>
+<text x="476.7" y="206" text-anchor="middle">−4%</text>
+<line class="grid" x1="533.3" x2="533.3" y1="10" y2="188"/>
+<text x="533.3" y="206" text-anchor="middle">−5%</text>
+<line class="grid" x1="590.0" x2="590.0" y1="10" y2="188"/>
+<text x="590.0" y="206" text-anchor="middle">−6%</text>
+<text class="t-ink" x="20" y="28">未来に新しい情報なし</text>
+<text class="t-ink" x="240" y="55" text-anchor="end">自分の履歴から切った窓</text>
+<rect class="bar-soft" x="250" y="41" width="141.7" height="20" rx="2"><title>未来に新しい情報なし 自分の履歴から切った窓：MSE -2.5%</title></rect>
+<text class="t-ink" x="397.7" y="55">−2.5%</text>
+<text class="t-ink" x="240" y="85" text-anchor="end">未来を窓自身の予測に</text>
+<rect class="bar-soft" x="250" y="71" width="153.0" height="20" rx="2"><title>未来に新しい情報なし 未来を窓自身の予測に：MSE -2.7%</title></rect>
+<line x1="394.5" x2="412.6" y1="81" y2="81" stroke="var(--ink)" stroke-width="1.5"/>
+<line x1="394.5" x2="394.5" y1="76" y2="86" stroke="var(--ink)" stroke-width="1.5"/><line x1="412.6" x2="412.6" y1="76" y2="86" stroke="var(--ink)" stroke-width="1.5"/>
+<text class="t-ink" x="418.6" y="85">−2.7%</text>
+<text class="t-ink" x="20" y="114">データベースから照合で選ぶ</text>
+<text class="t-ink" x="240" y="141" text-anchor="end">文脈＝文脈照合</text>
+<rect class="bar-ctx" x="250" y="127" width="277.7" height="20" rx="2"><title>データベースから照合で選ぶ 文脈＝文脈照合：MSE -4.9%</title></rect>
+<text class="t-ink" x="533.7" y="141">−4.9%</text>
+<text class="t-ink" x="240" y="171" text-anchor="end">予測＝予測照合</text>
+<rect class="bar-ctx" x="250" y="157" width="272.0" height="20" rx="2"><title>データベースから照合で選ぶ 予測＝予測照合：MSE -4.8%</title></rect>
+<text class="t-ink" x="528.0" y="171">−4.8%</text>
+</svg></div>
+      <div class="plate-cap"><b>データベースなし（K=128，履歴 2032 点，事例の文脈 384 点）</b>照合の 2 本は 2 節の文脈＝文脈照合と予測＝予測照合．ひげは 2 seed の範囲．どの事例もクエリと同じ系列から取る．自分の履歴から切った窓は，2032 点の中から 11 点おきに直近の 128 窓（予測の起点の 96 点前まで．起点の直前までにしても −2.7%）．未来を窓自身の予測にした事例は，ランダムな窓の未来をその窓の参照なしの予測に差し替えたもの．QL は自分の履歴が +1.1%，照合は −0.3〜−0.4%．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <ul class="tight">
+      <li><strong>新しい情報の無い本物の窓でも，効き目の一部は出る．</strong>クエリ自身の履歴から切った窓で効き目の約半分が出て，残りはデータベースの窓の実際の未来から来る．</li>
+    </ul>
+    <h3>many-shot では鍵を変えても同じ窓を選ぶ</h3>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 276" role="img" aria-label="many-shot での選び方ごとの MSE の改善">
+<line class="grid" x1="250.0" x2="250.0" y1="10" y2="248"/>
+<text x="250.0" y="266" text-anchor="middle">0</text>
+<line class="grid" x1="306.7" x2="306.7" y1="10" y2="248"/>
+<text x="306.7" y="266" text-anchor="middle">−1%</text>
+<line class="grid" x1="363.3" x2="363.3" y1="10" y2="248"/>
+<text x="363.3" y="266" text-anchor="middle">−2%</text>
+<line class="grid" x1="420.0" x2="420.0" y1="10" y2="248"/>
+<text x="420.0" y="266" text-anchor="middle">−3%</text>
+<line class="grid" x1="476.7" x2="476.7" y1="10" y2="248"/>
+<text x="476.7" y="266" text-anchor="middle">−4%</text>
+<line class="grid" x1="533.3" x2="533.3" y1="10" y2="248"/>
+<text x="533.3" y="266" text-anchor="middle">−5%</text>
+<line class="grid" x1="590.0" x2="590.0" y1="10" y2="248"/>
+<text x="590.0" y="266" text-anchor="middle">−6%</text>
+<text class="t-ink" x="20" y="28">K=128</text>
+<text class="t-ink" x="240" y="55" text-anchor="end">予測＝予測照合</text>
+<rect class="bar-ctx" x="250" y="41" width="272.0" height="20" rx="2"><title>K=128 予測＝予測照合：MSE -4.8%</title></rect>
+<text class="t-ink" x="528.0" y="55">−4.8%</text>
+<text class="t-ink" x="240" y="85" text-anchor="end">文脈＝文脈照合</text>
+<rect class="bar-soft" x="250" y="71" width="277.7" height="20" rx="2"><title>K=128 文脈＝文脈照合：MSE -4.9%</title></rect>
+<text class="t-ink" x="533.7" y="85">−4.9%</text>
+<text class="t-ink" x="240" y="115" text-anchor="end">データベース全体からランダム（2 seed）</text>
+<rect class="bar-rnd" x="250" y="101" width="215.3" height="20" rx="2"><title>K=128 データベース全体からランダム（2 seed）：MSE -3.8%</title></rect>
+<line x1="448.3" x2="482.3" y1="111" y2="111" stroke="var(--ink)" stroke-width="1.5"/>
+<line x1="448.3" x2="448.3" y1="106" y2="116" stroke="var(--ink)" stroke-width="1.5"/><line x1="482.3" x2="482.3" y1="106" y2="116" stroke="var(--ink)" stroke-width="1.5"/>
+<text class="t-ink" x="488.3" y="115">−3.8%</text>
+<text class="t-ink" x="20" y="144">K=256</text>
+<text class="t-ink" x="240" y="171" text-anchor="end">予測＝予測照合</text>
+<rect class="bar-ctx" x="250" y="157" width="300.3" height="20" rx="2"><title>K=256 予測＝予測照合：MSE -5.3%</title></rect>
+<text class="t-ink" x="556.3" y="171">−5.3%</text>
+<text class="t-ink" x="240" y="201" text-anchor="end">文脈＝文脈照合</text>
+<rect class="bar-soft" x="250" y="187" width="294.7" height="20" rx="2"><title>K=256 文脈＝文脈照合：MSE -5.2%</title></rect>
+<text class="t-ink" x="550.7" y="201">−5.2%</text>
+<text class="t-ink" x="240" y="231" text-anchor="end">データベース全体からランダム（1 seed）</text>
+<rect class="bar-rnd" x="250" y="217" width="249.3" height="20" rx="2"><title>K=256 データベース全体からランダム（1 seed）：MSE -4.4%</title></rect>
+<text class="t-ink" x="505.3" y="231">−4.4%</text>
+</svg></div>
+      <div class="plate-cap"><b>事例の文脈 384 点，MSE の改善（val）</b>2 つの照合が選ぶ窓の重なりは K=128 で 52%，K=256 で 67%（ランダムに選んだ場合は 18% と 37%）．ひげはランダムの seed の範囲．QL は 2 つの照合とも −0.3〜−0.4%．照合とランダムの予測の差と未来−予測の cos は 0.07〜0.09．ランダムの 2 seed は −4.1% と −3.5% で，seed だけで 0.6 pt 動く．このランダムは scratchpad のスクリプトで取ったもので，1 節の <code>run.py</code> のランダム（K=128・384 点で −4.6%，−3.9%，−3.8%）と値が合わない（原因は未確認）．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <h3>分かったこと</h3>
+    <ul class="tight">
+      <li><strong>選び方の上乗せは，モデル自身が最良からどれだけずれているかで頭打ちになる．</strong>読み手は未来−予測の情報を使えるが，クエリの文脈からはその情報が取り出せない．</li>
+      <li><strong>鍵の形を変えても意味がない．</strong>予測も文脈も文脈の関数なので，many-shot では同じ窓に行き着く．ランダムとの差は，モデルのずれのうち鍵で拾える分の実測値である．</li>
+      <li>ランダムでも効くのは，モデルが最良からずれている証拠である．ただしそれはどの事例でも直るずれで，鍵が足せるのはクエリごとに違う部分だけである．</li>
+      <li>例外は，文脈の外の情報が入る場合である（クエリの未来が文脈 2032 点より前のデータや，同時刻の他の系列に依存する場合）．</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================== 4 -->
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">4</span><h2>時刻で集める</h2></div>
+    <p>クエリごとに，未来の起点の時刻がクエリと同じ窓を集めた（時刻をそろえる）．時刻ごとに固定した集合を前計算する場合とも比べた．</p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 162" role="img" aria-label="時刻で集めたときの MSE の変化">
+<line class="grid" x1="280.0" x2="280.0" y1="6" y2="136"/><text x="280.0" y="152" text-anchor="middle">−8.0%</text>
+<line class="grid" x1="335.0" x2="335.0" y1="6" y2="136"/><text x="335.0" y="152" text-anchor="middle">−6.0%</text>
+<line class="grid" x1="390.0" x2="390.0" y1="6" y2="136"/><text x="390.0" y="152" text-anchor="middle">−4.0%</text>
+<line class="grid" x1="445.0" x2="445.0" y1="6" y2="136"/><text x="445.0" y="152" text-anchor="middle">−2.0%</text>
+<line class="grid" x1="500.0" x2="500.0" y1="6" y2="136"/><text x="500.0" y="152" text-anchor="middle">0</text>
+<line class="grid" x1="555.0" x2="555.0" y1="6" y2="136"/><text x="555.0" y="152" text-anchor="middle">+2.0%</text>
+<line class="grid" x1="610.0" x2="610.0" y1="6" y2="136"/><text x="610.0" y="152" text-anchor="middle">+4.0%</text>
+<line class="zero" x1="500.0" x2="500.0" y1="6" y2="136"/>
+<text class="t-ink" x="270" y="26" text-anchor="end">ランダム（履歴 2032 点）</text>
+<rect class="bar-rnd" x="398.2" y="14" width="101.8" height="16" rx="2"/>
+<text class="t-ink t-small" x="392.2" y="26" text-anchor="end">−3.7%</text>
+<text class="t-ink" x="270" y="50" text-anchor="end">時刻をそろえる（履歴 2032 点）</text>
+<rect class="bar-ctx" x="390.0" y="38" width="110.0" height="16" rx="2"/>
+<text class="t-ink t-small" x="384.0" y="50" text-anchor="end">−5.4%</text>
+<text class="t-ink" x="270" y="74" text-anchor="end">時刻ごとに固定した集合を前計算</text>
+<rect class="bar-ctx" x="390.0" y="62" width="110.0" height="16" rx="2"/>
+<text class="t-ink t-small" x="384.0" y="74" text-anchor="end">−4.7%</text>
+<text class="t-ink" x="270" y="98" text-anchor="end">ランダム（履歴 8192 点）</text>
+<rect class="bar-rnd" x="423.0" y="86" width="77.0" height="16" rx="2"/>
+<text class="t-ink t-small" x="417.0" y="98" text-anchor="end">−2.8%</text>
+<text class="t-ink" x="270" y="122" text-anchor="end">時刻をそろえる（履歴 8192 点）</text>
+<rect class="bar-ctx" x="390.0" y="110" width="110.0" height="16" rx="2"/>
+<text class="t-ink t-small" x="384.0" y="122" text-anchor="end">−4.3%</text>
+</svg></div>
+      <div class="plate-cap"><b>時刻で集めたときの MSE の変化（参照なし比，K=128）</b><strong>ほかの節と条件が違う</strong>：ランダムはクエリごと，候補は train の 1 点おきの窓，事例の文脈 384 点．割合は同じ履歴の参照なし（2032 点 0.5254，8192 点 0.5141）との比．時刻ごとに固定した集合は，group attention で事例の行には事例どうしだけを見せて前計算したもの．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <h3>分かったこと</h3>
+    <ul class="tight">
+      <li>時刻で集めた行は，履歴 8192 点でもランダムより良い．時刻ごとに固定した集合を前計算しても，クエリごとに選んで事例どうしだけを見せる場合とほぼ同じになる．ただし文脈の近さで集めても同程度で，時刻は集め方の 1 つにすぎない．</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================== 5 -->
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">5</span><h2>事例を時間方向にずらす</h2></div>
+    <p>事例を読むと直近（1〜16 時間先）が悪くなる（<a href="how-to-weight.html">読み方</a> RQ1）．この悪化が事例の起点とクエリの起点のずれから来るかを見るため，選んだ事例の窓を中身はそのままで時間方向にずらした．</p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 310" role="img" aria-label="事例の窓をずらす置き方">
+<defs><pattern id="nanhatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="var(--ink-faint)" stroke-width="1.2"/></pattern></defs>
+<line x1="448.4" x2="448.4" y1="34" y2="246" stroke="var(--rule)" stroke-dasharray="2 3"/>
+<line x1="474.0" x2="474.0" y1="34" y2="246" stroke="var(--rule)" stroke-dasharray="2 3"/>
+<line x1="499.6" x2="499.6" y1="34" y2="246" stroke="var(--rule)" stroke-dasharray="2 3"/>
+<line x1="525.2" x2="525.2" y1="34" y2="246" stroke="var(--rule)" stroke-dasharray="2 3"/>
+<line x1="550.8" x2="550.8" y1="34" y2="246" stroke="var(--rule)" stroke-dasharray="2 3"/>
+<line x1="168.4" x2="168.4" y1="26" y2="250" stroke="var(--ink-soft)" stroke-width="1.2"/>
+<text x="168.4" y="266" text-anchor="middle">事例の行の始まり</text>
+<rect x="428.4" y="44" width="18" height="196" rx="2" fill="var(--surface-sunk)" stroke="var(--ink)" stroke-width="1.2"/>
+<text class="t-ink" x="437.4" y="40" text-anchor="middle">REG</text>
+<text class="t-ink" x="437.4" y="266" text-anchor="middle">予測の起点（REG はどの行もここ）</text>
+<text x="499.6" y="20" text-anchor="middle">予測する 64 点（4 パッチ）</text>
+<text x="168.4" y="40" text-anchor="middle" font-size="10">−384</text>
+<text x="550.8" y="40" text-anchor="middle" font-size="10">+64</text>
+<text class="t-ink" x="120" y="66" text-anchor="end">クエリ</text>
+<rect x="130.0" y="52" width="296.4" height="20" fill="var(--ink-faint)" fill-opacity="0.55"/>
+<rect x="448.4" y="52" width="102.4" height="20" fill="none" stroke="var(--ink-faint)" stroke-dasharray="4 3"/>
+<text x="499.6" y="66" text-anchor="middle">？</text>
+<text class="t-ink" x="349.6" y="66" text-anchor="middle">履歴</text>
+<text x="134.0" y="66">← 2032 点</text>
+<text class="t-ink" x="120" y="114" text-anchor="end">事例 Δ=0</text>
+<rect x="168.4" y="100" width="258.0" height="20" fill="var(--accent)" fill-opacity="0.75"/>
+<rect x="448.4" y="100" width="102.4" height="20" fill="var(--oracle)" fill-opacity="0.85"/>
+<text class="t-ink" x="120" y="162" text-anchor="end">事例 Δ=+16</text>
+<rect x="168.4" y="148" width="25.6" height="20" fill="url(#nanhatch)" stroke="var(--ink-faint)"/>
+<rect x="194.0" y="148" width="232.4" height="20" fill="var(--accent)" fill-opacity="0.75"/>
+<rect x="448.4" y="148" width="25.6" height="20" fill="var(--accent)" fill-opacity="0.75"/>
+<rect x="474.0" y="148" width="76.8" height="20" fill="var(--oracle)" fill-opacity="0.85"/>
+<rect x="550.8" y="148" width="25.6" height="20" fill="var(--oracle)" fill-opacity="0.25" stroke="var(--oracle)" stroke-dasharray="3 2"/>
+<text x="563.6" y="181" text-anchor="middle" font-size="10">捨てる</text>
+<text class="t-ink" x="120" y="210" text-anchor="end">事例 Δ=−16</text>
+<rect x="142.8" y="196" width="25.6" height="20" fill="var(--accent)" fill-opacity="0.25" stroke="var(--accent)" stroke-dasharray="3 2"/>
+<text x="155.6" y="229" text-anchor="middle" font-size="10">捨てる</text>
+<rect x="168.4" y="196" width="232.4" height="20" fill="var(--accent)" fill-opacity="0.75"/>
+<rect x="400.8" y="196" width="25.6" height="20" fill="var(--oracle)" fill-opacity="0.85"/>
+<rect x="448.4" y="196" width="76.8" height="20" fill="var(--oracle)" fill-opacity="0.85"/>
+<rect x="525.2" y="196" width="25.6" height="20" fill="url(#nanhatch)" stroke="var(--ink-faint)"/>
+<rect x="130" y="284" width="18" height="12" fill="var(--accent)" fill-opacity="0.75"/><text class="t-ink" x="154" y="295">事例の文脈（384 点）</text>
+<rect x="300" y="284" width="18" height="12" fill="var(--oracle)" fill-opacity="0.85"/><text class="t-ink" x="324" y="295">事例の未来（64 点）</text>
+<rect x="470" y="284" width="18" height="12" fill="url(#nanhatch)" stroke="var(--ink-faint)"/><text class="t-ink" x="494" y="295">欠測（NaN）</text>
+</svg></div>
+      <div class="plate-cap"><b>事例の窓をずらす置き方</b>Δ=0 は事例の文脈の終わりを予測の起点にそろえる既定の置き方．窓の中身は変えずに丸ごと Δ 点ずらす．事例の行は予測の起点の 384 点前から始まり，行からはみ出た部分は捨て，空いたところは欠測にする．Δ&gt;0 では文脈の先頭 Δ 点が欠測になり，未来の最後 Δ 点を捨てる．Δ&lt;0 では文脈の先頭 |Δ| 点を捨て，未来の最後 |Δ| 点が欠測になる．REG は行の形で決まり，どの行でもクエリの予測の起点にある．ずらすと，事例の中身から見た REG の位置が逆向きに Δ 点動く（Δ&gt;0 では REG が事例の文脈の途中に，Δ&lt;0 では事例の未来の途中に来る）．横軸の比率は正確ではない．縦の点線はパッチの境目．</div>
+    </div>
+    <div class="plate">
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 476" role="img" aria-label="事例の窓をずらした量ごとの MSE の参照なし比">
+<text class="t-ink" x="141.0" y="24" text-anchor="middle">全体</text>
+<line class="grid" x1="56" x2="226" y1="196.0" y2="196.0"/><text x="50" y="200.0" text-anchor="end">−6%</text>
+<line class="grid" x1="56" x2="226" y1="157.0" y2="157.0"/><text x="50" y="161.0" text-anchor="end">−5%</text>
+<line class="grid" x1="56" x2="226" y1="118.0" y2="118.0"/><text x="50" y="122.0" text-anchor="end">−4%</text>
+<line class="grid" x1="56" x2="226" y1="79.0" y2="79.0"/><text x="50" y="83.0" text-anchor="end">−3%</text>
+<line class="grid" x1="56" x2="226" y1="40.0" y2="40.0"/><text x="50" y="44.0" text-anchor="end">−2%</text>
+<line x1="141.0" x2="141.0" y1="40" y2="196" stroke="var(--rule)" stroke-dasharray="2 3"/>
+<text x="62.0" y="214" text-anchor="middle">−32</text>
+<text x="88.3" y="214" text-anchor="middle">−8</text>
+<text x="114.7" y="214" text-anchor="middle">−2</text>
+<text x="141.0" y="214" text-anchor="middle">0</text>
+<text x="167.3" y="214" text-anchor="middle">+2</text>
+<text x="193.7" y="214" text-anchor="middle">+8</text>
+<text x="220.0" y="214" text-anchor="middle">+32</text>
+<line class="s-faint" x1="56" x2="226" y1="106.5" y2="106.5" stroke-dasharray="5 3"><title>Δ=0：−3.7%</title></line>
+<polyline class="s-ink" fill="none" points="62.0,146.8 75.2,128.9 88.3,64.5 101.5,70.9 114.7,70.6 127.8,73.8 141.0,106.5 154.2,105.8 167.3,111.4 180.5,116.7 193.7,115.7 206.8,101.3 220.0,78.3"/>
+<circle cx="62.0" cy="146.8" r="3" fill="var(--ink)"><title>Δ=-32 点：MSE −4.7%</title></circle>
+<circle cx="75.2" cy="128.9" r="3" fill="var(--ink)"><title>Δ=-16 点：MSE −4.3%</title></circle>
+<circle cx="88.3" cy="64.5" r="3" fill="var(--ink)"><title>Δ=-8 点：MSE −2.6%</title></circle>
+<circle cx="101.5" cy="70.9" r="3" fill="var(--ink)"><title>Δ=-4 点：MSE −2.8%</title></circle>
+<circle cx="114.7" cy="70.6" r="3" fill="var(--ink)"><title>Δ=-2 点：MSE −2.8%</title></circle>
+<circle cx="127.8" cy="73.8" r="3" fill="var(--ink)"><title>Δ=-1 点：MSE −2.9%</title></circle>
+<circle cx="141.0" cy="106.5" r="4" fill="var(--ink)"><title>Δ=+0 点：MSE −3.7%</title></circle>
+<circle cx="154.2" cy="105.8" r="3" fill="var(--ink)"><title>Δ=+1 点：MSE −3.7%</title></circle>
+<circle cx="167.3" cy="111.4" r="3" fill="var(--ink)"><title>Δ=+2 点：MSE −3.8%</title></circle>
+<circle cx="180.5" cy="116.7" r="3" fill="var(--ink)"><title>Δ=+4 点：MSE −4.0%</title></circle>
+<circle cx="193.7" cy="115.7" r="3" fill="var(--ink)"><title>Δ=+8 点：MSE −3.9%</title></circle>
+<circle cx="206.8" cy="101.3" r="3" fill="var(--ink)"><title>Δ=+16 点：MSE −3.6%</title></circle>
+<circle cx="220.0" cy="78.3" r="3" fill="var(--ink)"><title>Δ=+32 点：MSE −3.0%</title></circle>
+<text class="t-ink" x="355.0" y="24" text-anchor="middle">1〜16 時間先</text>
+<line class="grid" x1="270" x2="440" y1="196.0" y2="196.0"/><text x="264" y="200.0" text-anchor="end">+1%</text>
+<line class="grid" x1="270" x2="440" y1="170.0" y2="170.0"/><text x="264" y="174.0" text-anchor="end">+2%</text>
+<line class="grid" x1="270" x2="440" y1="144.0" y2="144.0"/><text x="264" y="148.0" text-anchor="end">+3%</text>
+<line class="grid" x1="270" x2="440" y1="118.0" y2="118.0"/><text x="264" y="122.0" text-anchor="end">+4%</text>
+<line class="grid" x1="270" x2="440" y1="92.0" y2="92.0"/><text x="264" y="96.0" text-anchor="end">+5%</text>
+<line class="grid" x1="270" x2="440" y1="66.0" y2="66.0"/><text x="264" y="70.0" text-anchor="end">+6%</text>
+<line class="grid" x1="270" x2="440" y1="40.0" y2="40.0"/><text x="264" y="44.0" text-anchor="end">+7%</text>
+<line x1="355.0" x2="355.0" y1="40" y2="196" stroke="var(--rule)" stroke-dasharray="2 3"/>
+<text x="276.0" y="214" text-anchor="middle">−32</text>
+<text x="302.3" y="214" text-anchor="middle">−8</text>
+<text x="328.7" y="214" text-anchor="middle">−2</text>
+<text x="355.0" y="214" text-anchor="middle">0</text>
+<text x="381.3" y="214" text-anchor="middle">+2</text>
+<text x="407.7" y="214" text-anchor="middle">+8</text>
+<text x="434.0" y="214" text-anchor="middle">+32</text>
+<line class="s-faint" x1="270" x2="440" y1="137.7" y2="137.7" stroke-dasharray="5 3"><title>Δ=0：+3.2%</title></line>
+<polyline class="s-ink" fill="none" points="276.0,182.9 289.2,164.1 302.3,75.3 315.5,91.4 328.7,97.4 341.8,102.0 355.0,137.7 368.2,145.6 381.3,146.0 394.5,151.6 407.7,147.8 420.8,130.6 434.0,142.4"/>
+<circle cx="276.0" cy="182.9" r="3" fill="var(--ink)"><title>Δ=-32 点：MSE +1.5%</title></circle>
+<circle cx="289.2" cy="164.1" r="3" fill="var(--ink)"><title>Δ=-16 点：MSE +2.2%</title></circle>
+<circle cx="302.3" cy="75.3" r="3" fill="var(--ink)"><title>Δ=-8 点：MSE +5.6%</title></circle>
+<circle cx="315.5" cy="91.4" r="3" fill="var(--ink)"><title>Δ=-4 点：MSE +5.0%</title></circle>
+<circle cx="328.7" cy="97.4" r="3" fill="var(--ink)"><title>Δ=-2 点：MSE +4.8%</title></circle>
+<circle cx="341.8" cy="102.0" r="3" fill="var(--ink)"><title>Δ=-1 点：MSE +4.6%</title></circle>
+<circle cx="355.0" cy="137.7" r="4" fill="var(--ink)"><title>Δ=+0 点：MSE +3.2%</title></circle>
+<circle cx="368.2" cy="145.6" r="3" fill="var(--ink)"><title>Δ=+1 点：MSE +2.9%</title></circle>
+<circle cx="381.3" cy="146.0" r="3" fill="var(--ink)"><title>Δ=+2 点：MSE +2.9%</title></circle>
+<circle cx="394.5" cy="151.6" r="3" fill="var(--ink)"><title>Δ=+4 点：MSE +2.7%</title></circle>
+<circle cx="407.7" cy="147.8" r="3" fill="var(--ink)"><title>Δ=+8 点：MSE +2.9%</title></circle>
+<circle cx="420.8" cy="130.6" r="3" fill="var(--ink)"><title>Δ=+16 点：MSE +3.5%</title></circle>
+<circle cx="434.0" cy="142.4" r="3" fill="var(--ink)"><title>Δ=+32 点：MSE +3.1%</title></circle>
+<text class="t-ink" x="569.0" y="24" text-anchor="middle">17〜32 時間先</text>
+<line class="grid" x1="484" x2="654" y1="196.0" y2="196.0"/><text x="478" y="200.0" text-anchor="end">−4%</text>
+<line class="grid" x1="484" x2="654" y1="164.8" y2="164.8"/><text x="478" y="168.8" text-anchor="end">−3%</text>
+<line class="grid" x1="484" x2="654" y1="133.6" y2="133.6"/><text x="478" y="137.6" text-anchor="end">−2%</text>
+<line class="grid" x1="484" x2="654" y1="102.4" y2="102.4"/><text x="478" y="106.4" text-anchor="end">−1%</text>
+<line class="zero" x1="484" x2="654" y1="71.2" y2="71.2"/><text x="478" y="75.2" text-anchor="end">0</text>
+<line class="grid" x1="484" x2="654" y1="40.0" y2="40.0"/><text x="478" y="44.0" text-anchor="end">+1%</text>
+<line x1="569.0" x2="569.0" y1="40" y2="196" stroke="var(--rule)" stroke-dasharray="2 3"/>
+<text x="490.0" y="214" text-anchor="middle">−32</text>
+<text x="516.3" y="214" text-anchor="middle">−8</text>
+<text x="542.7" y="214" text-anchor="middle">−2</text>
+<text x="569.0" y="214" text-anchor="middle">0</text>
+<text x="595.3" y="214" text-anchor="middle">+2</text>
+<text x="621.7" y="214" text-anchor="middle">+8</text>
+<text x="648.0" y="214" text-anchor="middle">+32</text>
+<line class="s-faint" x1="484" x2="654" y1="128.3" y2="128.3" stroke-dasharray="5 3"><title>Δ=0：−1.8%</title></line>
+<polyline class="s-ink" fill="none" points="490.0,169.7 503.2,152.2 516.3,89.4 529.5,88.8 542.7,85.8 555.8,93.7 569.0,128.3 582.2,125.1 595.3,130.5 608.5,131.6 621.7,132.9 634.8,117.8 648.0,98.6"/>
+<circle cx="490.0" cy="169.7" r="3" fill="var(--ink)"><title>Δ=-32 点：MSE −3.2%</title></circle>
+<circle cx="503.2" cy="152.2" r="3" fill="var(--ink)"><title>Δ=-16 点：MSE −2.6%</title></circle>
+<circle cx="516.3" cy="89.4" r="3" fill="var(--ink)"><title>Δ=-8 点：MSE −0.6%</title></circle>
+<circle cx="529.5" cy="88.8" r="3" fill="var(--ink)"><title>Δ=-4 点：MSE −0.6%</title></circle>
+<circle cx="542.7" cy="85.8" r="3" fill="var(--ink)"><title>Δ=-2 点：MSE −0.5%</title></circle>
+<circle cx="555.8" cy="93.7" r="3" fill="var(--ink)"><title>Δ=-1 点：MSE −0.7%</title></circle>
+<circle cx="569.0" cy="128.3" r="4" fill="var(--ink)"><title>Δ=+0 点：MSE −1.8%</title></circle>
+<circle cx="582.2" cy="125.1" r="3" fill="var(--ink)"><title>Δ=+1 点：MSE −1.7%</title></circle>
+<circle cx="595.3" cy="130.5" r="3" fill="var(--ink)"><title>Δ=+2 点：MSE −1.9%</title></circle>
+<circle cx="608.5" cy="131.6" r="3" fill="var(--ink)"><title>Δ=+4 点：MSE −1.9%</title></circle>
+<circle cx="621.7" cy="132.9" r="3" fill="var(--ink)"><title>Δ=+8 点：MSE −2.0%</title></circle>
+<circle cx="634.8" cy="117.8" r="3" fill="var(--ink)"><title>Δ=+16 点：MSE −1.5%</title></circle>
+<circle cx="648.0" cy="98.6" r="3" fill="var(--ink)"><title>Δ=+32 点：MSE −0.9%</title></circle>
+<text class="t-ink" x="141.0" y="260" text-anchor="middle">33〜48 時間先</text>
+<line class="grid" x1="56" x2="226" y1="432.0" y2="432.0"/><text x="50" y="436.0" text-anchor="end">−7%</text>
+<line class="grid" x1="56" x2="226" y1="393.0" y2="393.0"/><text x="50" y="397.0" text-anchor="end">−6%</text>
+<line class="grid" x1="56" x2="226" y1="354.0" y2="354.0"/><text x="50" y="358.0" text-anchor="end">−5%</text>
+<line class="grid" x1="56" x2="226" y1="315.0" y2="315.0"/><text x="50" y="319.0" text-anchor="end">−4%</text>
+<line class="grid" x1="56" x2="226" y1="276.0" y2="276.0"/><text x="50" y="280.0" text-anchor="end">−3%</text>
+<line x1="141.0" x2="141.0" y1="276" y2="432" stroke="var(--rule)" stroke-dasharray="2 3"/>
+<text x="62.0" y="450" text-anchor="middle">−32</text>
+<text x="88.3" y="450" text-anchor="middle">−8</text>
+<text x="114.7" y="450" text-anchor="middle">−2</text>
+<text x="141.0" y="450" text-anchor="middle">0</text>
+<text x="167.3" y="450" text-anchor="middle">+2</text>
+<text x="193.7" y="450" text-anchor="middle">+8</text>
+<text x="220.0" y="450" text-anchor="middle">+32</text>
+<line class="s-faint" x1="56" x2="226" y1="350.6" y2="350.6" stroke-dasharray="5 3"><title>Δ=0：−4.9%</title></line>
+<polyline class="s-ink" fill="none" points="62.0,383.2 75.2,367.9 88.3,334.7 101.5,328.8 114.7,328.7 127.8,325.7 141.0,350.6 154.2,349.0 167.3,356.0 180.5,362.2 193.7,354.1 206.8,345.8 220.0,323.9"/>
+<circle cx="62.0" cy="383.2" r="3" fill="var(--ink)"><title>Δ=-32 点：MSE −5.7%</title></circle>
+<circle cx="75.2" cy="367.9" r="3" fill="var(--ink)"><title>Δ=-16 点：MSE −5.4%</title></circle>
+<circle cx="88.3" cy="334.7" r="3" fill="var(--ink)"><title>Δ=-8 点：MSE −4.5%</title></circle>
+<circle cx="101.5" cy="328.8" r="3" fill="var(--ink)"><title>Δ=-4 点：MSE −4.4%</title></circle>
+<circle cx="114.7" cy="328.7" r="3" fill="var(--ink)"><title>Δ=-2 点：MSE −4.4%</title></circle>
+<circle cx="127.8" cy="325.7" r="3" fill="var(--ink)"><title>Δ=-1 点：MSE −4.3%</title></circle>
+<circle cx="141.0" cy="350.6" r="4" fill="var(--ink)"><title>Δ=+0 点：MSE −4.9%</title></circle>
+<circle cx="154.2" cy="349.0" r="3" fill="var(--ink)"><title>Δ=+1 点：MSE −4.9%</title></circle>
+<circle cx="167.3" cy="356.0" r="3" fill="var(--ink)"><title>Δ=+2 点：MSE −5.1%</title></circle>
+<circle cx="180.5" cy="362.2" r="3" fill="var(--ink)"><title>Δ=+4 点：MSE −5.2%</title></circle>
+<circle cx="193.7" cy="354.1" r="3" fill="var(--ink)"><title>Δ=+8 点：MSE −5.0%</title></circle>
+<circle cx="206.8" cy="345.8" r="3" fill="var(--ink)"><title>Δ=+16 点：MSE −4.8%</title></circle>
+<circle cx="220.0" cy="323.9" r="3" fill="var(--ink)"><title>Δ=+32 点：MSE −4.2%</title></circle>
+<text class="t-ink" x="355.0" y="260" text-anchor="middle">49〜64 時間先</text>
+<line class="grid" x1="270" x2="440" y1="432.0" y2="432.0"/><text x="264" y="436.0" text-anchor="end">−8%</text>
+<line class="grid" x1="270" x2="440" y1="393.0" y2="393.0"/><text x="264" y="397.0" text-anchor="end">−7%</text>
+<line class="grid" x1="270" x2="440" y1="354.0" y2="354.0"/><text x="264" y="358.0" text-anchor="end">−6%</text>
+<line class="grid" x1="270" x2="440" y1="315.0" y2="315.0"/><text x="264" y="319.0" text-anchor="end">−5%</text>
+<line class="grid" x1="270" x2="440" y1="276.0" y2="276.0"/><text x="264" y="280.0" text-anchor="end">−4%</text>
+<line x1="355.0" x2="355.0" y1="276" y2="432" stroke="var(--rule)" stroke-dasharray="2 3"/>
+<text x="276.0" y="450" text-anchor="middle">−32</text>
+<text x="302.3" y="450" text-anchor="middle">−8</text>
+<text x="328.7" y="450" text-anchor="middle">−2</text>
+<text x="355.0" y="450" text-anchor="middle">0</text>
+<text x="381.3" y="450" text-anchor="middle">+2</text>
+<text x="407.7" y="450" text-anchor="middle">+8</text>
+<text x="434.0" y="450" text-anchor="middle">+32</text>
+<line class="s-faint" x1="270" x2="440" y1="369.2" y2="369.2" stroke-dasharray="5 3"><title>Δ=0：−6.4%</title></line>
+<polyline class="s-ink" fill="none" points="276.0,398.9 289.2,385.1 302.3,328.4 315.5,343.1 328.7,341.3 341.8,344.3 355.0,369.2 368.2,366.7 381.3,372.2 394.5,378.1 407.7,383.3 420.8,370.6 434.0,332.4"/>
+<circle cx="276.0" cy="398.9" r="3" fill="var(--ink)"><title>Δ=-32 点：MSE −7.2%</title></circle>
+<circle cx="289.2" cy="385.1" r="3" fill="var(--ink)"><title>Δ=-16 点：MSE −6.8%</title></circle>
+<circle cx="302.3" cy="328.4" r="3" fill="var(--ink)"><title>Δ=-8 点：MSE −5.3%</title></circle>
+<circle cx="315.5" cy="343.1" r="3" fill="var(--ink)"><title>Δ=-4 点：MSE −5.7%</title></circle>
+<circle cx="328.7" cy="341.3" r="3" fill="var(--ink)"><title>Δ=-2 点：MSE −5.7%</title></circle>
+<circle cx="341.8" cy="344.3" r="3" fill="var(--ink)"><title>Δ=-1 点：MSE −5.8%</title></circle>
+<circle cx="355.0" cy="369.2" r="4" fill="var(--ink)"><title>Δ=+0 点：MSE −6.4%</title></circle>
+<circle cx="368.2" cy="366.7" r="3" fill="var(--ink)"><title>Δ=+1 点：MSE −6.3%</title></circle>
+<circle cx="381.3" cy="372.2" r="3" fill="var(--ink)"><title>Δ=+2 点：MSE −6.5%</title></circle>
+<circle cx="394.5" cy="378.1" r="3" fill="var(--ink)"><title>Δ=+4 点：MSE −6.6%</title></circle>
+<circle cx="407.7" cy="383.3" r="3" fill="var(--ink)"><title>Δ=+8 点：MSE −6.8%</title></circle>
+<circle cx="420.8" cy="370.6" r="3" fill="var(--ink)"><title>Δ=+16 点：MSE −6.4%</title></circle>
+<circle cx="434.0" cy="332.4" r="3" fill="var(--ink)"><title>Δ=+32 点：MSE −5.4%</title></circle>
+<text x="14" y="236" text-anchor="middle" transform="rotate(-90 14 236)">参照なしの MSE との差（%）</text><text x="654" y="468" text-anchor="end">事例をずらした量 Δ（点，＋は遅らせる）</text>
+</svg></div>
+      <div class="plate-cap"><b>事例の窓をずらした量 Δ と MSE の変化（参照なし比，ランダム）</b>Δ=0 は事例の文脈の終わりをクエリの予測の起点にそろえた既定の置き方．Δ&gt;0 は事例を Δ 点遅らせ（事例の起点が予測区間の中に入る），Δ&lt;0 は早める（事例の未来の先頭がクエリの履歴に重なる）．窓の中身は変えず，行からはみ出た部分は捨て，空いた部分は欠測にする．どの Δ でも選んだ事例は同じ．<strong>ほかの節と条件が違う</strong>：ランダムはクエリごと（候補は train の 1 点おき），K=128，事例の文脈 384 点．点にカーソルを合わせると値が出る．破線は Δ=0 の値．Δ=0 との差（ブートストラップの標準誤差）は，Δ=+1〜+8 で −0.3〜+0.0 pt（±0.1〜0.3），+16 で +0.1 pt（±0.4），+32 で +0.7 pt（±0.5），Δ=−1〜−8 で +0.8〜+1.1 pt（±0.3〜0.5），−16 で −0.6 pt（±0.4），−32 で −1.0 pt（±0.7）．<strong>Δ&lt;0 の差は，ずらしではなく事例の未来の終わりの欠測から来る．</strong>ずらさずに事例の未来の最後の 1 点だけ欠測にすると +0.7 pt（±0.2，1〜16 時間先 +4.7%），最後の 16 点を欠測にすると −0.7 pt（±0.3，+1.5%）で，Δ=−1 と −16 とほぼ同じになる．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <h3>分かったこと</h3>
+    <ul class="tight">
+      <li><strong>事例をずらしても，直近の悪化は消えない．</strong>事例の起点が予測区間の中にあっても外にあっても，直近は悪いままである．遅らせる向きでは，ずらしても結果は変わらない．悪化の原因は起点の位置のずれではない．</li>
+      <li><strong>事例の未来の終わりが欠けているかどうかに，読み手は敏感である．</strong>最後のパッチの一部だけ欠けると悪く，丸ごと欠けると良くなる．早める向きのずらしの差はこれで説明できる．</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================== 6 -->
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">6</span><h2>これから</h2></div>
+    <p>
+      類似度で上位 k 件を選ぶのは最良ではない（1〜3 節）．似すぎた事例はむしろ害になり，選ばない事例でも効く．
+      そこで選ぶ側で当てるのをやめ，事例を広く渡して，どれをどれだけ使うかを group attention に任せる方向に進んでいる．
+      読み手の分析は<a href="how-to-weight.html">読み方</a>にまとめた．
+    </p>
+    <div class="flow">
+      <div class="step now">
+        <h4><span class="tag now">次</span>既定の条件で選び直す</h4>
+        <p>このノートの数値は履歴 2032 点で取った．既定の履歴 8192 点で，K（128，256）と事例の文脈（384，768 点）を選び直す．比べるのは，ランダム，文脈＝文脈照合，類似度の順位から等間隔に取る文脈照合・等間隔の 3 つ．ランダムはクエリごとにも出し，読み方ノートの条件とそろえる．</p>
+      </div>
+      <div class="down">↓</div>
+      <div class="step">
+        <h4><span class="tag later">外す</span>鍵・信じさせ方・学習</h4>
+        <p>鍵の改良とクエリごとの信じさせ方は 3 節の壁に当たる．Chronos-2 の微調整はしない．</p>
+      </div>
+      <div class="down">↓</div>
+      <div class="step">
+        <h4><span class="tag later">最後</span>確定させる</h4>
+        <p>val で決めた設定で test を出す．ETTh1 以外のデータと，履歴 512 点・予測 64 点の標準設定でも確かめる．</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 条件 -->
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">条件</span><h2>実験条件</h2></div>
+    <ul class="tight">
+      <li><strong>データと指標</strong>：ETTh1（1 時間ごと，7 チャネル）の各チャネルを独立な 1 変量系列とし，生のスケールのまま入力する．分割は train 2016-07-01〜2017-06-25（12 か月），val 2017-06-26〜2017-10-23（4 か月），test 2017-10-24〜2018-02-20（4 か月）．予測の起点は val・test の中に 17 時間おき（チャネルあたり 166 本）で，起点までの履歴から直後の 64 点を予測する．履歴は前の区間にさかのぼってよい．モデルは Chronos-2（<code>amazon/chronos-2</code>，chronos-forecasting 2.2.2）で，重みは凍結し，Apple M4（16 GB）で推論する．MSE・MAE は中央値（0.5 分位）の誤差，QL は 0.1〜0.9 の 9 分位の分位点損失の平均で，どれもチャネルごとに train の標準偏差（ddof 0）で割って 7 チャネルで平均する．改善率は平均どうしの比．</li>
+      <li><strong>名前と <code>codes/run.py --select</code> の値</strong>：参照なし（<code>none</code>），ランダム（<code>random</code>），文脈＝文脈照合（<code>l2</code>，従来の RAF の検索），未来＝未来照合（<code>oracle</code>，正解を使う診断），クエリ＋未来（<code>truth</code>，クエリ自身の文脈と正解の未来を渡す診断）．予測＝予測照合は scratchpad のスクリプト．名前は「クエリの側＝データベースの窓の側」で付ける．</li>
+      <li><strong>旧既定（10-19 まで）</strong>：履歴 2032 点，事例の文脈 96 点，K=8，候補は 11 点おき（チャネルあたり 771 本）．結果のファイル名は旧既定との差で付く（<code>_sl384</code>，<code>_h8192</code> など）．</li>
+      <li>ETTh1，各チャネルを 1 変量として扱う．予測 64 点，Chronos-2 は凍結．val の予測起点は 17 時間おきに 1,162 本．事例は並列（共変量の行）で渡す．</li>
+      <li><strong>既定（履歴 8192 点，事例の文脈 384 点，K=128，候補は train の 1 点おきの全窓）との差</strong>：どの節も履歴 2032 点．候補は train の窓を 11 点おきに切ったもので，クエリごとに選ぶ方法は予測の起点より 96 点以上前に終わる窓に限る．事例の文脈は 1 節が 96〜1536 点，2 節が 96 点，3 節が 384 点．</li>
+      <li><strong>ランダムの意味</strong>：このノートのランダムは，チャネルごとに 1 セットを全クエリに渡す（<code>--select random</code>）．<a href="how-to-weight.html">読み方</a>のランダムはクエリごとに 1 点おきの窓から選ぶので，同じ K でも値が違う．</li>
+      <li><strong>3 節のデータベースなし</strong>：事例の文脈 384 点，K=128，候補は 11 点おき．<code>results/poolfc/ETTh1_val_hist_ex.npz</code>（scratchpad の <code>hist_ex.py</code>，未コミット）．</li>
+      <li><strong>4 節</strong>：ランダムと時刻をそろえるはクエリごとに train の 1 点おきの窓から選ぶ（seed 0）．履歴 2032 点と 8192 点．scratchpad の <code>fusion_probe.py</code>（セッション 606c9886）．</li>
+      <li><strong>5 節</strong>：履歴 2032 点，事例の文脈 384 点，K=128，ランダムはクエリごと（seed 0，候補は 1 点おき）で，<a href="how-to-weight.html">読み方</a> RQ1 と同じ事例．Δ は −32，−16，−8，−4，−2，−1，+1，+2，+4，+8，+16，+32 点．既定（履歴 8192 点）とは履歴の長さが違う．scratchpad の shift_probe.py（fusion_probe.py にずらし（shift）と未来の終わりの欠測（tail）を足したもの），結果は shift_probe_step1.json．2026-10-21 に取った．</li>
+      <li>参照なしの val MSE は履歴 2032 点で 0.5254（既定の 8192 点では 0.5141）．割合はどれも 2032 点の参照なしとの比．</li>
+      <li>候補窓の参照なしの予測は <code>results/poolfc/</code>，予測＝予測照合の many-shot は <code>results/poolfc/ETTh1_val_pp_many.npz</code>（scratchpad の <code>pp_many.py</code>）．コードは未コミット．</li>
+    </ul>
+  </div>
+</section>
+
+
+</div>
+</body>
+</html>
