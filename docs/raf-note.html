@@ -467,7 +467,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
     <p class="standfirst">
       過去の窓（事例）を参照して予測する RAF を，凍結した時系列基盤モデルの<strong>文脈内学習</strong>として見る．
       Chronos-2 の <strong>time attention</strong> と <strong>group attention</strong> の性質に合わせて事例を渡し，読ませ方を学習なしで直す．
-      このノートには全体の論旨を書き，実験は<a href="how-to-fuse.html">渡し方</a>・<a href="how-to-select.html">選び方</a>・<a href="how-to-weight.html">読み方</a>の 3 冊に置く．
+      このノートには全体の論旨を書き，実験は渡し方（<a href="how-to-fuse/parallel-rows.html">並列と連結</a>・<a href="how-to-fuse/history-length.html">履歴の長さ</a>），選び方（<a href="how-to-select/match-key.html">照合で選ぶ</a>・<a href="how-to-select/attention-weight.html">attention で選ぶ</a>），読み方（<a href="how-to-read/patch-mask.html">パッチを隠す</a>・<a href="how-to-read/level-align.html">段差をそろえる</a>・<a href="how-to-read/time-shift.html">時間方向にずらす</a>）の 6 冊に置く．
     </p>
   </div>
 </header>
@@ -540,7 +540,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
           <li><strong>入力と答えの境目が分からない．</strong>どこまでが事例の文脈でどこからが答えかを，モデルは区切りの値から推すしかない．</li>
           <li><strong>尺度が混ざる．</strong>正規化は入力 1 本全体で行うので，クエリ自身の平均と標準偏差が事例の値に引っぱられる．</li>
         </ul>
-        <p style="margin-top:0.7em">結果として，実在の窓の未来はほとんど読まれない．クエリ自身の文脈と正解を渡しても，並列より大きく劣る（<a href="how-to-fuse.html">渡し方</a> 1 節）．</p>
+        <p style="margin-top:0.7em">結果として，実在の窓の未来はほとんど読まれない．クエリ自身の文脈と正解を渡しても，並列より大きく劣る（<a href="how-to-fuse/parallel-rows.html">並列と連結</a> 1 節）．</p>
       </div>
 
       </div>
@@ -901,7 +901,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
 <line x1="652.0" x2="652.0" y1="200.9" y2="195.1" stroke="var(--ink-faint)" stroke-width="1.5"/>
 <circle cx="652.0" cy="197.6" r="3.5" fill="var(--ink-faint)"><title>ランダム K=256・384 点：MSE −4.2%，3 seed の平均</title></circle>
 </svg></div>
-      <div class="plate-cap"><b>件数 K と MSE の参照なし比（val）</b>点にカーソルを合わせると値が出る．ランダムは seed の平均で，ひげは seed の範囲．ランダムと文脈＝文脈照合は，件数を増やすほど良くなり K=128〜256 で頭打ちになる．未来＝未来照合（正しい事例だけ）は少ない件数で最良になる．履歴 2032 点，候補は 11 点おき，ランダムは全クエリ共通（<a href="how-to-select.html">選び方</a> 1 節）．</div>
+      <div class="plate-cap"><b>件数 K と MSE の参照なし比（val）</b>点にカーソルを合わせると値が出る．ランダムは seed の平均で，ひげは seed の範囲．ランダムと文脈＝文脈照合は，件数を増やすほど良くなり K=128〜256 で頭打ちになる．未来＝未来照合（正しい事例だけ）は少ない件数で最良になる．履歴 2032 点，候補は 11 点おき，ランダムは全クエリ共通（<a href="how-to-select/match-key.html">照合で選ぶ</a> 1 節）．</div>
     </div>
   </div>
   <div class="prose">
@@ -918,7 +918,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
       <div class="down">↓</div>
       <div class="step done">
         <h4><span class="tag done">問題</span>並列で読ませると，直近の予測が引っぱられる</h4>
-        <p>事例を読むと，1〜16 時間先は参照なしより悪くなる．デモの答えの始まりがクエリの現在値とつながらないことが一因で，値の段差をそろえると悪化は半分になる（<a href="how-to-weight.html">読み方</a> RQ1）．group attention は時間方向に頑健でないという指摘とも合う．連結でも起きるかはまだ確かめていない．</p>
+        <p>事例を読むと，1〜16 時間先は参照なしより悪くなる．デモの答えの始まりがクエリの現在値とつながらないことが一因で，値の段差をそろえると悪化は半分になる（<a href="how-to-read/level-align.html">段差をそろえる</a>）．group attention は時間方向に頑健でないという指摘とも合う．連結でも起きるかはまだ確かめていない．</p>
       </div>
       </div>
   </div>
@@ -964,7 +964,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
       <div class="down">↓</div>
       <div class="step now">
         <h4><span class="tag now">(B) 検証中</span>最初の予測パッチだけ，クエリから事例を隠す</h4>
-        <p>最初の予測パッチの列でだけ group attention の相手から事例を外すと，1〜16 時間先の平均は参照なしとほぼ同じになり，先の時間の改善は残る．ただし 1〜2 時間先の悪化は残る．文脈の列で読んだ事例の情報が，time attention を通って最初のパッチにも届くためと考えられる（読み方 RQ1）．評価は val だけ．</p>
+        <p>最初の予測パッチの列でだけ group attention の相手から事例を外すと，1〜16 時間先の平均は参照なしとほぼ同じになる．先の時間の改善は残るだけでなく，少し大きくなる．後ろのパッチは time attention で最初のパッチを読むので，事例を読んでずれた最初のパッチのずれを受け継いでいたためである．そのため，隠さずに最初のパッチだけ参照なしの予測に差し替えるより少し良い（候補 1024 件からランダム 128 件で，隠すと −4.3%，差し替えると −4.0%．差は標準誤差の約 1.5 倍）．ただし 1〜2 時間先の悪化は残る．文脈の最後のパッチの列で読んだ事例の情報が，time attention を通って最初のパッチに届くためと考えられる（<a href="how-to-read/patch-mask.html">パッチを隠す</a> 1 節）．評価は val だけ．</p>
       </div>
       </div>
   </div>
@@ -996,14 +996,14 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
 <line class="s-faint" x1="76" x2="100" y1="196" y2="196"/><text class="t-ink" x="106" y="200">隠さない（全体 −3.7%）</text>
 <line class="s-ctx" x1="266" x2="290" y1="196" y2="196"/><text class="t-ink" x="296" y="200">隠す</text>
 <rect x="366" y="189" width="18" height="13" fill="var(--accent-wash)"/><text class="t-ink" x="390" y="200">隠したパッチ</text>
-</svg></div><div class="plate-cap"><b>最初の予測パッチを隠したときの，何時間先かごとの MSE の変化（参照なし比）</b>3 点の移動平均．色の付いた範囲が隠したパッチ．履歴 2032 点，事例の文脈 384 点，K=128，事例はクエリごとにランダム（<a href="how-to-weight.html">読み方</a> RQ1）．</div></div>
+</svg></div><div class="plate-cap"><b>最初の予測パッチを隠したときの，何時間先かごとの MSE の変化（参照なし比）</b>3 点の移動平均．色の付いた範囲が隠したパッチ．履歴 2032 点，事例の文脈 384 点，K=128，事例はクエリごとにランダム（<a href="how-to-read/patch-mask.html">パッチを隠す</a> 1 節）．</div></div>
   </div>
   <div class="prose">
     <div class="flow">
       <div class="down">↓</div>
       <div class="step done">
-        <h4><span class="tag done">分かったこと</span>many-shot では，似たデモを選んでも効かない</h4>
-        <p>類似度で上位 k 件を選ぶ従来の検索は，ランダムと区別できない．文脈から作った鍵は，モデルの予測がすでに使った情報しか持たないからである．効き目の大半は件数と長さから来る（<a href="how-to-select.html">選び方</a> 1〜3 節）．だから当面は，選ぶ側で当てるより件数で稼ぎ，読む側に任せる．選び方そのものは (C) で解く．</p>
+        <h4><span class="tag done">分かったこと</span>少ない件数に絞ると，似たデモを選んでも効かない</h4>
+        <p>類似度で上位 k 件を選ぶ従来の検索は，128 件ではランダムとほとんど変わらない．似た文脈の窓は未来も予測と似ていて，予測に足すものがない．256 件に増やすと少し効くが，効き目の大半は件数と長さから来る（<a href="how-to-select/match-key.html">照合で選ぶ</a> 1〜3 節，<a href="how-to-select/attention-weight.html#rq3">attention で選ぶ</a> 2 節）．</p>
       </div>
       </div>
   </div>
@@ -1044,9 +1044,9 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
       <div class="down">↓</div>
       <div class="step now">
         <h4><span class="tag now">(C) 検証中</span>どの事例を入れるかを，読む側の重みで決める</h4>
-        <p>「似たデモを選んでも効かない」を解く候補である．文脈の近さや予測の近さの鍵は，クエリの文脈だけから作るので，モデルの予測がすでに使った情報しか持たない．attention の重みは，クエリと事例を一緒に読ませたときに決まるので，事例の未来とクエリの関係まで含んだ鍵になり，この壁の外に出られる可能性がある．</p>
+        <p>似たデモでは少ない件数で効かないことへの答えの候補である．人が決めた距離ではなく，モデルが事例を読むときの重みで選ぶ．</p>
         <p style="margin-top:0.7em">group attention のヘッドの多くは正解から遠い事例や振幅の大きい事例を重く読むが，後ろのレイヤーの一部のヘッドは正解に近い事例を重く読む．そこで候補を多めに入れて 1 回読ませ，そのヘッドの重みで K 件に絞ってから予測し直す．ヘッドは train の末尾のクエリで，重みと正解への近さの順位相関から第 10〜12 レイヤーの上位 3 つ（L12H1，L12H7，L11H10）に決めた．</p>
-        <p style="margin-top:0.7em">候補 1024 件から 128 件を選ぶと，ランダムよりも候補の全部入れよりも良く，MAE も参照なしを下回る．候補を全部入れても良くならないので，効き目は件数ではなく選ぶことから来る．(B) と重ねると，さらに少し良くなる．全ヘッドの平均の重みや前のレイヤーのヘッド，性能で決めたヘッドでは選べない（<a href="how-to-weight.html#rq3">読み方</a> RQ3）．</p>
+        <p style="margin-top:0.7em">候補 1024 件から 128 件を選ぶと，ランダムよりも候補の全部入れよりも良く，MAE も参照なしを下回る．候補を全部入れても良くならないので，効き目は件数ではなく選ぶことから来る．(B) と重ねると，さらに少し良くなる．全ヘッドの平均の重みや前のレイヤーのヘッド，性能で決めたヘッドでは選べない．同じ候補から照合で選ぶと，128 件ではヘッドに負けるが，256 件では差が区別できない．ヘッドの強みは，少ない件数で効くことと MAE である．照合より当たる理由はまだ分からない（<a href="how-to-select/attention-weight.html#rq3">attention で選ぶ</a> 2 節）．</p>
       </div>
     </div>
   </div>
@@ -1085,7 +1085,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
 <rect class="bar-orc" x="330" y="264" width="14" height="12" rx="2"/><text class="t-ink" x="350" y="274">最初のパッチを隠す</text>
 <text x="395.0" y="296" text-anchor="middle">参照なしの MSE との差</text>
 </svg></div>
-      <div class="plate-cap"><b>(C) ヘッドで選ぶことと (B) 最初のパッチを隠すことを重ねたときの MSE（val）</b>どれも (A) の並列．履歴 2032 点，事例の文脈 384 点，候補はクエリごとにランダムな 1024 件で，どの棒も同じ候補．ランダムは候補の最初の 128 件と 256 件．ヘッドは第 10〜12 レイヤーの上位 3 つ．候補 1024 件を全部入れると −3.7%．MAE は参照なし 0.4634 に対し，ヘッドで 128 件＋隠す 0.4579．隠した上でのヘッドとランダムの差は，128 件 −1.3 pt（ブートストラップの標準誤差 ±0.5），256 件 −0.8 pt（±0.3）（<a href="how-to-weight.html#rq3">読み方</a> RQ3）．</div>
+      <div class="plate-cap"><b>(C) ヘッドで選ぶことと (B) 最初のパッチを隠すことを重ねたときの MSE（val）</b>どれも (A) の並列．履歴 2032 点，事例の文脈 384 点，候補はクエリごとにランダムな 1024 件で，どの棒も同じ候補．ランダムは候補の最初の 128 件と 256 件．ヘッドは第 10〜12 レイヤーの上位 3 つ．候補 1024 件を全部入れると −3.7%．MAE は参照なし 0.4634 に対し，ヘッドで 128 件＋隠す 0.4579．隠した上でのヘッドとランダムの差は，128 件 −1.3 pt（ブートストラップの標準誤差 ±0.5），256 件 −0.8 pt（±0.3）（<a href="how-to-select/attention-weight.html#rq3">attention で選ぶ</a> 2 節）．</div>
     </div>
   </div>
   <div class="prose">
@@ -1237,7 +1237,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
       <li>Delle Monache et al.（2013）の analog ensemble：予測＝予測照合の考え方の元．</li>
       <li>Han et al.（2023）：文脈内学習をカーネル回帰として見る．</li>
     </ul>
-    <p>本筋とは別に，全クエリ共通のセットを勾配で選ぶ試み（CLG・Parallel-CLG）を<a href="clg-note.html">別冊</a>に残してある．</p>
+    <p>本筋とは別に，全クエリ共通のセットを勾配で選ぶ試み（CLG・Parallel-CLG）を<a href="others/clg-note.html">別冊</a>に残してある．</p>
   </div>
 </section>
 

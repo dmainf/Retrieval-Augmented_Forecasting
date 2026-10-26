@@ -1,0 +1,705 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>時間方向にずらす</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root {
+  --ground: #F2F5F7;
+  --surface: #FFFFFF;
+  --surface-sunk: #E9EEF2;
+  --ink: #131A21;
+  --ink-soft: #5C6873;
+  --ink-faint: #8794A1;
+  --rule: #D6DEE5;
+  --rule-soft: #E5EBF0;
+  --accent: #2F5F8F;
+  --accent-tint: #D5E3F0;
+  --accent-wash: rgba(47, 95, 143, 0.10);
+  --oracle: #B0621C;
+  --oracle-tint: #F3DFC7;
+  --oracle-wash: rgba(176, 98, 28, 0.12);
+  --warn: #A03A2E;
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+
+  --f-display: "Zen Old Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --f-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --f-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0F141A;
+    --surface: #161E26;
+    --surface-sunk: #1C262F;
+    --ink: #E3EAF1;
+    --ink-soft: #97A5B3;
+    --ink-faint: #6E7D8C;
+    --rule: #2A3540;
+    --rule-soft: #222C36;
+    --accent: #7FB0DC;
+    --accent-tint: #24384B;
+    --accent-wash: rgba(127, 176, 220, 0.13);
+    --oracle: #E0A164;
+    --oracle-tint: #3A2B1B;
+    --oracle-wash: rgba(224, 161, 100, 0.14);
+    --warn: #E08476;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground: #0F141A;
+  --surface: #161E26;
+  --surface-sunk: #1C262F;
+  --ink: #E3EAF1;
+  --ink-soft: #97A5B3;
+  --ink-faint: #6E7D8C;
+  --rule: #2A3540;
+  --rule-soft: #222C36;
+  --accent: #7FB0DC;
+  --accent-tint: #24384B;
+  --accent-wash: rgba(127, 176, 220, 0.13);
+  --oracle: #E0A164;
+  --oracle-tint: #3A2B1B;
+  --oracle-wash: rgba(224, 161, 100, 0.14);
+  --warn: #E08476;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 16px;
+  line-height: 1.85;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page { padding: 0 20px 96px; }
+.prose { max-width: 40rem; margin-inline: auto; }
+.wide  { max-width: 66rem; margin-inline: auto; }
+
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+/* ---------- masthead ---------- */
+
+.masthead {
+  border-bottom: 1px solid var(--rule);
+  padding: 64px 0 40px;
+  margin-bottom: 56px;
+}
+.kicker {
+  font-family: var(--f-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0 0 18px;
+}
+h1 {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: clamp(2rem, 5.5vw, 2.9rem);
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+  margin: 0 0 20px;
+  text-wrap: balance;
+}
+.standfirst {
+  font-size: 1.03rem;
+  color: var(--ink-soft);
+  margin: 0;
+  max-width: 34rem;
+}
+
+/* ---------- section rhythm ---------- */
+
+section { margin-bottom: 72px; }
+
+.sec-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 10px;
+  margin-bottom: 28px;
+}
+.sec-num {
+  font-family: var(--f-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.06em;
+  flex: none;
+}
+h2 {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 1.42rem;
+  line-height: 1.45;
+  margin: 0;
+  text-wrap: balance;
+}
+h3 {
+  font-family: var(--f-body);
+  font-weight: 700;
+  font-size: 1.02rem;
+  margin: 38px 0 12px;
+  letter-spacing: 0.01em;
+}
+p { margin: 0 0 1.15em; }
+strong { font-weight: 700; }
+.em-blue { color: var(--accent); font-weight: 700; }
+.em-amber { color: var(--oracle); font-weight: 700; }
+
+code {
+  font-family: var(--f-mono);
+  font-size: 0.85em;
+  background: var(--surface-sunk);
+  padding: 0.12em 0.4em;
+  border-radius: 3px;
+}
+
+/* ---------- plates: figures, diagrams, tables ---------- */
+
+.plate {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  margin: 32px 0;
+  overflow: hidden;
+}
+.plate-body { padding: 22px 24px; }
+.plate-cap {
+  border-top: 1px solid var(--rule-soft);
+  padding: 12px 24px 14px;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  background: var(--surface-sunk);
+}
+.plate-cap b {
+  font-family: var(--f-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  display: block;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.shot { background: #FFFFFF; padding: 14px; }
+.shot-scroll { overflow-x: auto; }
+.shot img { display: block; width: 100%; min-width: 720px; height: auto; }
+.shot--narrow img { min-width: 420px; max-width: 560px; margin-inline: auto; }
+
+svg.diagram { display: block; width: 100%; height: auto; }
+
+/* ---------- tables ---------- */
+
+.table-scroll { overflow-x: auto; }
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 560px;
+  font-family: var(--f-mono);
+  font-size: 0.84rem;
+  font-variant-numeric: tabular-nums;
+}
+caption { display: none; }
+th, td {
+  padding: 9px 12px;
+  text-align: right;
+  border-bottom: 1px solid var(--rule-soft);
+  white-space: nowrap;
+}
+thead th {
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+  border-bottom: 1px solid var(--rule);
+}
+tbody th, td.lbl {
+  text-align: left;
+  font-family: var(--f-body);
+  font-weight: 500;
+  font-size: 0.86rem;
+  color: var(--ink);
+}
+tr.ctx td, tr.ctx th { background: var(--accent-wash); }
+tr.orc td, tr.orc th { background: var(--oracle-wash); }
+td.best { font-weight: 600; color: var(--oracle); }
+tbody tr:last-child td, tbody tr:last-child th { border-bottom: none; }
+
+/* ---------- callouts ---------- */
+
+.callout {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-wash);
+  padding: 16px 20px;
+  margin: 28px 0;
+  border-radius: 0 4px 4px 0;
+}
+.callout.amber { border-left-color: var(--oracle); background: var(--oracle-wash); }
+.callout p:last-child { margin-bottom: 0; }
+.callout .lead {
+  font-family: var(--f-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.badge {
+  display: inline-block;
+  font-family: var(--f-mono);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 3px;
+  vertical-align: 0.15em;
+  background: var(--warn);
+  color: var(--surface);
+}
+:root[data-theme="dark"] .badge,
+:root:not([data-theme="light"]) .badge { color: #12181F; }
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .badge { color: #FFFFFF; }
+}
+
+/* ---------- branch list ---------- */
+
+.branch {
+  display: grid;
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 28px 0;
+}
+.branch > div {
+  background: var(--surface);
+  padding: 16px 20px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 14px;
+  align-items: baseline;
+}
+.branch .cond {
+  font-family: var(--f-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-faint);
+  letter-spacing: 0.06em;
+}
+.branch .then { font-size: 0.94rem; line-height: 1.7; }
+.branch .then b { color: var(--accent); }
+
+/* ---------- axis cards ---------- */
+
+.axes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px;
+  margin: 28px 0;
+}
+.axis {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 18px 20px;
+}
+.axis h4 {
+  font-family: var(--f-mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 4px;
+  font-weight: 600;
+}
+.axis .q { font-size: 0.9rem; font-weight: 700; margin: 0 0 12px; }
+.axis dl { margin: 0; font-size: 0.84rem; line-height: 1.65; }
+.axis dt {
+  font-family: var(--f-mono);
+  font-size: 0.78rem;
+  color: var(--ink);
+  font-weight: 500;
+  margin-top: 8px;
+}
+.axis dt:first-child { margin-top: 0; }
+.axis dd { margin: 0; color: var(--ink-soft); font-size: 0.82rem; line-height: 1.6; }
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  margin: 0 0 16px;
+  font-family: var(--f-body);
+}
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.swatch { width: 22px; height: 10px; border-radius: 2px; flex: none; }
+
+.footnote {
+  border-top: 1px solid var(--rule);
+  padding-top: 22px;
+  font-size: 0.84rem;
+  color: var(--ink-soft);
+  line-height: 1.75;
+}
+.footnote p { margin-bottom: 0.6em; }
+
+math { font-size: 1.02em; color: var(--ink); }
+math[display="block"].eq {
+  display: block;
+  margin: 22px auto;
+  padding: 14px 18px;
+  background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 4px 4px 0;
+  overflow-x: auto;
+  font-size: 1.08em;
+}
+math mtext { font-family: var(--f-body); font-size: 0.78em; color: var(--ink-faint); }
+td math, .plate-cap math { font-size: 0.95em; }
+pre {
+  font-family: var(--f-mono);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 14px 16px;
+  margin: 0 0 1.15em;
+  overflow-x: auto;
+}
+</style>
+
+
+<style>
+.chart text { font-family: var(--f-mono); font-size: 11px; fill: var(--ink-soft); }
+.chart .axis-line { stroke: var(--rule); stroke-width: 1; }
+.chart .grid { stroke: var(--rule-soft); stroke-width: 1; }
+.chart .zero { stroke: var(--ink-faint); stroke-width: 1; stroke-dasharray: 4 3; }
+.chart .s-ctx { stroke: var(--accent); fill: none; stroke-width: 2; }
+.chart .s-ctxrv { stroke: var(--accent); fill: none; stroke-width: 2; stroke-dasharray: 5 4; }
+.chart .s-orc { stroke: var(--oracle); fill: none; stroke-width: 2; }
+.chart .s-orcrv { stroke: var(--oracle); fill: none; stroke-width: 2; stroke-dasharray: 5 4; }
+.chart .d-ctx { fill: var(--accent); } .chart .d-orc { fill: var(--oracle); }
+.chart .d-ref { fill: var(--surface); stroke: var(--accent); stroke-width: 2; }
+.chart .lbl-ctx { fill: var(--accent); } .chart .lbl-orc { fill: var(--oracle); }
+math[display="block"].eq { display: block math; text-align: center; }
+li math[display="block"].eq { margin: 12px 0; }
+td.wrap, th.wrap { text-align: left; white-space: normal; min-width: 14rem; }
+tr.neg td { color: var(--warn); }
+ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.tight li { margin-bottom: 0.35em; }
+
+.chart .bar-ctx { fill: var(--accent); } .chart .bar-orc { fill: var(--oracle); }
+.chart .bar-rnd { fill: var(--ink-faint); } .chart .bar-soft { fill: var(--accent-tint); }
+.chart .t-ink { fill: var(--ink); } .chart .t-big { font-size: 13px; }
+.chart .box { fill: var(--surface-sunk); stroke: var(--rule); }
+.chart .box-ctx { fill: var(--accent-wash); stroke: var(--accent); }
+.chart .box-orc { fill: var(--oracle-wash); stroke: var(--oracle); }
+.chart .box-q { fill: none; stroke: var(--ink-faint); stroke-dasharray: 4 3; }
+.chart .arrow { stroke: var(--ink-soft); stroke-width: 1.5; fill: none; }
+.chart .ah { fill: var(--ink-soft); }
+.flow { display: grid; gap: 0; margin: 28px 0; }
+.flow .step { border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); padding: 14px 18px; }
+.flow .step.done { background: var(--surface-sunk); }
+.flow .step.now { border: 2px solid var(--accent); }
+.flow .step h4 { margin: 0 0 6px; font-size: 1rem; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.flow .step p { margin: 0; font-size: 0.92rem; line-height: 1.7; }
+.flow .tag { font-family: var(--f-mono); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; padding: 1px 8px; border-radius: 99px; border: 1px solid currentColor; }
+.flow .tag.done { color: var(--ink-faint); } .flow .tag.now { color: var(--accent); } .flow .tag.next { color: var(--oracle); } .flow .tag.later { color: var(--ink-faint); }
+.flow .down { text-align: center; color: var(--ink-faint); font-size: 1.1rem; line-height: 1; padding: 6px 0; }
+.flow .fork { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 10px; }
+.flow .result { margin-top: 6px; font-size: 0.88rem; color: var(--ink-soft); }
+</style>
+
+<style>
+.chart .s-rnd { stroke: var(--ink-faint); fill: none; stroke-width: 2; }
+.chart .s-ink { stroke: var(--ink); fill: none; stroke-width: 2; }
+.chart .s-faint { stroke: var(--ink-faint); fill: none; stroke-width: 1.5; }
+.chart .band-ctx { fill: var(--accent-wash); stroke: none; }
+.chart .band-orc { fill: var(--oracle-wash); stroke: none; }
+.chart .d-rnd { fill: var(--ink-faint); } .chart .d-ink { fill: var(--ink); }
+.chart .t-small { font-size: 10px; }
+.chart .patch { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 3 3; }
+.algo { background: var(--surface); border: 1px solid var(--rule); border-radius: 4px; padding: 18px 22px 8px; margin: 28px 0; }
+.algo h4 { margin: 0 0 10px; font-size: 0.95rem; }
+.algo ol { margin: 0 0 10px; padding-left: 1.4em; font-size: 0.93rem; line-height: 1.75; }
+.vs { display: grid; grid-template-columns: 9rem 1fr; gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; margin: 24px 0; }
+.vs > div { background: var(--surface); padding: 10px 14px; font-size: 0.88rem; line-height: 1.65; }
+.vs > div.k { font-weight: 700; background: var(--surface-sunk); }
+</style>
+
+</head>
+<body>
+<div class="page">
+
+<header class="masthead">
+  <div class="prose">
+    <p class="kicker"><a href="../raf-note.html">RAF 研究ノート</a> · 読み方 · 2026-10-23 · ETTh1 / Chronos-2（凍結） · すべて val</p>
+    <h1>事例を時間方向にずらす</h1>
+    <p class="standfirst">
+      事例を読むと直近（1〜16 時間先）が悪くなる．その原因が事例の起点とクエリの起点のずれかを確かめるため，選んだ事例の窓を中身はそのままで時間方向にずらした．
+      <strong>ずらしても直近の悪化は消えず</strong>，原因は起点のずれではない．代わりに，事例の未来の終わりの欠測に読み手が敏感なことが分かった．
+    </p>
+  </div>
+</header>
+
+<!-- ============================== 1 -->
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">1</span><h2>事例を時間方向にずらす</h2></div>
+    <p>事例を読むと直近（1〜16 時間先）が悪くなる（<a href="patch-mask.html">パッチを隠す</a> 1 節）．この悪化が事例の起点とクエリの起点のずれから来るかを見るため，選んだ事例の窓を中身はそのままで時間方向にずらした．</p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 310" role="img" aria-label="事例の窓をずらす置き方">
+<defs><pattern id="nanhatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="var(--ink-faint)" stroke-width="1.2"/></pattern></defs>
+<line x1="448.4" x2="448.4" y1="34" y2="246" stroke="var(--rule)" stroke-dasharray="2 3"/>
+<line x1="474.0" x2="474.0" y1="34" y2="246" stroke="var(--rule)" stroke-dasharray="2 3"/>
+<line x1="499.6" x2="499.6" y1="34" y2="246" stroke="var(--rule)" stroke-dasharray="2 3"/>
+<line x1="525.2" x2="525.2" y1="34" y2="246" stroke="var(--rule)" stroke-dasharray="2 3"/>
+<line x1="550.8" x2="550.8" y1="34" y2="246" stroke="var(--rule)" stroke-dasharray="2 3"/>
+<line x1="168.4" x2="168.4" y1="26" y2="250" stroke="var(--ink-soft)" stroke-width="1.2"/>
+<text x="168.4" y="266" text-anchor="middle">事例の行の始まり</text>
+<rect x="428.4" y="44" width="18" height="196" rx="2" fill="var(--surface-sunk)" stroke="var(--ink)" stroke-width="1.2"/>
+<text class="t-ink" x="437.4" y="40" text-anchor="middle">REG</text>
+<text class="t-ink" x="437.4" y="266" text-anchor="middle">予測の起点（REG はどの行もここ）</text>
+<text x="499.6" y="20" text-anchor="middle">予測する 64 点（4 パッチ）</text>
+<text x="168.4" y="40" text-anchor="middle" font-size="10">−384</text>
+<text x="550.8" y="40" text-anchor="middle" font-size="10">+64</text>
+<text class="t-ink" x="120" y="66" text-anchor="end">クエリ</text>
+<rect x="130.0" y="52" width="296.4" height="20" fill="var(--ink-faint)" fill-opacity="0.55"/>
+<rect x="448.4" y="52" width="102.4" height="20" fill="none" stroke="var(--ink-faint)" stroke-dasharray="4 3"/>
+<text x="499.6" y="66" text-anchor="middle">？</text>
+<text class="t-ink" x="349.6" y="66" text-anchor="middle">履歴</text>
+<text x="134.0" y="66">← 2032 点</text>
+<text class="t-ink" x="120" y="114" text-anchor="end">事例 Δ=0</text>
+<rect x="168.4" y="100" width="258.0" height="20" fill="var(--accent)" fill-opacity="0.75"/>
+<rect x="448.4" y="100" width="102.4" height="20" fill="var(--oracle)" fill-opacity="0.85"/>
+<text class="t-ink" x="120" y="162" text-anchor="end">事例 Δ=+16</text>
+<rect x="168.4" y="148" width="25.6" height="20" fill="url(#nanhatch)" stroke="var(--ink-faint)"/>
+<rect x="194.0" y="148" width="232.4" height="20" fill="var(--accent)" fill-opacity="0.75"/>
+<rect x="448.4" y="148" width="25.6" height="20" fill="var(--accent)" fill-opacity="0.75"/>
+<rect x="474.0" y="148" width="76.8" height="20" fill="var(--oracle)" fill-opacity="0.85"/>
+<rect x="550.8" y="148" width="25.6" height="20" fill="var(--oracle)" fill-opacity="0.25" stroke="var(--oracle)" stroke-dasharray="3 2"/>
+<text x="563.6" y="181" text-anchor="middle" font-size="10">捨てる</text>
+<text class="t-ink" x="120" y="210" text-anchor="end">事例 Δ=−16</text>
+<rect x="142.8" y="196" width="25.6" height="20" fill="var(--accent)" fill-opacity="0.25" stroke="var(--accent)" stroke-dasharray="3 2"/>
+<text x="155.6" y="229" text-anchor="middle" font-size="10">捨てる</text>
+<rect x="168.4" y="196" width="232.4" height="20" fill="var(--accent)" fill-opacity="0.75"/>
+<rect x="400.8" y="196" width="25.6" height="20" fill="var(--oracle)" fill-opacity="0.85"/>
+<rect x="448.4" y="196" width="76.8" height="20" fill="var(--oracle)" fill-opacity="0.85"/>
+<rect x="525.2" y="196" width="25.6" height="20" fill="url(#nanhatch)" stroke="var(--ink-faint)"/>
+<rect x="130" y="284" width="18" height="12" fill="var(--accent)" fill-opacity="0.75"/><text class="t-ink" x="154" y="295">事例の文脈（384 点）</text>
+<rect x="300" y="284" width="18" height="12" fill="var(--oracle)" fill-opacity="0.85"/><text class="t-ink" x="324" y="295">事例の未来（64 点）</text>
+<rect x="470" y="284" width="18" height="12" fill="url(#nanhatch)" stroke="var(--ink-faint)"/><text class="t-ink" x="494" y="295">欠測（NaN）</text>
+</svg></div>
+      <div class="plate-cap"><b>事例の窓をずらす置き方</b>Δ=0 は事例の文脈の終わりを予測の起点にそろえる既定の置き方．窓の中身は変えずに丸ごと Δ 点ずらす．事例の行は予測の起点の 384 点前から始まり，行からはみ出た部分は捨て，空いたところは欠測にする．Δ&gt;0 では文脈の先頭 Δ 点が欠測になり，未来の最後 Δ 点を捨てる．Δ&lt;0 では文脈の先頭 |Δ| 点を捨て，未来の最後 |Δ| 点が欠測になる．REG は行の形で決まり，どの行でもクエリの予測の起点にある．ずらすと，事例の中身から見た REG の位置が逆向きに Δ 点動く（Δ&gt;0 では REG が事例の文脈の途中に，Δ&lt;0 では事例の未来の途中に来る）．横軸の比率は正確ではない．縦の点線はパッチの境目．</div>
+    </div>
+    <div class="plate">
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 476" role="img" aria-label="事例の窓をずらした量ごとの MSE の参照なし比">
+<text class="t-ink" x="141.0" y="24" text-anchor="middle">全体</text>
+<line class="grid" x1="56" x2="226" y1="196.0" y2="196.0"/><text x="50" y="200.0" text-anchor="end">−6%</text>
+<line class="grid" x1="56" x2="226" y1="157.0" y2="157.0"/><text x="50" y="161.0" text-anchor="end">−5%</text>
+<line class="grid" x1="56" x2="226" y1="118.0" y2="118.0"/><text x="50" y="122.0" text-anchor="end">−4%</text>
+<line class="grid" x1="56" x2="226" y1="79.0" y2="79.0"/><text x="50" y="83.0" text-anchor="end">−3%</text>
+<line class="grid" x1="56" x2="226" y1="40.0" y2="40.0"/><text x="50" y="44.0" text-anchor="end">−2%</text>
+<line x1="141.0" x2="141.0" y1="40" y2="196" stroke="var(--rule)" stroke-dasharray="2 3"/>
+<text x="62.0" y="214" text-anchor="middle">−32</text>
+<text x="88.3" y="214" text-anchor="middle">−8</text>
+<text x="114.7" y="214" text-anchor="middle">−2</text>
+<text x="141.0" y="214" text-anchor="middle">0</text>
+<text x="167.3" y="214" text-anchor="middle">+2</text>
+<text x="193.7" y="214" text-anchor="middle">+8</text>
+<text x="220.0" y="214" text-anchor="middle">+32</text>
+<line class="s-faint" x1="56" x2="226" y1="106.5" y2="106.5" stroke-dasharray="5 3"><title>Δ=0：−3.7%</title></line>
+<polyline class="s-ink" fill="none" points="62.0,146.8 75.2,128.9 88.3,64.5 101.5,70.9 114.7,70.6 127.8,73.8 141.0,106.5 154.2,105.8 167.3,111.4 180.5,116.7 193.7,115.7 206.8,101.3 220.0,78.3"/>
+<circle cx="62.0" cy="146.8" r="3" fill="var(--ink)"><title>Δ=-32 点：MSE −4.7%</title></circle>
+<circle cx="75.2" cy="128.9" r="3" fill="var(--ink)"><title>Δ=-16 点：MSE −4.3%</title></circle>
+<circle cx="88.3" cy="64.5" r="3" fill="var(--ink)"><title>Δ=-8 点：MSE −2.6%</title></circle>
+<circle cx="101.5" cy="70.9" r="3" fill="var(--ink)"><title>Δ=-4 点：MSE −2.8%</title></circle>
+<circle cx="114.7" cy="70.6" r="3" fill="var(--ink)"><title>Δ=-2 点：MSE −2.8%</title></circle>
+<circle cx="127.8" cy="73.8" r="3" fill="var(--ink)"><title>Δ=-1 点：MSE −2.9%</title></circle>
+<circle cx="141.0" cy="106.5" r="4" fill="var(--ink)"><title>Δ=+0 点：MSE −3.7%</title></circle>
+<circle cx="154.2" cy="105.8" r="3" fill="var(--ink)"><title>Δ=+1 点：MSE −3.7%</title></circle>
+<circle cx="167.3" cy="111.4" r="3" fill="var(--ink)"><title>Δ=+2 点：MSE −3.8%</title></circle>
+<circle cx="180.5" cy="116.7" r="3" fill="var(--ink)"><title>Δ=+4 点：MSE −4.0%</title></circle>
+<circle cx="193.7" cy="115.7" r="3" fill="var(--ink)"><title>Δ=+8 点：MSE −3.9%</title></circle>
+<circle cx="206.8" cy="101.3" r="3" fill="var(--ink)"><title>Δ=+16 点：MSE −3.6%</title></circle>
+<circle cx="220.0" cy="78.3" r="3" fill="var(--ink)"><title>Δ=+32 点：MSE −3.0%</title></circle>
+<text class="t-ink" x="355.0" y="24" text-anchor="middle">1〜16 時間先</text>
+<line class="grid" x1="270" x2="440" y1="196.0" y2="196.0"/><text x="264" y="200.0" text-anchor="end">+1%</text>
+<line class="grid" x1="270" x2="440" y1="170.0" y2="170.0"/><text x="264" y="174.0" text-anchor="end">+2%</text>
+<line class="grid" x1="270" x2="440" y1="144.0" y2="144.0"/><text x="264" y="148.0" text-anchor="end">+3%</text>
+<line class="grid" x1="270" x2="440" y1="118.0" y2="118.0"/><text x="264" y="122.0" text-anchor="end">+4%</text>
+<line class="grid" x1="270" x2="440" y1="92.0" y2="92.0"/><text x="264" y="96.0" text-anchor="end">+5%</text>
+<line class="grid" x1="270" x2="440" y1="66.0" y2="66.0"/><text x="264" y="70.0" text-anchor="end">+6%</text>
+<line class="grid" x1="270" x2="440" y1="40.0" y2="40.0"/><text x="264" y="44.0" text-anchor="end">+7%</text>
+<line x1="355.0" x2="355.0" y1="40" y2="196" stroke="var(--rule)" stroke-dasharray="2 3"/>
+<text x="276.0" y="214" text-anchor="middle">−32</text>
+<text x="302.3" y="214" text-anchor="middle">−8</text>
+<text x="328.7" y="214" text-anchor="middle">−2</text>
+<text x="355.0" y="214" text-anchor="middle">0</text>
+<text x="381.3" y="214" text-anchor="middle">+2</text>
+<text x="407.7" y="214" text-anchor="middle">+8</text>
+<text x="434.0" y="214" text-anchor="middle">+32</text>
+<line class="s-faint" x1="270" x2="440" y1="137.7" y2="137.7" stroke-dasharray="5 3"><title>Δ=0：+3.2%</title></line>
+<polyline class="s-ink" fill="none" points="276.0,182.9 289.2,164.1 302.3,75.3 315.5,91.4 328.7,97.4 341.8,102.0 355.0,137.7 368.2,145.6 381.3,146.0 394.5,151.6 407.7,147.8 420.8,130.6 434.0,142.4"/>
+<circle cx="276.0" cy="182.9" r="3" fill="var(--ink)"><title>Δ=-32 点：MSE +1.5%</title></circle>
+<circle cx="289.2" cy="164.1" r="3" fill="var(--ink)"><title>Δ=-16 点：MSE +2.2%</title></circle>
+<circle cx="302.3" cy="75.3" r="3" fill="var(--ink)"><title>Δ=-8 点：MSE +5.6%</title></circle>
+<circle cx="315.5" cy="91.4" r="3" fill="var(--ink)"><title>Δ=-4 点：MSE +5.0%</title></circle>
+<circle cx="328.7" cy="97.4" r="3" fill="var(--ink)"><title>Δ=-2 点：MSE +4.8%</title></circle>
+<circle cx="341.8" cy="102.0" r="3" fill="var(--ink)"><title>Δ=-1 点：MSE +4.6%</title></circle>
+<circle cx="355.0" cy="137.7" r="4" fill="var(--ink)"><title>Δ=+0 点：MSE +3.2%</title></circle>
+<circle cx="368.2" cy="145.6" r="3" fill="var(--ink)"><title>Δ=+1 点：MSE +2.9%</title></circle>
+<circle cx="381.3" cy="146.0" r="3" fill="var(--ink)"><title>Δ=+2 点：MSE +2.9%</title></circle>
+<circle cx="394.5" cy="151.6" r="3" fill="var(--ink)"><title>Δ=+4 点：MSE +2.7%</title></circle>
+<circle cx="407.7" cy="147.8" r="3" fill="var(--ink)"><title>Δ=+8 点：MSE +2.9%</title></circle>
+<circle cx="420.8" cy="130.6" r="3" fill="var(--ink)"><title>Δ=+16 点：MSE +3.5%</title></circle>
+<circle cx="434.0" cy="142.4" r="3" fill="var(--ink)"><title>Δ=+32 点：MSE +3.1%</title></circle>
+<text class="t-ink" x="569.0" y="24" text-anchor="middle">17〜32 時間先</text>
+<line class="grid" x1="484" x2="654" y1="196.0" y2="196.0"/><text x="478" y="200.0" text-anchor="end">−4%</text>
+<line class="grid" x1="484" x2="654" y1="164.8" y2="164.8"/><text x="478" y="168.8" text-anchor="end">−3%</text>
+<line class="grid" x1="484" x2="654" y1="133.6" y2="133.6"/><text x="478" y="137.6" text-anchor="end">−2%</text>
+<line class="grid" x1="484" x2="654" y1="102.4" y2="102.4"/><text x="478" y="106.4" text-anchor="end">−1%</text>
+<line class="zero" x1="484" x2="654" y1="71.2" y2="71.2"/><text x="478" y="75.2" text-anchor="end">0</text>
+<line class="grid" x1="484" x2="654" y1="40.0" y2="40.0"/><text x="478" y="44.0" text-anchor="end">+1%</text>
+<line x1="569.0" x2="569.0" y1="40" y2="196" stroke="var(--rule)" stroke-dasharray="2 3"/>
+<text x="490.0" y="214" text-anchor="middle">−32</text>
+<text x="516.3" y="214" text-anchor="middle">−8</text>
+<text x="542.7" y="214" text-anchor="middle">−2</text>
+<text x="569.0" y="214" text-anchor="middle">0</text>
+<text x="595.3" y="214" text-anchor="middle">+2</text>
+<text x="621.7" y="214" text-anchor="middle">+8</text>
+<text x="648.0" y="214" text-anchor="middle">+32</text>
+<line class="s-faint" x1="484" x2="654" y1="128.3" y2="128.3" stroke-dasharray="5 3"><title>Δ=0：−1.8%</title></line>
+<polyline class="s-ink" fill="none" points="490.0,169.7 503.2,152.2 516.3,89.4 529.5,88.8 542.7,85.8 555.8,93.7 569.0,128.3 582.2,125.1 595.3,130.5 608.5,131.6 621.7,132.9 634.8,117.8 648.0,98.6"/>
+<circle cx="490.0" cy="169.7" r="3" fill="var(--ink)"><title>Δ=-32 点：MSE −3.2%</title></circle>
+<circle cx="503.2" cy="152.2" r="3" fill="var(--ink)"><title>Δ=-16 点：MSE −2.6%</title></circle>
+<circle cx="516.3" cy="89.4" r="3" fill="var(--ink)"><title>Δ=-8 点：MSE −0.6%</title></circle>
+<circle cx="529.5" cy="88.8" r="3" fill="var(--ink)"><title>Δ=-4 点：MSE −0.6%</title></circle>
+<circle cx="542.7" cy="85.8" r="3" fill="var(--ink)"><title>Δ=-2 点：MSE −0.5%</title></circle>
+<circle cx="555.8" cy="93.7" r="3" fill="var(--ink)"><title>Δ=-1 点：MSE −0.7%</title></circle>
+<circle cx="569.0" cy="128.3" r="4" fill="var(--ink)"><title>Δ=+0 点：MSE −1.8%</title></circle>
+<circle cx="582.2" cy="125.1" r="3" fill="var(--ink)"><title>Δ=+1 点：MSE −1.7%</title></circle>
+<circle cx="595.3" cy="130.5" r="3" fill="var(--ink)"><title>Δ=+2 点：MSE −1.9%</title></circle>
+<circle cx="608.5" cy="131.6" r="3" fill="var(--ink)"><title>Δ=+4 点：MSE −1.9%</title></circle>
+<circle cx="621.7" cy="132.9" r="3" fill="var(--ink)"><title>Δ=+8 点：MSE −2.0%</title></circle>
+<circle cx="634.8" cy="117.8" r="3" fill="var(--ink)"><title>Δ=+16 点：MSE −1.5%</title></circle>
+<circle cx="648.0" cy="98.6" r="3" fill="var(--ink)"><title>Δ=+32 点：MSE −0.9%</title></circle>
+<text class="t-ink" x="141.0" y="260" text-anchor="middle">33〜48 時間先</text>
+<line class="grid" x1="56" x2="226" y1="432.0" y2="432.0"/><text x="50" y="436.0" text-anchor="end">−7%</text>
+<line class="grid" x1="56" x2="226" y1="393.0" y2="393.0"/><text x="50" y="397.0" text-anchor="end">−6%</text>
+<line class="grid" x1="56" x2="226" y1="354.0" y2="354.0"/><text x="50" y="358.0" text-anchor="end">−5%</text>
+<line class="grid" x1="56" x2="226" y1="315.0" y2="315.0"/><text x="50" y="319.0" text-anchor="end">−4%</text>
+<line class="grid" x1="56" x2="226" y1="276.0" y2="276.0"/><text x="50" y="280.0" text-anchor="end">−3%</text>
+<line x1="141.0" x2="141.0" y1="276" y2="432" stroke="var(--rule)" stroke-dasharray="2 3"/>
+<text x="62.0" y="450" text-anchor="middle">−32</text>
+<text x="88.3" y="450" text-anchor="middle">−8</text>
+<text x="114.7" y="450" text-anchor="middle">−2</text>
+<text x="141.0" y="450" text-anchor="middle">0</text>
+<text x="167.3" y="450" text-anchor="middle">+2</text>
+<text x="193.7" y="450" text-anchor="middle">+8</text>
+<text x="220.0" y="450" text-anchor="middle">+32</text>
+<line class="s-faint" x1="56" x2="226" y1="350.6" y2="350.6" stroke-dasharray="5 3"><title>Δ=0：−4.9%</title></line>
+<polyline class="s-ink" fill="none" points="62.0,383.2 75.2,367.9 88.3,334.7 101.5,328.8 114.7,328.7 127.8,325.7 141.0,350.6 154.2,349.0 167.3,356.0 180.5,362.2 193.7,354.1 206.8,345.8 220.0,323.9"/>
+<circle cx="62.0" cy="383.2" r="3" fill="var(--ink)"><title>Δ=-32 点：MSE −5.7%</title></circle>
+<circle cx="75.2" cy="367.9" r="3" fill="var(--ink)"><title>Δ=-16 点：MSE −5.4%</title></circle>
+<circle cx="88.3" cy="334.7" r="3" fill="var(--ink)"><title>Δ=-8 点：MSE −4.5%</title></circle>
+<circle cx="101.5" cy="328.8" r="3" fill="var(--ink)"><title>Δ=-4 点：MSE −4.4%</title></circle>
+<circle cx="114.7" cy="328.7" r="3" fill="var(--ink)"><title>Δ=-2 点：MSE −4.4%</title></circle>
+<circle cx="127.8" cy="325.7" r="3" fill="var(--ink)"><title>Δ=-1 点：MSE −4.3%</title></circle>
+<circle cx="141.0" cy="350.6" r="4" fill="var(--ink)"><title>Δ=+0 点：MSE −4.9%</title></circle>
+<circle cx="154.2" cy="349.0" r="3" fill="var(--ink)"><title>Δ=+1 点：MSE −4.9%</title></circle>
+<circle cx="167.3" cy="356.0" r="3" fill="var(--ink)"><title>Δ=+2 点：MSE −5.1%</title></circle>
+<circle cx="180.5" cy="362.2" r="3" fill="var(--ink)"><title>Δ=+4 点：MSE −5.2%</title></circle>
+<circle cx="193.7" cy="354.1" r="3" fill="var(--ink)"><title>Δ=+8 点：MSE −5.0%</title></circle>
+<circle cx="206.8" cy="345.8" r="3" fill="var(--ink)"><title>Δ=+16 点：MSE −4.8%</title></circle>
+<circle cx="220.0" cy="323.9" r="3" fill="var(--ink)"><title>Δ=+32 点：MSE −4.2%</title></circle>
+<text class="t-ink" x="355.0" y="260" text-anchor="middle">49〜64 時間先</text>
+<line class="grid" x1="270" x2="440" y1="432.0" y2="432.0"/><text x="264" y="436.0" text-anchor="end">−8%</text>
+<line class="grid" x1="270" x2="440" y1="393.0" y2="393.0"/><text x="264" y="397.0" text-anchor="end">−7%</text>
+<line class="grid" x1="270" x2="440" y1="354.0" y2="354.0"/><text x="264" y="358.0" text-anchor="end">−6%</text>
+<line class="grid" x1="270" x2="440" y1="315.0" y2="315.0"/><text x="264" y="319.0" text-anchor="end">−5%</text>
+<line class="grid" x1="270" x2="440" y1="276.0" y2="276.0"/><text x="264" y="280.0" text-anchor="end">−4%</text>
+<line x1="355.0" x2="355.0" y1="276" y2="432" stroke="var(--rule)" stroke-dasharray="2 3"/>
+<text x="276.0" y="450" text-anchor="middle">−32</text>
+<text x="302.3" y="450" text-anchor="middle">−8</text>
+<text x="328.7" y="450" text-anchor="middle">−2</text>
+<text x="355.0" y="450" text-anchor="middle">0</text>
+<text x="381.3" y="450" text-anchor="middle">+2</text>
+<text x="407.7" y="450" text-anchor="middle">+8</text>
+<text x="434.0" y="450" text-anchor="middle">+32</text>
+<line class="s-faint" x1="270" x2="440" y1="369.2" y2="369.2" stroke-dasharray="5 3"><title>Δ=0：−6.4%</title></line>
+<polyline class="s-ink" fill="none" points="276.0,398.9 289.2,385.1 302.3,328.4 315.5,343.1 328.7,341.3 341.8,344.3 355.0,369.2 368.2,366.7 381.3,372.2 394.5,378.1 407.7,383.3 420.8,370.6 434.0,332.4"/>
+<circle cx="276.0" cy="398.9" r="3" fill="var(--ink)"><title>Δ=-32 点：MSE −7.2%</title></circle>
+<circle cx="289.2" cy="385.1" r="3" fill="var(--ink)"><title>Δ=-16 点：MSE −6.8%</title></circle>
+<circle cx="302.3" cy="328.4" r="3" fill="var(--ink)"><title>Δ=-8 点：MSE −5.3%</title></circle>
+<circle cx="315.5" cy="343.1" r="3" fill="var(--ink)"><title>Δ=-4 点：MSE −5.7%</title></circle>
+<circle cx="328.7" cy="341.3" r="3" fill="var(--ink)"><title>Δ=-2 点：MSE −5.7%</title></circle>
+<circle cx="341.8" cy="344.3" r="3" fill="var(--ink)"><title>Δ=-1 点：MSE −5.8%</title></circle>
+<circle cx="355.0" cy="369.2" r="4" fill="var(--ink)"><title>Δ=+0 点：MSE −6.4%</title></circle>
+<circle cx="368.2" cy="366.7" r="3" fill="var(--ink)"><title>Δ=+1 点：MSE −6.3%</title></circle>
+<circle cx="381.3" cy="372.2" r="3" fill="var(--ink)"><title>Δ=+2 点：MSE −6.5%</title></circle>
+<circle cx="394.5" cy="378.1" r="3" fill="var(--ink)"><title>Δ=+4 点：MSE −6.6%</title></circle>
+<circle cx="407.7" cy="383.3" r="3" fill="var(--ink)"><title>Δ=+8 点：MSE −6.8%</title></circle>
+<circle cx="420.8" cy="370.6" r="3" fill="var(--ink)"><title>Δ=+16 点：MSE −6.4%</title></circle>
+<circle cx="434.0" cy="332.4" r="3" fill="var(--ink)"><title>Δ=+32 点：MSE −5.4%</title></circle>
+<text x="14" y="236" text-anchor="middle" transform="rotate(-90 14 236)">参照なしの MSE との差（%）</text><text x="654" y="468" text-anchor="end">事例をずらした量 Δ（点，＋は遅らせる）</text>
+</svg></div>
+      <div class="plate-cap"><b>事例の窓をずらした量 Δ と MSE の変化（参照なし比，ランダム）</b>Δ=0 は事例の文脈の終わりをクエリの予測の起点にそろえた既定の置き方．Δ&gt;0 は事例を Δ 点遅らせ（事例の起点が予測区間の中に入る），Δ&lt;0 は早める（事例の未来の先頭がクエリの履歴に重なる）．窓の中身は変えず，行からはみ出た部分は捨て，空いた部分は欠測にする．どの Δ でも選んだ事例は同じ．<strong>ほかの節と条件が違う</strong>：ランダムはクエリごと（候補は train の 1 点おき），K=128，事例の文脈 384 点．点にカーソルを合わせると値が出る．破線は Δ=0 の値．Δ=0 との差（ブートストラップの標準誤差）は，Δ=+1〜+8 で −0.3〜+0.0 pt（±0.1〜0.3），+16 で +0.1 pt（±0.4），+32 で +0.7 pt（±0.5），Δ=−1〜−8 で +0.8〜+1.1 pt（±0.3〜0.5），−16 で −0.6 pt（±0.4），−32 で −1.0 pt（±0.7）．<strong>Δ&lt;0 の差は，ずらしではなく事例の未来の終わりの欠測から来る．</strong>ずらさずに事例の未来の最後の 1 点だけ欠測にすると +0.7 pt（±0.2，1〜16 時間先 +4.7%），最後の 16 点を欠測にすると −0.7 pt（±0.3，+1.5%）で，Δ=−1 と −16 とほぼ同じになる．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <h3>分かったこと</h3>
+    <ul class="tight">
+      <li><strong>事例をずらしても，直近の悪化は消えない．</strong>事例の起点が予測区間の中にあっても外にあっても，直近は悪いままである．遅らせる向きでは，ずらしても結果は変わらない．悪化の原因は起点の位置のずれではない．</li>
+      <li><strong>事例の未来の終わりが欠けているかどうかに，読み手は敏感である．</strong>最後のパッチの一部だけ欠けると悪く，丸ごと欠けると良くなる．早める向きのずらしの差はこれで説明できる．</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================== 条件 -->
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">条件</span><h2>実験条件</h2></div>
+    <ul class="tight">
+      <li><strong>データと指標</strong>：ETTh1（1 時間ごと，7 チャネル）の各チャネルを独立な 1 変量系列とし，生のスケールのまま入力する．分割は train 2016-07-01〜2017-06-25（12 か月），val 2017-06-26〜2017-10-23（4 か月），test 2017-10-24〜2018-02-20（4 か月）．予測の起点は val・test の中に 17 時間おき（チャネルあたり 166 本）で，起点までの履歴から直後の 64 点を予測する．履歴は前の区間にさかのぼってよい．モデルは Chronos-2（<code>amazon/chronos-2</code>，chronos-forecasting 2.2.2）で，重みは凍結し，Apple M4（16 GB）で推論する．MSE・MAE は中央値（0.5 分位）の誤差，QL は 0.1〜0.9 の 9 分位の分位点損失の平均で，どれもチャネルごとに train の標準偏差（ddof 0）で割って 7 チャネルで平均する．改善率は平均どうしの比．</li>
+      <li>ETTh1，各チャネルを 1 変量として扱う．予測 64 点，Chronos-2 は凍結．val の予測起点は 17 時間おきに 1,162 本．事例は並列（共変量の行）で渡す．</li>
+      <li><strong>1 節</strong>：履歴 2032 点，事例の文脈 384 点，K=128，ランダムはクエリごと（seed 0，候補は 1 点おき）で，<a href="patch-mask.html">パッチを隠す</a> 1 節と同じ事例．Δ は −32，−16，−8，−4，−2，−1，+1，+2，+4，+8，+16，+32 点．既定（履歴 8192 点）とは履歴の長さが違う．scratchpad の shift_probe.py（fusion_probe.py にずらし（shift）と未来の終わりの欠測（tail）を足したもの），結果は shift_probe_step1.json．2026-10-21 に取った．</li>
+      <li>参照なしの val MSE は履歴 2032 点で 0.5254（既定の 8192 点では 0.5141）．割合はどれも 2032 点の参照なしとの比．</li>
+    </ul>
+  </div>
+</section>
+
+</div>
+</body>
+</html>
