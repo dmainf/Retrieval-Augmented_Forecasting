@@ -1555,6 +1555,625 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
       <li><strong>MAE はどちらの件数でもヘッドが一番良い．</strong></li>
     </ul>
   </div>
+  <div class="prose">
+    <h3>重みを前計算して候補を増やす</h3>
+    <p>選ぶときの重みは，クエリの query（q）と候補の key（k）の内積を softmax にかけたものである．ここまでの正確な重みでは，クエリと候補をまとめて通すので，前の層で行どうしが読み合い，q と k が一緒に入れた行に左右される．そのためクエリごとに候補を全部通し直すことになり，時間は候補の数に比例し，候補 2048 件はメモリに載らない．前計算では，各行を単独で通して読み合いを切る．すると k は候補だけで決まり，データベースを作るときに保存しておける．ただし q も k も読み合いの影響を受けないので，重みは正確な重みとは一致しない近似である．</p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 436" role="img" aria-label="正確な重みと前計算した重みの求め方">
+<text class="t-ink" x="20" y="20" text-anchor="start" font-weight="600">正確な重み：クエリと候補をまとめて通す（クエリごと）</text>
+<text class="t-ink" x="225.0" y="42" text-anchor="middle">第 1〜10 層</text>
+<text class="t-ink" x="370.0" y="42" text-anchor="middle">第 11・12 層</text>
+<text class="t-ink" x="100" y="66" text-anchor="end">クエリ</text>
+<rect class="box" x="110" y="52" width="290" height="20" rx="3"/>
+<line class="grid" x1="340" x2="340" y1="52" y2="72"/>
+<text class="t-ink" x="100" y="92" text-anchor="end">候補</text>
+<rect class="box" x="110" y="78" width="290" height="20" rx="3"/>
+<line class="grid" x1="340" x2="340" y1="78" y2="98"/>
+<text class="t-ink" x="100" y="118" text-anchor="end">候補</text>
+<rect class="box" x="110" y="104" width="290" height="20" rx="3"/>
+<line class="grid" x1="340" x2="340" y1="104" y2="124"/>
+<text class="t-ink" x="100" y="144" text-anchor="end">候補</text>
+<rect class="box" x="110" y="130" width="290" height="20" rx="3"/>
+<line class="grid" x1="340" x2="340" y1="130" y2="150"/>
+<line class="s-ctx" x1="140" x2="140" y1="73" y2="77" style="stroke-width:2"/>
+<line class="s-ctx" x1="140" x2="140" y1="99" y2="103" style="stroke-width:2"/>
+<line class="s-ctx" x1="140" x2="140" y1="125" y2="129" style="stroke-width:2"/>
+<line class="s-ctx" x1="185" x2="185" y1="73" y2="77" style="stroke-width:2"/>
+<line class="s-ctx" x1="185" x2="185" y1="99" y2="103" style="stroke-width:2"/>
+<line class="s-ctx" x1="185" x2="185" y1="125" y2="129" style="stroke-width:2"/>
+<line class="s-ctx" x1="230" x2="230" y1="73" y2="77" style="stroke-width:2"/>
+<line class="s-ctx" x1="230" x2="230" y1="99" y2="103" style="stroke-width:2"/>
+<line class="s-ctx" x1="230" x2="230" y1="125" y2="129" style="stroke-width:2"/>
+<line class="s-ctx" x1="275" x2="275" y1="73" y2="77" style="stroke-width:2"/>
+<line class="s-ctx" x1="275" x2="275" y1="99" y2="103" style="stroke-width:2"/>
+<line class="s-ctx" x1="275" x2="275" y1="125" y2="129" style="stroke-width:2"/>
+<line class="s-ctx" x1="320" x2="320" y1="73" y2="77" style="stroke-width:2"/>
+<line class="s-ctx" x1="320" x2="320" y1="99" y2="103" style="stroke-width:2"/>
+<line class="s-ctx" x1="320" x2="320" y1="125" y2="129" style="stroke-width:2"/>
+<text class="lbl-ctx" x="225.0" y="168" text-anchor="middle">前の層で行どうしが読み合う</text>
+<rect class="box-ctx" x="356" y="54" width="28" height="16" rx="2"/>
+<text class="t-ink" x="370" y="66" text-anchor="middle">q</text>
+<rect class="box-orc" x="356" y="80" width="28" height="16" rx="2"/>
+<text class="t-ink" x="370" y="92" text-anchor="middle">k</text>
+<rect class="box-orc" x="356" y="106" width="28" height="16" rx="2"/>
+<text class="t-ink" x="370" y="118" text-anchor="middle">k</text>
+<rect class="box-orc" x="356" y="132" width="28" height="16" rx="2"/>
+<text class="t-ink" x="370" y="144" text-anchor="middle">k</text>
+<path class="arrow" d="M386,62.0 C404,62.0 404,88.0 386,88.0" style="stroke-width:1"/>
+<path class="arrow" d="M386,62.0 C412,62.0 412,114.0 386,114.0" style="stroke-width:1"/>
+<path class="arrow" d="M386,62.0 C419,62.0 419,140.0 386,140.0" style="stroke-width:1"/>
+<text class="t-ink" x="430" y="42" text-anchor="start">q·k → softmax</text>
+<text class="t-ink" x="560" y="42" text-anchor="start">重み</text>
+<line class="arrow" x1="430" x2="550" y1="88.0" y2="88.0" style="stroke-width:1"/>
+<line class="arrow" x1="430" x2="550" y1="114.0" y2="114.0" style="stroke-width:1"/>
+<line class="arrow" x1="430" x2="550" y1="140.0" y2="140.0" style="stroke-width:1"/>
+<rect class="bar-ctx" x="560" y="82" width="56" height="12" rx="2"/>
+<rect class="bar-ctx" x="560" y="108" width="16" height="12" rx="2"/>
+<rect class="bar-ctx" x="560" y="134" width="86" height="12" rx="2"/>
+<text class="t-ink" x="430" y="168" text-anchor="start">q と k はモデルの中で出会う</text>
+<text class="t-ink" x="20" y="220" text-anchor="start" font-weight="600">前計算：1 行ずつ単独で通す</text>
+<text class="t-ink" x="225.0" y="242" text-anchor="middle">第 1〜10 層</text>
+<text class="t-ink" x="370.0" y="242" text-anchor="middle">第 11・12 層</text>
+<text class="t-small" x="20" y="262" text-anchor="start" font-size="10">データベースを作るとき 1 回</text>
+<text class="t-ink" x="100" y="284" text-anchor="end">候補</text>
+<rect class="box" x="110" y="270" width="290" height="20" rx="3"/>
+<line class="grid" x1="340" x2="340" y1="270" y2="290"/>
+<rect class="box-orc" x="356" y="272" width="28" height="16" rx="2"/>
+<text class="t-ink" x="370" y="284" text-anchor="middle">k</text>
+<text class="t-ink" x="100" y="314" text-anchor="end">候補</text>
+<rect class="box" x="110" y="300" width="290" height="20" rx="3"/>
+<line class="grid" x1="340" x2="340" y1="300" y2="320"/>
+<rect class="box-orc" x="356" y="302" width="28" height="16" rx="2"/>
+<text class="t-ink" x="370" y="314" text-anchor="middle">k</text>
+<text class="t-ink" x="100" y="344" text-anchor="end">候補</text>
+<rect class="box" x="110" y="330" width="290" height="20" rx="3"/>
+<line class="grid" x1="340" x2="340" y1="330" y2="350"/>
+<rect class="box-orc" x="356" y="332" width="28" height="16" rx="2"/>
+<text class="t-ink" x="370" y="344" text-anchor="middle">k</text>
+<text class="t-ink" x="20" y="372" text-anchor="start" font-size="10">クエリが来たとき</text>
+<text class="t-ink" x="100" y="394" text-anchor="end">クエリ</text>
+<rect class="box" x="110" y="380" width="290" height="20" rx="3"/>
+<line class="grid" x1="340" x2="340" y1="380" y2="400"/>
+<rect class="box-ctx" x="356" y="382" width="28" height="16" rx="2"/>
+<text class="t-ink" x="370" y="394" text-anchor="middle">q</text>
+<text class="t-ink" x="225.0" y="422" text-anchor="middle">行どうしは読み合わない</text>
+<rect class="box-q" x="414" y="262" width="54" height="96" rx="4"/>
+<text class="t-ink" x="441" y="256" text-anchor="middle">保存した key</text>
+<line class="arrow" x1="386" x2="422" y1="280.0" y2="280.0" style="stroke-width:1"/>
+<rect class="box-orc" x="427" y="272" width="28" height="16" rx="2"/>
+<text class="t-ink" x="441" y="284" text-anchor="middle">k</text>
+<line class="arrow" x1="386" x2="422" y1="310.0" y2="310.0" style="stroke-width:1"/>
+<rect class="box-orc" x="427" y="302" width="28" height="16" rx="2"/>
+<text class="t-ink" x="441" y="314" text-anchor="middle">k</text>
+<line class="arrow" x1="386" x2="422" y1="340.0" y2="340.0" style="stroke-width:1"/>
+<rect class="box-orc" x="427" y="332" width="28" height="16" rx="2"/>
+<text class="t-ink" x="441" y="344" text-anchor="middle">k</text>
+<rect class="box-ctx" x="427" y="382" width="28" height="16" rx="2"/>
+<text class="t-ink" x="441" y="394" text-anchor="middle">q</text>
+<line class="arrow" x1="386" x2="425" y1="390.0" y2="390.0" style="stroke-width:1"/>
+<path class="arrow" d="M455,390.0 C498,390.0 498,280.0 455,280.0" style="stroke-width:1"/>
+<path class="arrow" d="M455,390.0 C489,390.0 489,310.0 455,310.0" style="stroke-width:1"/>
+<path class="arrow" d="M455,390.0 C480,390.0 480,340.0 455,340.0" style="stroke-width:1"/>
+<line class="arrow" x1="467" x2="550" y1="280.0" y2="280.0" style="stroke-width:1"/>
+<line class="arrow" x1="467" x2="550" y1="310.0" y2="310.0" style="stroke-width:1"/>
+<line class="arrow" x1="467" x2="550" y1="340.0" y2="340.0" style="stroke-width:1"/>
+<rect class="bar-ctx" x="560" y="274" width="56" height="12" rx="2"/>
+<rect class="bar-ctx" x="560" y="304" width="16" height="12" rx="2"/>
+<rect class="bar-ctx" x="560" y="334" width="86" height="12" rx="2"/>
+<text class="t-ink" x="414" y="422" text-anchor="start">q·k → softmax はモデルの外で</text>
+<text class="t-ink" x="560" y="242" text-anchor="start">重み</text>
+</svg></div>
+      <div class="plate-cap"><b>正確な重みと前計算した重みの求め方</b>候補は 3 件だけ描いた．重みのまとめ方（列ごとに自分＋候補で softmax，予測の 4 列の平均，自分を除いて正規化，3 ヘッドの平均）はどちらも同じ．違うのは，前の層で行どうしが読み合った影響が q と k に入るかどうかだけである．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <p>q と k は，ヘッドのある層 <math><msub><mi>ℓ</mi><mi>h</mi></msub></math> での各行の状態 <math><msub><mi>z</mi><mi>i</mi></msub></math> から作る．正確な重みと前計算の違いは，この状態が何に依存するかだけである．</p>
+    <math display="block" class="eq"><mtable columnalign="left"><mtr><mtd><mtext>正確：</mtext><mspace width="0.6em"/><msub><mi>k</mi><mi>i</mi></msub><mo>=</mo><msub><mi>W</mi><mi>k</mi></msub><mspace width="0.2em"/><msubsup><mi>z</mi><mi>i</mi><mrow><mo>(</mo><msub><mi>ℓ</mi><mi>h</mi></msub><mo>)</mo></mrow></msubsup><mo>(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>;</mo><mspace width="0.3em"/><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>x</mi><mn>1</mn></msub><mo>,</mo><mo>…</mo><mo>,</mo><msub><mi>x</mi><mi>N</mi></msub><mo>)</mo><mo>,</mo><mspace width="1em"/><mi>q</mi><mo>=</mo><msub><mi>W</mi><mi>q</mi></msub><mspace width="0.2em"/><msubsup><mi>z</mi><mi>0</mi><mrow><mo>(</mo><msub><mi>ℓ</mi><mi>h</mi></msub><mo>)</mo></mrow></msubsup><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>;</mo><mspace width="0.3em"/><msub><mi>x</mi><mn>1</mn></msub><mo>,</mo><mo>…</mo><mo>,</mo><msub><mi>x</mi><mi>N</mi></msub><mo>)</mo></mtd></mtr><mtr><mtd><mtext>前計算：</mtext><mspace width="0.6em"/><msub><mover><mi>k</mi><mo>~</mo></mover><mi>i</mi></msub><mo>=</mo><msub><mi>W</mi><mi>k</mi></msub><mspace width="0.2em"/><msubsup><mi>z</mi><mi>i</mi><mrow><mo>(</mo><msub><mi>ℓ</mi><mi>h</mi></msub><mo>)</mo></mrow></msubsup><mo>(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>)</mo><mo>,</mo><mspace width="1em"/><mover><mi>q</mi><mo>~</mo></mover><mo>=</mo><msub><mi>W</mi><mi>q</mi></msub><mspace width="0.2em"/><msubsup><mi>z</mi><mi>0</mi><mrow><mo>(</mo><msub><mi>ℓ</mi><mi>h</mi></msub><mo>)</mo></mrow></msubsup><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo></mtd></mtr></mtable></math>
+    <p>正確な重みでは，状態がクエリと全候補に依存する（<math><mo>;</mo></math> の右）ので，クエリごとに計算し直す．前計算では <math><msub><mover><mi>k</mi><mo>~</mo></mover><mi>i</mi></msub></math> が候補 <math><msub><mi>x</mi><mi>i</mi></msub></math> だけで決まるので，前もって保存できる．</p>
+    <p>クエリを単独で通す推論は参照なしの予測と同じで，選ぶときの計算はそれと内積だけになる．この重みで，「照合と比べる」と同じ候補 1024 件から選ぶ場合と，train の全窓（約 8100 件）から選ぶ場合を比べた．</p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 348" role="img" aria-label="前計算した重みで選んだときの MSE ">
+<line class="grid" x1="200.0" x2="200.0" y1="24" y2="298"/>
+<text x="200.0" y="314" text-anchor="middle">−6%</text>
+<line class="grid" x1="330.0" x2="330.0" y1="24" y2="298"/>
+<text x="330.0" y="314" text-anchor="middle">−4%</text>
+<line class="grid" x1="460.0" x2="460.0" y1="24" y2="298"/>
+<text x="460.0" y="314" text-anchor="middle">−2%</text>
+<line class="zero" x1="590.0" x2="590.0" y1="24" y2="298"/>
+<text x="590.0" y="314" text-anchor="middle">0</text>
+<text class="t-ink" x="40" y="50" font-weight="600">128 件を選ぶ</text>
+<text class="t-ink" x="190" y="76" text-anchor="end">ランダム</text>
+<rect class="bar-soft" x="313.0" y="64" width="277.0" height="16" rx="2"><title>ランダム：−4.3%</title></rect>
+<text x="598.0" y="76">−4.3%</text>
+<text class="t-ink" x="190" y="102" text-anchor="end">正確な重み</text>
+<rect class="bar-ctx" x="225.8" y="90" width="364.2" height="16" rx="2"><title>正確な重み：−5.6%</title></rect>
+<text x="598.0" y="102">−5.6%</text>
+<text class="t-ink" x="190" y="128" text-anchor="end">前計算</text>
+<rect class="bar-ctx" x="226.4" y="116" width="363.6" height="16" rx="2"><title>前計算：−5.6%</title></rect>
+<text x="598.0" y="128">−5.6%</text>
+<text class="t-ink" x="190" y="154" text-anchor="end">前計算，全窓から</text>
+<rect class="bar-ctx" x="285.8" y="142" width="304.2" height="16" rx="2"><title>前計算，全窓から：−4.7%</title></rect>
+<text x="598.0" y="154">−4.7%</text>
+<text class="t-ink" x="40" y="184" font-weight="600">256 件を選ぶ</text>
+<text class="t-ink" x="190" y="210" text-anchor="end">ランダム</text>
+<rect class="bar-soft" x="276.1" y="198" width="313.9" height="16" rx="2"><title>ランダム：−4.8%</title></rect>
+<text x="598.0" y="210">−4.8%</text>
+<text class="t-ink" x="190" y="236" text-anchor="end">正確な重み</text>
+<rect class="bar-ctx" x="222.3" y="224" width="367.7" height="16" rx="2"><title>正確な重み：−5.7%</title></rect>
+<text x="598.0" y="236">−5.7%</text>
+<text class="t-ink" x="190" y="262" text-anchor="end">前計算</text>
+<rect class="bar-ctx" x="224.2" y="250" width="365.8" height="16" rx="2"><title>前計算：−5.6%</title></rect>
+<text x="598.0" y="262">−5.6%</text>
+<text class="t-ink" x="190" y="288" text-anchor="end">前計算，全窓から</text>
+<rect class="bar-ctx" x="265.5" y="276" width="324.5" height="16" rx="2"><title>前計算，全窓から：−5.0%</title></rect>
+<text x="598.0" y="288">−5.0%</text>
+<text x="395.0" y="334" text-anchor="middle">参照なしの MSE との差（どれも 1 パッチ隠す）</text>
+</svg></div>
+      <div class="plate-cap"><b>前計算した重みで選んだときの MSE（val）</b>ランダムと正確な重みは「照合と比べる」と同じ実行で，前計算も同じ候補 1024 件から選ぶ．全窓からは，起点より前に終わる train の 1 点おきの全窓から選ぶ．前計算と正確な重みの差（ブートストラップの標準誤差）は 128 件 +0.0 pt（±0.2），256 件 +0.0 pt（±0.2），全窓からと候補 1024 件からの差は +0.9 pt（±0.5），+0.6 pt（±0.5），前計算とランダムの差は −1.3 pt（±0.5），−0.8 pt（±0.4）．8 クエリおき（147 本）に測った正確な重みとの順位相関は平均 0.69（チャネル別 0.57〜0.85），上位 128 件の重なりは 56%，上位 256 件は 65%（ランダムなら 13% と 25%）．MAE は参照なし 0.4634 に対し，128 件で正確な重み 0.4579，前計算 0.4578，全窓から 0.4597，256 件で 0.4590，0.4589，0.4592．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <ul class="tight">
+      <li><strong>前計算した重みで選んでも，正確な重みと同じだけ効く．</strong>選ぶ事例は半分ほどしか重ならない．</li>
+      <li><strong>全窓から選ぶと，候補 1024 件から選ぶより悪い．</strong></li>
+    </ul>
+  </div>
+  <div class="prose">
+    <h3>候補の数を変える</h3>
+    <p>候補を増やすと悪くなるのか，増やしすぎると悪くなるのかを見るため，ランダムに取る候補の数を 512 件から全窓まで変えた．</p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 320" role="img" aria-label="候補の数と MSE">
+<line class="grid" x1="110" x2="560" y1="270.0" y2="270.0"/>
+<text x="102" y="274.0" text-anchor="end">−7%</text>
+<line class="grid" x1="110" x2="560" y1="210.0" y2="210.0"/>
+<text x="102" y="214.0" text-anchor="end">−6%</text>
+<line class="grid" x1="110" x2="560" y1="150.0" y2="150.0"/>
+<text x="102" y="154.0" text-anchor="end">−5%</text>
+<line class="grid" x1="110" x2="560" y1="90.0" y2="90.0"/>
+<text x="102" y="94.0" text-anchor="end">−4%</text>
+<line class="grid" x1="110" x2="560" y1="30.0" y2="30.0"/>
+<text x="102" y="34.0" text-anchor="end">−3%</text>
+<text x="110.0" y="286" text-anchor="middle">512</text>
+<text x="222.5" y="286" text-anchor="middle">1024</text>
+<text x="335.0" y="286" text-anchor="middle">2048</text>
+<text x="447.5" y="286" text-anchor="middle">4096</text>
+<text x="560.0" y="286" text-anchor="middle">全窓</text>
+<text x="335.0" y="306" text-anchor="middle">候補の数（ランダムに取る）</text>
+<line class="s-faint" x1="110" x2="560" y1="105.7" y2="105.7" style="stroke-width:1;stroke-dasharray:none"/>
+<text x="570" y="109.7">ランダム 128 件</text>
+<polyline class="s-ctx" points="110.0,161.9 222.5,185.6 335.0,188.2 447.5,149.4 560.0,130.8"/>
+<circle class="d-ctx" cx="110.0" cy="161.9" r="4"><title>128 件，候補 512：−5.2%</title></circle>
+<circle class="d-ctx" cx="222.5" cy="185.6" r="4"><title>128 件，候補 1024：−5.6%</title></circle>
+<circle class="d-ctx" cx="335.0" cy="188.2" r="4"><title>128 件，候補 2048：−5.6%</title></circle>
+<circle class="d-ctx" cx="447.5" cy="149.4" r="4"><title>128 件，候補 4096：−5.0%</title></circle>
+<circle class="d-ctx" cx="560.0" cy="130.8" r="4"><title>128 件，候補 全窓：−4.7%</title></circle>
+<text class="lbl-ctx" x="335.0" y="176.2" text-anchor="middle">128 件を選ぶ</text>
+<line class="s-faint" x1="110" x2="560" y1="139.8" y2="139.8" style="stroke-width:1;stroke-dasharray:5 4"/>
+<text x="570" y="143.8">ランダム 256 件</text>
+<polyline class="s-ctxrv" points="110.0,158.4 222.5,187.7 335.0,212.2 447.5,183.7 560.0,149.6"/>
+<circle class="d-ref" cx="110.0" cy="158.4" r="4"><title>256 件，候補 512：−5.1%</title></circle>
+<circle class="d-ref" cx="222.5" cy="187.7" r="4"><title>256 件，候補 1024：−5.6%</title></circle>
+<circle class="d-ref" cx="335.0" cy="212.2" r="4"><title>256 件，候補 2048：−6.0%</title></circle>
+<circle class="d-ref" cx="447.5" cy="183.7" r="4"><title>256 件，候補 4096：−5.6%</title></circle>
+<circle class="d-ref" cx="560.0" cy="149.6" r="4"><title>256 件，候補 全窓：−5.0%</title></circle>
+<text class="lbl-ctx" x="335.0" y="238.2" text-anchor="middle">256 件を選ぶ</text>
+<text x="50" y="16">参照なしの MSE との差（1 パッチ隠す）</text>
+</svg></div>
+      <div class="plate-cap"><b>候補の数と MSE（val，前計算の重み）</b>候補 1024 件と全窓は前の図と同じ実行．512，2048，4096 件はクエリごとに train の窓を並べ替えた先頭から取る（512 件は 2048 件に含まれる）．候補 1024 件との差（ブートストラップの標準誤差）は，128 件で 512 件 +0.4 pt（±0.4），2048 件 −0.0 pt（±0.3），4096 件 +0.6 pt（±0.4），256 件で +0.5 pt（±0.3），−0.4 pt（±0.3），+0.1 pt（±0.4）．MAE は参照なし 0.4634 に対し，128 件で 0.4598，0.4578，0.4581，0.4594，0.4597，256 件で 0.4609，0.4589，0.4578，0.4580，0.4592（候補の少ない順）．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <ul class="tight">
+      <li><strong>候補は増やすほど良いわけではない．</strong>2048 件までは良くなるか変わらず，それより増やすと悪くなる．</li>
+      <li><strong>一番良いのは，候補 2048 件から 256 件を選ぶときである．</strong>候補 1024 件からとの差は区別できない．</li>
+    </ul>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 408" role="img" aria-label="全窓から選ぶと選んだ事例が固まる">
+<text class="t-ink" x="20" y="22" font-weight="600">選んだ 128 件の train の中の位置（HUFL のクエリ 1 本）</text>
+<text class="t-ink" x="140" y="58" text-anchor="end">候補 1024 件から</text>
+<line class="axis-line" x1="150" x2="600" y1="66" y2="66"/>
+<line class="s-ctx" x1="194.9" x2="194.9" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="202.8" x2="202.8" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="203.0" x2="203.0" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="225.3" x2="225.3" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="226.5" x2="226.5" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="226.7" x2="226.7" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="233.2" x2="233.2" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="233.3" x2="233.3" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="234.4" x2="234.4" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="234.8" x2="234.8" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="235.9" x2="235.9" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="237.4" x2="237.4" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="238.7" x2="238.7" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="239.9" x2="239.9" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="241.0" x2="241.0" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="241.2" x2="241.2" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="241.2" x2="241.2" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="242.4" x2="242.4" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="245.0" x2="245.0" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="245.0" x2="245.0" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="245.2" x2="245.2" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="246.2" x2="246.2" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="258.4" x2="258.4" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="259.5" x2="259.5" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="259.7" x2="259.7" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="260.8" x2="260.8" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="261.0" x2="261.0" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="261.1" x2="261.1" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="263.4" x2="263.4" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="267.3" x2="267.3" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="267.4" x2="267.4" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="267.5" x2="267.5" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="272.7" x2="272.7" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="272.8" x2="272.8" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="278.4" x2="278.4" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="279.6" x2="279.6" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="303.3" x2="303.3" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="309.5" x2="309.5" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="309.9" x2="309.9" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="317.8" x2="317.8" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="327.0" x2="327.0" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="331.9" x2="331.9" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="341.2" x2="341.2" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="341.4" x2="341.4" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="345.5" x2="345.5" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="361.4" x2="361.4" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="388.7" x2="388.7" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="389.9" x2="389.9" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="400.5" x2="400.5" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="401.9" x2="401.9" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="405.9" x2="405.9" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="417.6" x2="417.6" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="417.7" x2="417.7" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="426.7" x2="426.7" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="432.3" x2="432.3" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="437.7" x2="437.7" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="450.6" x2="450.6" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="450.6" x2="450.6" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="450.8" x2="450.8" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="454.5" x2="454.5" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="455.9" x2="455.9" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="457.3" x2="457.3" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="457.3" x2="457.3" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="462.8" x2="462.8" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="466.4" x2="466.4" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="466.6" x2="466.6" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="467.8" x2="467.8" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="469.2" x2="469.2" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="469.2" x2="469.2" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="474.7" x2="474.7" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="479.6" x2="479.6" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="479.8" x2="479.8" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="480.9" x2="480.9" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="482.2" x2="482.2" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="483.6" x2="483.6" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="487.6" x2="487.6" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="490.0" x2="490.0" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="492.8" x2="492.8" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="495.8" x2="495.8" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="496.9" x2="496.9" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="497.1" x2="497.1" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="502.4" x2="502.4" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="505.8" x2="505.8" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="508.4" x2="508.4" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="508.5" x2="508.5" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="510.0" x2="510.0" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="512.5" x2="512.5" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="515.1" x2="515.1" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="515.6" x2="515.6" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="516.5" x2="516.5" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="517.9" x2="517.9" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="519.0" x2="519.0" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="520.5" x2="520.5" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="524.2" x2="524.2" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="524.5" x2="524.5" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="525.5" x2="525.5" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="525.6" x2="525.6" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="536.7" x2="536.7" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="539.0" x2="539.0" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="544.2" x2="544.2" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="546.8" x2="546.8" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="546.9" x2="546.9" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="549.6" x2="549.6" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="550.9" x2="550.9" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="552.6" x2="552.6" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="553.8" x2="553.8" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="554.7" x2="554.7" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="554.8" x2="554.8" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="556.2" x2="556.2" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="560.0" x2="560.0" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="561.4" x2="561.4" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="562.5" x2="562.5" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="562.8" x2="562.8" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="565.1" x2="565.1" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="570.6" x2="570.6" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="571.8" x2="571.8" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="571.9" x2="571.9" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="573.1" x2="573.1" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="573.3" x2="573.3" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="580.2" x2="580.2" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="582.7" x2="582.7" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="588.9" x2="588.9" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="591.8" x2="591.8" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="594.3" x2="594.3" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="595.6" x2="595.6" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="596.9" x2="596.9" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="597.0" x2="597.0" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="599.5" x2="599.5" y1="44" y2="66" style="stroke-width:1;opacity:0.6"/>
+<text class="t-ink" x="140" y="102" text-anchor="end">全窓から</text>
+<line class="axis-line" x1="150" x2="600" y1="110" y2="110"/>
+<line class="s-ctx" x1="386.0" x2="386.0" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="388.6" x2="388.6" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="388.7" x2="388.7" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="388.7" x2="388.7" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="396.5" x2="396.5" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="396.6" x2="396.6" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="396.6" x2="396.6" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="397.9" x2="397.9" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="397.9" x2="397.9" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="398.0" x2="398.0" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="399.2" x2="399.2" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="399.2" x2="399.2" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="399.3" x2="399.3" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="400.5" x2="400.5" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="422.8" x2="422.8" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="422.9" x2="422.9" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="423.0" x2="423.0" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="424.1" x2="424.1" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="424.2" x2="424.2" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="424.2" x2="424.2" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="424.3" x2="424.3" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="424.3" x2="424.3" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="425.5" x2="425.5" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="425.5" x2="425.5" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="425.6" x2="425.6" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="428.1" x2="428.1" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="428.2" x2="428.2" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="428.2" x2="428.2" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="429.5" x2="429.5" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="429.5" x2="429.5" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="436.5" x2="436.5" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="442.7" x2="442.7" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="442.7" x2="442.7" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="442.8" x2="442.8" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="444.0" x2="444.0" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="444.0" x2="444.0" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="444.1" x2="444.1" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="445.3" x2="445.3" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="445.4" x2="445.4" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="446.7" x2="446.7" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="449.2" x2="449.2" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="449.3" x2="449.3" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="449.3" x2="449.3" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="449.4" x2="449.4" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="450.6" x2="450.6" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="450.6" x2="450.6" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="450.7" x2="450.7" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="455.9" x2="455.9" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="455.9" x2="455.9" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="457.2" x2="457.2" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="457.2" x2="457.2" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="458.6" x2="458.6" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="459.8" x2="459.8" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="459.9" x2="459.9" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="465.1" x2="465.1" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="466.4" x2="466.4" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="466.5" x2="466.5" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="479.6" x2="479.6" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="479.6" x2="479.6" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="480.9" x2="480.9" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="480.9" x2="480.9" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="481.0" x2="481.0" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="481.0" x2="481.0" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="482.2" x2="482.2" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="482.3" x2="482.3" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="483.5" x2="483.5" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="490.1" x2="490.1" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="490.1" x2="490.1" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="490.2" x2="490.2" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="491.5" x2="491.5" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="504.6" x2="504.6" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="504.6" x2="504.6" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="504.7" x2="504.7" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="504.7" x2="504.7" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="505.9" x2="505.9" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="506.0" x2="506.0" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="506.0" x2="506.0" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="507.2" x2="507.2" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="507.3" x2="507.3" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="507.3" x2="507.3" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="508.5" x2="508.5" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="508.6" x2="508.6" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="508.6" x2="508.6" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="512.6" x2="512.6" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="517.8" x2="517.8" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="517.8" x2="517.8" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="517.9" x2="517.9" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="519.1" x2="519.1" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="519.1" x2="519.1" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="519.2" x2="519.2" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="524.4" x2="524.4" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="524.4" x2="524.4" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="524.5" x2="524.5" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="524.5" x2="524.5" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="525.6" x2="525.6" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="525.7" x2="525.7" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="525.7" x2="525.7" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="525.8" x2="525.8" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="525.8" x2="525.8" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="527.0" x2="527.0" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="527.1" x2="527.1" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="527.1" x2="527.1" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="540.2" x2="540.2" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="540.3" x2="540.3" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="541.6" x2="541.6" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="541.6" x2="541.6" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="549.5" x2="549.5" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="549.5" x2="549.5" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="561.3" x2="561.3" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="562.6" x2="562.6" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="562.6" x2="562.6" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="562.7" x2="562.7" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="563.9" x2="563.9" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="564.0" x2="564.0" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="564.0" x2="564.0" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="565.3" x2="565.3" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="565.3" x2="565.3" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="570.6" x2="570.6" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="589.0" x2="589.0" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="589.0" x2="589.0" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="590.3" x2="590.3" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="590.3" x2="590.3" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="590.4" x2="590.4" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="591.7" x2="591.7" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="591.7" x2="591.7" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="596.9" x2="596.9" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="597.0" x2="597.0" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<line class="s-ctx" x1="599.6" x2="599.6" y1="88" y2="110" style="stroke-width:1;opacity:0.6"/>
+<text x="150.0" y="134" text-anchor="middle">2016-07</text>
+<text x="271.3" y="134" text-anchor="middle">2016-10</text>
+<text x="392.6" y="134" text-anchor="middle">2017-01</text>
+<text x="511.2" y="134" text-anchor="middle">2017-04</text>
+<text x="600.0" y="134" text-anchor="middle">2017-06</text>
+<text class="t-ink" x="20" y="178" font-weight="600">選んだ事例のうち，隣と 1 時間しかずれていない割合</text>
+<line class="zero" x1="150" x2="600" y1="358.0" y2="358.0"/>
+<text x="142" y="362.0" text-anchor="end">0%</text>
+<line class="grid" x1="150" x2="600" y1="312.3" y2="312.3"/>
+<text x="142" y="316.3" text-anchor="end">20%</text>
+<line class="grid" x1="150" x2="600" y1="266.6" y2="266.6"/>
+<text x="142" y="270.6" text-anchor="end">40%</text>
+<line class="grid" x1="150" x2="600" y1="220.9" y2="220.9"/>
+<text x="142" y="224.9" text-anchor="end">60%</text>
+<text x="150.0" y="374" text-anchor="middle">512</text>
+<text x="262.5" y="374" text-anchor="middle">1024</text>
+<text x="375.0" y="374" text-anchor="middle">2048</text>
+<text x="487.5" y="374" text-anchor="middle">4096</text>
+<text x="600.0" y="374" text-anchor="middle">全窓</text>
+<text x="375.0" y="394" text-anchor="middle">候補の数（ランダムに取る）</text>
+<polyline class="s-ctx" points="150.0,346.9 262.5,337.0 375.0,320.3 487.5,287.3 600.0,229.7"/>
+<circle class="d-ctx" cx="150.0" cy="346.9" r="4"><title>128 件，候補 512：5%</title></circle>
+<circle class="d-ctx" cx="262.5" cy="337.0" r="4"><title>128 件，候補 1024：9%</title></circle>
+<circle class="d-ctx" cx="375.0" cy="320.3" r="4"><title>128 件，候補 2048：16%</title></circle>
+<circle class="d-ctx" cx="487.5" cy="287.3" r="4"><title>128 件，候補 4096：31%</title></circle>
+<circle class="d-ctx" cx="600.0" cy="229.7" r="4"><title>128 件，候補 all：56%</title></circle>
+<text class="lbl-ctx" x="610" y="245.7">128 件</text>
+<polyline class="s-ctxrv" points="150.0,345.7 262.5,335.3 375.0,316.3 487.5,281.7 600.0,216.9"/>
+<circle class="d-ref" cx="150.0" cy="345.7" r="4"><title>256 件，候補 512：5%</title></circle>
+<circle class="d-ref" cx="262.5" cy="335.3" r="4"><title>256 件，候補 1024：10%</title></circle>
+<circle class="d-ref" cx="375.0" cy="316.3" r="4"><title>256 件，候補 2048：18%</title></circle>
+<circle class="d-ref" cx="487.5" cy="281.7" r="4"><title>256 件，候補 4096：33%</title></circle>
+<circle class="d-ref" cx="600.0" cy="216.9" r="4"><title>256 件，候補 all：62%</title></circle>
+<text class="lbl-ctx" x="610" y="210.9">256 件</text>
+</svg></div>
+      <div class="plate-cap"><b>候補を増やしたときの選んだ事例の偏り（val，前計算の重み）</b>上は HUFL の 1 本で，線 1 本が選んだ窓 1 件の開始位置．この例では，全窓から選ぶと 2017 年の窓だけが選ばれる．下は 7 チャネルの 8 クエリおき 147 本の平均で，選んだ窓を開始位置の順に並べ，次の窓との差が 1 時間のものの割合．候補は上の図と同じ．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <ul class="tight">
+      <li><strong>候補を増やすほど，選んだ事例が隣り合う窓に固まる．</strong>全窓から選ぶと，半分以上が 1 時間ずらしただけの窓になる．</li>
+      <li><strong>候補が少ないと選べる事例が限られ，多いと選んだ事例が固まる．</strong>その釣り合いで 2048 件あたりが一番良くなると考えられるが，固まりが悪くなる理由かは，隣り合う窓を間引いて確かめる．</li>
+    </ul>
+  </div>
+  <div class="prose">
+    <h3>1 クエリあたりの計算時間</h3>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 280" role="img" aria-label="手法ごとのクエリ 1 本あたりの時間">
+<line class="zero" x1="200.0" x2="200.0" y1="24" y2="200"/>
+<text x="200.0" y="216" text-anchor="middle">0</text>
+<line class="grid" x1="251.4" x2="251.4" y1="24" y2="200"/>
+<text x="251.4" y="216" text-anchor="middle">2</text>
+<line class="grid" x1="302.9" x2="302.9" y1="24" y2="200"/>
+<text x="302.9" y="216" text-anchor="middle">4</text>
+<line class="grid" x1="354.3" x2="354.3" y1="24" y2="200"/>
+<text x="354.3" y="216" text-anchor="middle">6</text>
+<line class="grid" x1="405.7" x2="405.7" y1="24" y2="200"/>
+<text x="405.7" y="216" text-anchor="middle">8</text>
+<line class="grid" x1="457.1" x2="457.1" y1="24" y2="200"/>
+<text x="457.1" y="216" text-anchor="middle">10</text>
+<line class="grid" x1="508.6" x2="508.6" y1="24" y2="200"/>
+<text x="508.6" y="216" text-anchor="middle">12</text>
+<line class="grid" x1="560.0" x2="560.0" y1="24" y2="200"/>
+<text x="560.0" y="216" text-anchor="middle">14</text>
+<text class="t-ink" x="190" y="48" text-anchor="end">参照なし</text>
+<rect class="bar-orc" x="200" y="36" width="0.0" height="18"><title>参照なし，選ぶ：0.00 秒</title></rect>
+<rect class="bar-ctx" x="200.0" y="36" width="0.7" height="18"><title>参照なし，予測：0.03 秒</title></rect>
+<text x="208.7" y="49">0.03 秒</text>
+<text class="t-ink" x="190" y="82" text-anchor="end">ランダム</text>
+<rect class="bar-orc" x="200" y="70" width="0.0" height="18"><title>ランダム，選ぶ：0.00 秒</title></rect>
+<rect class="bar-ctx" x="200.0" y="70" width="19.9" height="18"><title>ランダム，予測：0.77 秒</title></rect>
+<text x="227.9" y="83">0.77 秒</text>
+<text class="t-ink" x="190" y="116" text-anchor="end">正確な重み</text>
+<rect class="bar-orc" x="200" y="104" width="304.3" height="18"><title>正確な重み，選ぶ：11.83 秒</title></rect>
+<rect class="bar-ctx" x="504.3" y="104" width="19.9" height="18"><title>正確な重み，予測：0.77 秒</title></rect>
+<text x="532.2" y="117">12.61 秒</text>
+<text class="t-ink" x="190" y="150" text-anchor="end">前計算</text>
+<rect class="bar-orc" x="200" y="138" width="1.1" height="18"><title>前計算，選ぶ：0.04 秒</title></rect>
+<rect class="bar-ctx" x="201.1" y="138" width="19.9" height="18"><title>前計算，予測：0.77 秒</title></rect>
+<text x="228.9" y="151">0.81 秒</text>
+<text class="t-ink" x="190" y="184" text-anchor="end">前計算，全窓から</text>
+<rect class="bar-orc" x="200" y="172" width="1.0" height="18"><title>前計算，全窓から，選ぶ：0.04 秒</title></rect>
+<rect class="bar-ctx" x="201.0" y="172" width="19.9" height="18"><title>前計算，全窓から，予測：0.77 秒</title></rect>
+<text x="228.8" y="185">0.81 秒</text>
+<text x="380.0" y="230" text-anchor="middle">クエリ 1 本あたりの時間（秒）</text>
+<rect class="bar-orc" x="200" y="244" width="14" height="12"/><text class="t-ink" x="220" y="254">事例を選ぶ</text>
+<rect class="bar-ctx" x="320" y="244" width="14" height="12"/><text class="t-ink" x="340" y="254">予測</text>
+</svg></div>
+      <div class="plate-cap"><b>手法ごとのクエリ 1 本あたりの時間</b>HUFL の 8 クエリの中央値，Apple M4（16 GB）．参照なし以外は 128 件で 1 パッチ隠して予測する．選ぶ時間は，正確な重みでは候補 1024 件を全部入れた推論，前計算ではクエリ単独の推論と内積と並べ替え．前計算の key はデータベースを作るときに 1 回で，8193 窓に 32 秒かかる（この図には含まない）．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <ul class="tight">
+      <li><strong>正確な重みで選ぶと，ランダムの約 16 倍かかる．</strong>時間のほとんどは選ぶための推論である．</li>
+      <li><strong>前計算で選ぶと，候補を全窓に増やしてもランダムとほとんど変わらない．</strong></li>
+    </ul>
+  </div>
+  <div class="prose">
+    <h3>前計算でも同じだけ効く理由</h3>
+    <p>前計算と正確な重みでは選ぶ事例が半分ほど入れ替わるのに，効き目は同じだった．違いがクエリ側の q（query）と候補側の k（key）のどちらから来るかを見るため，正確な重みの推論から第 11・12 層の q と k を取り出し，片方だけ前計算のものと入れ替えて重みを作り直した．</p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 180" role="img" aria-label="q と k のどちらを正確にすると正確な重みに近づくか">
+<line class="zero" x1="200.0" x2="200.0" y1="24" y2="120"/>
+<text x="200.0" y="136" text-anchor="middle">0</text>
+<line class="grid" x1="290.0" x2="290.0" y1="24" y2="120"/>
+<text x="290.0" y="136" text-anchor="middle">0.25</text>
+<line class="grid" x1="380.0" x2="380.0" y1="24" y2="120"/>
+<text x="380.0" y="136" text-anchor="middle">0.5</text>
+<line class="grid" x1="470.0" x2="470.0" y1="24" y2="120"/>
+<text x="470.0" y="136" text-anchor="middle">0.75</text>
+<line class="grid" x1="560.0" x2="560.0" y1="24" y2="120"/>
+<text x="560.0" y="136" text-anchor="middle">1</text>
+<text class="t-ink" x="190" y="46" text-anchor="end">q も k も前計算</text>
+<rect class="bar-ctx" x="200" y="34" width="243.8" height="16" rx="2"><title>q も k も前計算：0.68</title></rect>
+<text x="451.8" y="46">0.68</text>
+<text class="t-ink" x="190" y="76" text-anchor="end">q だけ正確</text>
+<rect class="bar-ctx" x="200" y="64" width="249.7" height="16" rx="2"><title>q だけ正確：0.69</title></rect>
+<text x="457.7" y="76">0.69</text>
+<text class="t-ink" x="190" y="106" text-anchor="end">k だけ正確</text>
+<rect class="bar-orc" x="200" y="94" width="349.8" height="16" rx="2"><title>k だけ正確：0.97</title></rect>
+<text x="557.8" y="106">0.97</text>
+<text x="380.0" y="156" text-anchor="middle">正確な重みとの順位相関</text>
+</svg></div>
+      <div class="plate-cap"><b>q と k の片方だけを正確にしたときの重みの順位相関（val）</b>3 チャネル（HUFL，MULL，OT）の 8 クエリおき 63 本，候補は前の図と同じ 1024 件．取り出した q と k から作り直した重みは，正確な重みと順位相関 1.00 で一致する．k の変化のうち全候補に共通する成分は 39%（内積に同じ値を足すだけで順位を変えない）．前計算の上位 128 件のうち正確な重みの上位 128 件に入らないものは，正確な重みで中央値 263 位．正確な重みの 128 位の重みは平均の 1.5 倍，1 位の 0.22 倍．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <ul class="tight">
+      <li><strong>前計算とのずれは，ほとんど k から来る．</strong>候補がほかの行を読むと k は変わるが，クエリの q はほかの行を読んでもほとんど変わらない．</li>
+      <li><strong>入れ替わる事例は，正確な重みでも上位 3 割ほどにある．</strong>上位でも重みの差は小さく，そこで入れ替わっても効き目は変わらなかった．</li>
+    </ul>
+  </div>
 </section>
 
 <section>
@@ -1562,12 +2181,12 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
     <div class="sec-head"><span class="sec-num">筋</span><h2>ここまでの筋と次の一手</h2></div>
     <div class="vs">
       <div class="k">1 どう読むか</div><div>多くのレイヤーは正解から遠い事例を重く読む．正解や文脈の近い事例を重く読むのは後ろのレイヤーだけ．</div>
-      <div class="k">2 attention で選ぶ</div><div>第 10〜12 レイヤーから train の相関で決めたヘッドの重みで選ぶと，ランダムや候補の全部入れより良い．候補を増やすほど効き，MAE も参照なしを下回る．ヘッドの数・層・重みのまとめ方を変えても，上位 3 より良いものはない．最初のパッチを隠すと重ねるとさらに少し良くなる．性能で決めたヘッドや前のレイヤーのヘッドは効かない．同じ候補から照合で選ぶと，128 件ではヘッドに負けるが，256 件では差が区別できない．</div>
+      <div class="k">2 attention で選ぶ</div><div>第 10〜12 レイヤーから train の相関で決めたヘッドの重みで選ぶと，ランダムや候補の全部入れより良い．候補を増やすほど効き，MAE も参照なしを下回る．ヘッドの数・層・重みのまとめ方を変えても，上位 3 より良いものはない．最初のパッチを隠すと重ねるとさらに少し良くなる．性能で決めたヘッドや前のレイヤーのヘッドは効かない．同じ候補から照合で選ぶと，128 件ではヘッドに負けるが，256 件では差が区別できない．重みは候補を単独で通して前計算しても同じだけ効く．候補は 2048 件までは増やしてよいが，それより増やすと選んだ事例が隣り合う窓に固まって悪くなる．</div>
     </div>
     <div class="flow">
       <div class="step now">
         <h4><span class="tag now">次</span>既定の設定とほかのデータで確かめる</h4>
-        <p>ヘッドで選ぶ＋最初のパッチを隠すを，履歴 8192 点（既定）と ETTh2 で確かめる．候補 2048 件は 1 回の forward ではメモリが足りないので，候補を分けて重みを比べる方法を考える．</p>
+        <p>ヘッドで選ぶ＋最初のパッチを隠すを，履歴 8192 点（既定）と ETTh2 で確かめる．候補を増やすには，前計算した重みで全窓から選ぶとき，隣り合う窓を間引く．</p>
       </div>
     </div>
   </div>
@@ -1585,6 +2204,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
       <li><strong>2 節の attention で選ぶ</strong>：履歴 2032 点，事例の文脈 384 点，候補 512 件，K=128．ヘッドを決めるクエリは train の各チャネルの最後の 60 本（17 時間おき，履歴は train の中）で，候補はその起点より 96 点以上前に終わる train の窓からランダム（seed [7, チャネル]）．val の候補は seed [1, チャネル]．参照なしは<a href="../how-to-read/patch-mask.html">パッチを隠す</a>と同じ値．scratchpad の <code>head_select.py</code>（結果 head_select.json），<code>head_val.py</code>（head_val_step1.json），<code>head_val2.py</code>（head_val2_step1.json），全ヘッドの平均はセッション 606c9886 の <code>agcr.py</code>（agcr_step1.json，同じ候補），<code>head_val3.py</code>（HV_M=1024，head_val3_M1024_step1.json），<code>head_val4.py</code>（同じ候補で予測時に 1 パッチ隠す，head_val4_M1024_step1.json）．</li>
       <li><strong>2 節のほかのヘッドの組み合わせ</strong>：「val で評価する」と同じ候補 512 件（seed [1, チャネル]）．scratchpad の <code>head_search.py</code>（列ごとに正規化，head_search_step1.json），<code>head_search2.py</code>（既定のまとめ方，head_search2_step1.json，正規化前の重み attnraw512_ch*_step1.npy）．head_search2 の第 10〜12 層の上位 3 は head_val2 と完全に一致する．</li>
       <li><strong>2 節の照合と比べる</strong>：候補は head_val3 と同じ 1024 件（seed [1, チャネル]）．予測照合の候補側の予測は，train の 1 点おきの全窓について文脈 384 点だけから参照なしで予測したもの．scratchpad の <code>sim_pool.py</code>（sim_pool_M1024_step1.json），図は <code>sim_fig.py</code>．<a href="match-key.html">照合で選ぶ</a>の照合とは，候補（11 点おきの全窓とランダム 1024 件）と予測照合の候補側の文脈の長さが違う．</li>
+      <li><strong>2 節の重みを前計算して候補を増やす</strong>：各候補は他の行なしで（group attention は自分だけ）通し，位置は予測の起点に終わるようにずらす．クエリの query は参照なしの推論から取る．重みのまとめ方（列ごとに自分＋候補で softmax，列の平均，自分を除いて正規化，3 ヘッドの平均）は正確な重みと同じ．正確な重みでは候補どうしやクエリが前のレイヤーで互いを読むが，前計算では読まない．scratchpad の <code>sel_fast.py</code>（SF_MODE=A，sel_fast_A_M1024_step1.json），分かれ方は <code>sf_div.py</code>（sf_div.json），図は <code>sf_fig.py</code>，<code>fast_diagram.py</code>．候補の数を変えるのは <code>sel_fast.py</code>（SF_MODE=C，候補は seed [3, チャネル, クエリ] の並べ替えの先頭，sel_fast_C_M1024_step1.json，図は <code>msweep_fig.py</code>）で，候補 1024 件だけは seed [1, チャネル] の別の取り方．偏りは <code>spread_M.py</code>（spread_M.json，図は <code>bias_fig.py</code>）．計算時間は <code>time_fast.py</code>（time_fast.json，図は <code>cost_fig.py</code>），q と k の入れ替えは <code>why_fast.py</code>（why_fast.json，図は <code>whyfast_fig.py</code>）．</li>
       <li>スクリプトは scratchpad の <code>attn_dump.py</code>，<code>attn_ana.py</code>．</li>
     </ul>
   </div>
