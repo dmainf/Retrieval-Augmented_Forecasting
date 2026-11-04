@@ -10,7 +10,7 @@ instead. That weights the channels by how hard the evaluated period is rather
 than by their train scale, and can change an improvement ratio noticeably.
 
 The table is long (one row per channel, window and horizon step, columns true
-and q0.1 ... q0.9). Older wide tables (pred_q<q>_<t> / true_<t>) are converted.
+and q0.1 ... q0.9).
 
   python3 codes/evaluate.py results/ETTh1_val_none.parquet [more.parquet ...]
 """
@@ -28,21 +28,6 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 METRICS = ["MSE", "MAE", "QL"]
 
 
-def to_long(table: pd.DataFrame) -> pd.DataFrame:
-    """Convert a wide table (pred_q<q>_<t>, true_<t>) to the long layout."""
-    if "true" in table.columns:
-        return table
-    steps = sorted(int(c.rsplit("_", 1)[1]) for c in table.columns if c.startswith("true_"))
-    levels = sorted({c.split("_")[1][1:] for c in table.columns if c.startswith("pred_q")}, key=float)
-    n, p = len(table), len(steps)
-    out = pd.DataFrame({"channel": np.repeat(table["channel"].to_numpy(), p),
-                        "h": np.tile(steps, n),
-                        "true": table[[f"true_{t}" for t in steps]].to_numpy().reshape(-1)})
-    for q in levels:
-        out[f"q{q}"] = table[[f"pred_q{q}_{t}" for t in steps]].to_numpy().reshape(-1)
-    return out
-
-
 def quantile_columns(table: pd.DataFrame) -> list:
     return sorted([c for c in table.columns if re.fullmatch(r"q\d*\.?\d+", c)], key=lambda c: float(c[1:]))
 
@@ -51,9 +36,6 @@ def train_std(args_path: str) -> dict:
     """Per-channel std (ddof 0) of the train split of the run's dataset."""
     with open(args_path) as f:
         a = json.load(f)
-    if "ett_months" not in a:
-        from run import ETT_MONTHS, TEST_FRAC, TRAIN_FRAC
-        a.update(ett_months=ETT_MONTHS, train_frac=TRAIN_FRAC, test_frac=TEST_FRAC)
     root = a["root_path"]
     if not os.path.isabs(root) and not os.path.isdir(root):
         root = os.path.join(REPO, root)
@@ -87,7 +69,7 @@ def channel_scores(table: pd.DataFrame, scale: dict = None, median: str = "q0.5"
 
 def evaluate(path: str) -> dict:
     """Main scores (train std) and e-scores (evaluated-truth std), averaged over channels."""
-    table = to_long(pd.read_parquet(path))
+    table = pd.read_parquet(path)
     main = channel_scores(table, train_std(path[:-len(".parquet")] + "_args.json")).mean()
     own = channel_scores(table).mean()
     return {**main.to_dict(), **{f"e{k}": v for k, v in own.items()}}

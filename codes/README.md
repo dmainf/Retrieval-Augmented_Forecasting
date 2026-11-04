@@ -1,18 +1,23 @@
 # Retrieval-Augmented Forecasting with Chronos-2
 
-凍結した Chronos-2 に，過去の窓（参照事例）を**共変量の行として並列に**渡して予測する．
-着目点は 2 つ：**どう融合するか**（並列）と，**どう選ぶか**（全クエリ共通の many-shot セット）．
-論旨と結果は `docs/raf-note.html`．旧実験の記録は git 履歴（`c66158c` 以前）と `results/_archive/` にある．
+凍結した Chronos-2 に，過去の窓（事例）を渡して予測する．論旨と結果は `docs/raf-note.html`．
+
+提案手法は 3 つの組み合わせで，`--select attn` だけで走る（`--select` 以外の既定は提案手法の値）．
+
+- (A) 事例を共変量の行として並列に置き，group attention で読ませる（`--fusion parallel`）
+- (B) 最初の予測パッチの列だけ，クエリから事例を隠す（`--hide P1`）
+- (C) クエリごとに train の窓から候補を 2048 件引き，近さヘッド 3 つの重みで 256 件に絞る．key は前計算する（`--select attn --candidates 2048 --top-k 256`）
 
 ## 構成
 
 | ファイル | 役割 |
 |---|---|
-| `codes/dataset.py` | parquet 読み込み，train/val/test 分割，窓の切り出し |
-| `codes/chronos2.py` | Chronos-2 の forward．並列（事例を共変量の行に）と連結（事例を時間軸の前に）．事例 1 件 11 トークンで計算するので many-shot が回る |
-| `codes/selection.py` | 事例の選び方．task-level：`random` / `medoid`（形の代表点）/ `strat`（外れ方で層別）．instance-level：`l2` / `l2rv`（各窓を自分の文脈で正規化してからの距離）/ `band`（`l2rv` の順位を等間隔に K 件）/ `oracle` / `truth`．`--inst-k` で共通セットに文脈照合を足す（ハイブリッド） |
+| `codes/dataset.py` | parquet の読み込み，train/val/test の分割，窓の切り出し |
+| `codes/chronos2.py` | Chronos-2 の forward．並列と連結，隠す列，ヘッドの query・key と重みの取り出し |
+| `codes/selection.py` | 候補の引き方と選び方（ランダム，照合 5 種，ヘッドの重み） |
 | `codes/run.py` | 入口．予測と正解を `results/<名前>.parquet` に縦長で保存（1 行＝チャネル×クエリ×予測の何点目 `h`．列は `date` `true` `q0.1`〜`q0.9` など） |
-| `codes/evaluate.py` | MSE・MAE・分位点損失（QL）．主な指標は各チャネルを train の標準偏差で標準化した値（論文の慣例）．`eMSE` などは評価区間の正解の標準偏差で割った補助指標．以前の横長の表も読める |
+| `codes/heads.py` | `--select attn` で使う近さヘッドを，train の末尾のクエリだけで選び直す（val・test は使わない） |
+| `codes/evaluate.py` | MSE・MAE・分位点損失（QL）．各チャネルを train の標準偏差で割って 7 チャネルで平均する．`eMSE` などは評価区間の正解の標準偏差で割った補助指標 |
 
 ## 準備
 
@@ -25,36 +30,52 @@ pip3 install "chronos-forecasting>=2.0" pandas pyarrow einops
 ## 実行
 
 ```bash
-python3 codes/run.py --select none                                  # 参照なし
-python3 codes/run.py --select random --top-k 128 --seed 0           # task-level・many-shot
-python3 codes/run.py --select l2 --top-k 8                          # instance-level（RAF の基準線）
-python3 codes/run.py --select l2 --top-k 8 --fusion concat          # 同じ事例を連結で
-python3 codes/run.py --select random --top-k 32 --ablation shuffle-future
-python3 codes/run.py --select random --top-k 128 --seed 0 --eval-split test   # 値を val で決めてから
+python3 codes/run.py                          # 参照なし
+python3 codes/run.py --select attn            # 提案手法
+python3 codes/run.py --select attn --hide ""  # 提案から (B) を外す
+python3 codes/run.py --select random          # 同じ候補・件数・隠し方でランダム
+python3 codes/run.py --select ctx=ctx --top-k 8 --fusion concat
+python3 codes/run.py --select attn --eval-split test   # 値を val で決めてから
 python3 codes/evaluate.py results/*.parquet
 ```
 
+`--select` 以外の既定は提案手法の値なので，ほかの選び方も同じ候補・件数・隠し方で比べられる．参照なしでは，履歴・予測の長さ・起点の間隔だけが効く．
+
 | 引数 | 既定 | 意味 |
 |---|---|---|
-| `--fusion` | `parallel` | `parallel`：事例を共変量の行に．`concat`：事例を履歴の前に連結（qmean 区切り 16 点） |
-| `--select` | `none` | 選び方（上の表） |
-| `--top-k` | `128` | 事例の数．連結は履歴 2032 なら 35 件まで |
-| `--history` | `8192` | クエリの履歴長（Chronos-2 の文脈の上限） |
-| `--seq-len` / `--pred-len` | `384` / `64` | 事例の文脈長 / 予測長 |
-| `--db-stride` | `1` | 事例の候補となる窓の間隔（train の全窓） |
-| `--ablation` | `none` | `shuffle-future`：事例どうしで未来を入れ替える．選び方によらずかかる（`truth` は K 件が同じなので変化しない） |
-| `--eval-split` | `val` | `val` / `test`．ハイパーパラメータは val で決めてから，`--eval-split test` で test を出す |
+| `--select` | `none` | `none`：参照なし．`random`：候補の最初の K 件．照合：`ctx=ctx` `fc=fc` `fc=fut` `fut=fc` `fut=fut`．`attn`：近さヘッドの attention の重み |
+| `--fusion` | `parallel` | `parallel`：事例を共変量の行に．`concat`：事例を履歴の前に時間方向につなぎ，あいだに欠測を 1 パッチ空ける |
+| `--top-k` | `256` | 事例の数 K．連結は履歴 512 点なら 16 件，2032 点なら 13 件まで |
+| `--candidates` | `2048` | クエリごとにランダムに引く候補の数．0 は使える全窓．どの選び方もこの中から選ぶ |
+| `--hide` | `P1` | クエリが事例を読まない列．`P1`〜`P4` は予測パッチ，`C1` は文脈の最後のパッチ（`C2` はその前），`REG`．例：`P1,C1`．`""` で隠さない．並列のときだけで，連結では隠さない |
+| `--metric` | `l2` | 照合の距離．`l2`（ユークリッド距離），`cosine`（1 − コサイン類似度），`corr`（1 − 相関係数） |
+| `--match-norm` | `context` | `context`：クエリと窓をそれぞれ自分の文脈で標準化してから測る．`raw`：生の値で測る |
+| `--heads` | `L12H1,L12H7,L11H10` | `attn` で使うヘッド（第何層の何番目か，1 から数える） |
+| `--head-weights` | `precompute` | `precompute`：各行を単独で通して key を前計算する．`exact`：クエリと候補をまとめて通す（候補 2048 件はメモリに載らない） |
+| `--select-hide` | なし | `exact` で選ぶ 1 回目の推論にも `--hide` をかける |
+| `--history` | `512` | クエリの履歴の長さ．先行研究（TS-RAG，Cross-RAG など）と同じ．長い履歴は 8192（上限），報告書は 2032 |
+| `--seq-len` / `--pred-len` | `384` / `64` | 事例の文脈の長さ（履歴より長くできない）/ 予測の長さ．K・事例の文脈・候補の数は履歴 2032 点で選んだ値で，512 点で選び直す予定 |
+| `--eval-stride` | `17` | 予測の起点の間隔．24 と 168 と公約数を持たない |
+| `--db-stride` | `1` | train の窓を切る間隔（1 は全窓） |
+| `--seed` | `0` | 候補を引く乱数 |
+| `--eval-split` | `val` | `val` / `test`．ハイパーパラメータは val で決めてから test を出す |
 | `--overwrite` | なし | 同名の結果があると止まる．上書きするときに付ける |
 
-どの選び方も，候補は同じ train の窓（`--db-stride` 点おき）．instance-level は，そのうちクエリの文脈が始まる前に終わる窓から選ぶ．
-`_selected.parquet` の `db_index` は train の窓の番号で，窓の開始位置は `db_index × db-stride`．
-`oracle` と `truth` は正解を使う診断用で，手法ではない．`truth` はクエリ自身の文脈と正解の未来をそのまま K 件渡す（候補からは選ばない）．
+照合の名前は「クエリの側＝窓の側」で，`ctx` は文脈（クエリは履歴の最後の `seq_len` 点），`fut` は未来，`fc` は参照なしの予測（クエリは履歴から，窓は自分の文脈 `seq_len` 点だけから）．`fut` をクエリの側に使う `fut=fc` と `fut=fut` は正解を使う診断で，手法ではない．
 
-ファイル名は `<データセット>_<分割>_<選び方>_k<K>_<融合>_s<seed>` に，2026-10-19 より前の既定（`--seq-len 96` `--pred-len 64` `--history 2032` `--eval-stride 17` `--db-stride 11`）と違う値（`_sl384` `_h8192` など．`none` には `_sl` を付けない）と `--channels`（`_chOT`）が付く．
-乱数はチャネルごとに seed とチャネル名から作るので，`--channels` で一部だけ走らせても同じ事例が選ばれる．
+候補は，予測の起点より 96 点以上前に終わる train の窓から引く．乱数は seed，チャネル名，クエリの番号から作るので，選び方を変えても同じクエリには同じ候補が渡る．
+`_selected.parquet` には選んだ窓（`db_index` は train の窓の番号で，開始位置は `db_index × db-stride`）と，その選び方での点数が入る．
 
-ハイパーパラメータはすべて `run.py` 冒頭の定数にまとめてある（引数の既定値，連結の区切り長 `SEP_LEN`，分割比，モデル名，保存する分位点，`TOKEN_BUDGET`）．
-連結の区切り（qmean）は整理前に test 上で選んだ値を引き継いでいる．val での確認はまだ．
-`--eval-stride 17` と `--db-stride 11` は，1 日（24）と 1 週間（168）の周期と公約数を持たない値．db-stride は val で 5 / 7 / 8 / 11 を比べて決めた（差は誤差の範囲）．
+結果の名前は `<データセット>_<分割>_<選び方>` に，既定と違う値が付く（例：提案手法は `ETTh1_val_attn`，隠さないと `ETTh1_val_attn_nohide`）．既定は `run.py` 冒頭の `DEFAULTS` にある．
 
-`python3 codes/chronos2.py` で，並列の計算が Chronos-2 本来の forward と一致することを確認できる．
+## ヘッドを選び直す
+
+```bash
+python3 codes/heads.py                                   # ETTh1，正確な重み
+python3 codes/heads.py --dataset ETTh2 --head-weights precompute
+```
+
+各チャネルの train の最後の 60 個の起点（`--eval-stride` おき，履歴は train の中）をクエリにし，それぞれ train の窓を 512 件ランダムに候補にする．ヘッドごとに，クエリが候補に置く重み（予測の 4 列の平均）と，候補の未来がクエリの正解にどれだけ近いか（それぞれ自分の文脈で標準化した RMSE）の順位相関をとり，クエリで平均する．`--layers 10-12` の中で相関の高い `--top 3` 個を `--heads` の形で出し，144 ヘッドの相関を `results/heads_<データセット>_<重み>_h<履歴>.json` に保存する．
+既定の `--heads`（L12H1，L12H7，L11H10）は，ETTh1，履歴 2032 点，正確な重みで選んだもの．
+
+`python3 codes/chronos2.py` で，並列の計算が Chronos-2 本来の forward と一致すること，全部の列を隠すと参照なしと一致することを確認できる．

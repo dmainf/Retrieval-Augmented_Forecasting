@@ -1,207 +1,110 @@
 """How the reference examples are chosen.
 
-Every method draws from the same pool, the train windows of one channel, and
-returns examples of shape (n_queries or 1, K, seq_len + pred_len) plus their
-indices in the pool. A leading 1 means one set shared by every query.
+Every method picks K examples per query among the same candidates: train windows
+of the query's channel that end at least GAP points before the forecast origin,
+--candidates of them drawn at random per query (all of them when 0).
 
-task-level (one set per channel)
-  random    K windows at random
-  medoid    K medoids of the windows in the reader's view (each normed on its own context),
-            k-means++ start then alternating updates: representatives of the shapes
-  strat     stratified on the outcome, how the future departs from its own context: the
-            pool is cut into a x b equal-count cells by the future's mean shift and then
-            its log std ratio (both in context std units), one window drawn per cell
-
-instance-level (chosen per query among the pool windows that end before its context)
-  l2        nearest contexts by raw L2 -- the RAF baseline
-  l2rv      nearest contexts in the reader's view: each window instance-normed on its own
-            context and the query on its history, as the rows reach Chronos-2
-  band      the l2rv ranking cut into K equal bands, the middle window of each: near,
-            middling and far contexts in equal number
-  oracle    nearest futures to the TRUE future; a diagnostic bound, not a method
-  oraclerv  the same in the reader's view; a diagnostic bound, not a method
-  ar        nearest past->future relation: AR coefficients (lags AR_LAGS) fitted on each window's
-            context + future, against the query's fitted on its last seq_len + pred_len history
-            points; no distance on values at all
-  aroracle  the same with the query's coefficients fitted on its context + TRUE future; a
-            diagnostic bound, not a method
-  proxy     nearest futures to y + lambda * (f - y), f the no-reference median forecast:
-            lambda 0 is the oracle, 1 retrieves by the model's own forecast (realizable);
-            in between measures how good a guess of the future must be (diagnostic)
-  attn      the windows the model itself attends to: every usable pool window goes in as a
-            parallel row, and the K rows with the most group attention from the query's
-            forecast patches (mean over heads and the --attn-layers) are kept (run.py)
-  truth     K copies of the query itself, its context and its TRUE future; not from the
-            pool. A diagnostic of how far a given future is read, not a method
-
-hybrid (--inst-k)
-  a task-level set plus, per query, the nearest-context (l2) windows not already in the set,
-  all as parallel rows -- the task-level many-shot + instance-level few-shot of Zhang et al.
-
-ablation
-  shuffle-future   permute the futures among the K examples, keeping the set of futures,
-                   whatever the selection (a no-op for truth, whose K examples are equal)
+random    the first K candidates (the draw is already random)
+match     <query side>=<window side>, nearest K by --metric:
+            ctx=ctx   the query's last seq_len history points vs the window's context
+            fc=fc     the query's no-reference forecast vs the window's no-reference
+                      forecast from its own context only
+            fc=fut    the query's forecast vs the window's future
+            fut=fc    the query's TRUE future vs the window's forecast (diagnostic)
+            fut=fut   the query's TRUE future vs the window's future (diagnostic bound)
+          with --match-norm context every series is standardized on its own context
+          (the query on its last seq_len points, the window on its context) first.
+attn      group attention of chosen heads: per head and forecast column, a softmax
+          of the query's query vector over its own key and the candidates' keys; the
+          weights on the candidates are averaged over the forecast columns, renormed
+          to sum to 1 and averaged over the heads, and the K largest are kept.
+            precompute  every row runs on its own, so a candidate's key is fixed and
+                        computed once per window (rows do not read each other)
+            exact       the query and all its candidates in one forward
 """
+import zlib
+
 import numpy as np
 
-TASK_LEVEL = ("random", "medoid", "strat")
-INSTANCE_LEVEL = ("l2", "l2rv", "band", "oracle", "oraclerv", "ar", "aroracle", "proxy", "truth", "attn")
-AR_LAGS = (1, 2, 3, 24)
-AR_RIDGE = 1e-2
+MATCHES = ("ctx=ctx", "fc=fc", "fc=fut", "fut=fc", "fut=fut")
+METRICS = ("l2", "cosine", "corr")
 
 
-def nearest(keys_db: np.ndarray, keys_q: np.ndarray, k: int, limit: np.ndarray,
-            exclude=None) -> np.ndarray:
-    """(n, k) indices of the k nearest rows of keys_db by L2, using only rows <= limit[i]
-    and not in exclude."""
-    d = ((keys_q ** 2).sum(1)[:, None] + (keys_db ** 2).sum(1)[None, :]
-         - 2.0 * keys_q @ keys_db.T)
-    d[np.arange(len(keys_db))[None, :] > limit[:, None]] = np.inf
-    n_excl = 0
-    if exclude is not None and len(exclude):
-        d[:, exclude] = np.inf
-        n_excl = int((np.asarray(exclude)[None, :] <= limit[:, None]).sum(1).max())
-    if (limit + 1 - n_excl < k).any():
-        raise ValueError("a query has fewer than k windows before it")
-    idx = np.argpartition(d, k - 1, axis=1)[:, :k]
-    order = np.take_along_axis(d, idx, 1).argsort(1)
-    return np.take_along_axis(idx, order, 1)
+def candidates(limit: np.ndarray, n_pool: int, m: int, seed: int, channel: str):
+    """(n, M) pool indices drawn per query at random among the windows <= limit[i]
+    (all of them when m is 0) and their validity (shorter draws are padded)."""
+    limit = np.minimum(limit, n_pool - 1)
+    crc = zlib.crc32(channel.encode())
+    draws = []
+    for i, lim in enumerate(limit):
+        perm = np.random.default_rng([seed, crc, i]).permutation(int(lim) + 1)
+        draws.append(perm if m == 0 else perm[:m])
+    width = max(len(d) for d in draws)
+    cand = np.zeros((len(limit), width), dtype=np.int64)
+    valid = np.zeros((len(limit), width), dtype=bool)
+    for i, d in enumerate(draws):
+        cand[i, :len(d)], valid[i, :len(d)] = d, True
+    return cand, valid
 
 
-def banded(keys_db: np.ndarray, keys_q: np.ndarray, k: int, limit: np.ndarray) -> np.ndarray:
-    """(n, k) indices: rows <= limit[i] ranked by L2 to query i, the middle one of each of
-    k equal bands of the ranking."""
-    d = ((keys_q ** 2).sum(1)[:, None] + (keys_db ** 2).sum(1)[None, :]
-         - 2.0 * keys_q @ keys_db.T)
-    d[np.arange(len(keys_db))[None, :] > limit[:, None]] = np.inf
-    n_use = np.minimum(limit + 1, len(keys_db))
-    if (n_use < k).any():
-        raise ValueError("a query has fewer than k windows before it")
-    order = np.argsort(d, axis=1)
-    pos = ((np.arange(k)[None, :] + 0.5) * n_use[:, None] / k).astype(np.int64)
-    return np.take_along_axis(order, pos, 1)
+def top_k(score: np.ndarray, cand: np.ndarray, valid: np.ndarray, k: int):
+    """Highest-scoring k valid candidates per query -> pool indices and scores (n, k)."""
+    if (valid.sum(1) < k).any():
+        raise ValueError(f"a query has fewer than k={k} candidates")
+    score = np.where(valid, score, -np.inf)
+    order = np.argsort(-score, axis=1, kind="stable")[:, :k]
+    return np.take_along_axis(cand, order, 1), np.take_along_axis(score, order, 1)
 
 
-def kmedoids(x: np.ndarray, k: int, rng, iters: int = 100) -> np.ndarray:
-    d = np.sqrt(np.maximum((x ** 2).sum(1)[:, None] + (x ** 2).sum(1)[None, :] - 2 * x @ x.T, 0))
-    med = [int(rng.integers(len(x)))]
-    for _ in range(k - 1):
-        w = d[:, med].min(1) ** 2
-        med.append(int(rng.choice(len(x), p=w / w.sum())))
-    med = np.array(med)
-    for _ in range(iters):
-        lab = d[:, med].argmin(1)
-        new = med.copy()
-        for c in range(k):
-            m = np.where(lab == c)[0]
-            if len(m):
-                new[c] = m[d[np.ix_(m, m)].sum(1).argmin()]
-        if (new == med).all():
-            break
-        med = new
-    return med
+def standardize(x: np.ndarray, ctx: np.ndarray) -> np.ndarray:
+    mu = ctx.mean(-1, keepdims=True)
+    sd = ctx.std(-1, keepdims=True)
+    return (x - mu) / np.maximum(sd, 1e-8)
 
 
-def outcome(pool: np.ndarray, s: int) -> np.ndarray:
-    """(N, 2) mean shift and log std ratio of each window's future against its context."""
-    c, f = pool[:, :s].astype(np.float64), pool[:, s:].astype(np.float64)
-    sd = c.std(1) + 1e-8
-    return np.stack([(f.mean(1) - c.mean(1)) / sd, np.log((f.std(1) + 1e-3 * sd) / sd)], 1)
+def distance(q: np.ndarray, d: np.ndarray, metric: str) -> np.ndarray:
+    """q (L,), d (M, L) -> (M,) distances, smaller is nearer."""
+    if metric == "l2":
+        return np.sqrt(((d - q) ** 2).sum(-1))
+    if metric == "corr":
+        q, d = q - q.mean(), d - d.mean(-1, keepdims=True)
+    elif metric != "cosine":
+        raise ValueError(metric)
+    return 1.0 - d @ q / np.maximum(np.linalg.norm(d, axis=-1) * np.linalg.norm(q), 1e-12)
 
 
-def stratified(z: np.ndarray, k: int, rng) -> np.ndarray:
-    a = int(round(np.sqrt(k)))
-    while k % a:
-        a -= 1
-    b = k // a
-    idx = []
-    for rows in np.array_split(np.argsort(z[:, 0], kind="stable"), a):
-        for cell in np.array_split(rows[np.argsort(z[rows, 1], kind="stable")], b):
-            idx.append(int(rng.choice(cell)))
-    return np.array(idx)
+def match(pair: str, query: dict, window: dict, cand, valid, k: int, metric: str, norm: str):
+    """query / window: {"ctx", "fut", "fc"} arrays of the queries (n, L) and the pool (N, L)."""
+    qs, ws = pair.split("=")
+    q = query[qs].astype(np.float64)
+    w = window[ws].astype(np.float64)
+    if norm == "context":
+        q = standardize(q, query["ctx"].astype(np.float64))
+        w = standardize(w, window["ctx"].astype(np.float64))
+    score = np.empty(cand.shape)
+    for i in range(len(q)):
+        score[i] = -distance(q[i], w[cand[i]], metric)
+    return top_k(score, cand, valid, k)
 
 
-def reader_view(x: np.ndarray, ref: np.ndarray) -> np.ndarray:
-    """x as Chronos-2 sees it in a row instance-normed on ref: arcsinh((x - mean) / std)."""
-    loc = np.nanmean(ref, axis=1, keepdims=True)
-    scale = np.sqrt(np.nanmean((ref - loc) ** 2, axis=1, keepdims=True))
-    return np.arcsinh((x - loc) / np.where(scale == 0, 1e-5, scale))
+def head_weights(att: np.ndarray, valid: np.ndarray) -> np.ndarray:
+    """att (heads, cols, 1 + M) softmax weights over [self, candidates] -> (heads, M): the
+    weights on the candidates averaged over the columns and renormed to sum to 1 per head."""
+    w = att[..., 1:].mean(1) * valid
+    return w / np.maximum(w.sum(-1, keepdims=True), 1e-30)
 
 
-def ar_coef(x: np.ndarray, ref: np.ndarray, lags=AR_LAGS, ridge: float = AR_RIDGE) -> np.ndarray:
-    """(N, T) series z-normed on ref (N, R) -> (N, len(lags) + 1) ridge AR coefficients and intercept."""
-    z = (x - ref.mean(1, keepdims=True)) / (ref.std(1, keepdims=True) + 1e-8)
-    m = max(lags)
-    X = np.stack([z[:, m - l:z.shape[1] - l] for l in lags] + [np.ones((len(z), z.shape[1] - m))], -1)
-    A = np.einsum("ntp,ntq->npq", X, X) + ridge * np.eye(X.shape[-1])[None]
-    return np.linalg.solve(A, np.einsum("ntp,nt->np", X, z[:, m:])[..., None])[..., 0]
+def head_score(att: np.ndarray, valid: np.ndarray) -> np.ndarray:
+    """(M,) score of the candidates: head_weights averaged over the heads."""
+    return head_weights(att, valid).mean(0)
 
 
-def instance_level(method: str, pool: np.ndarray, query: np.ndarray, limit: np.ndarray,
-                   k: int, s: int, exclude=None, history: np.ndarray = None,
-                   target: np.ndarray = None):
-    """limit[i] is the highest pool index query i may use (see TimeSeriesData.past_limit);
-    exclude: pool indices never to pick (a shared set the examples are added to).
-    target (n, pred_len): the future each query is matched on, for proxy.
-    history: the query rows fed to the model, for the reader-view methods (l2rv / oraclerv),
-    which compare windows as the model sees them: each example normed on its own context,
-    the query on its history. Returns indices None for truth, whose examples do not come
-    from the pool."""
-    if method == "truth":
-        return np.repeat(query[:, None, :], k, axis=1), None
-    p64, q64 = pool.astype(np.float64), query.astype(np.float64)
-    if method in ("l2rv", "oraclerv", "band"):
-        if history is None:
-            raise ValueError(f"{method} needs the query history")
-        h64 = history.astype(np.float64)
-        p64, q64 = reader_view(p64, p64[:, :s]), reader_view(q64, h64)
-    if method in ("l2", "l2rv"):
-        idx = nearest(p64[:, :s], q64[:, :s], k, limit, exclude)
-    elif method == "band":
-        idx = banded(p64[:, :s], q64[:, :s], k, limit)
-    elif method in ("oracle", "oraclerv"):
-        idx = nearest(p64[:, s:], q64[:, s:], k, limit)
-    elif method in ("ar", "aroracle"):
-        tc = ar_coef(p64, p64[:, :s])
-        if method == "aroracle":
-            tq = ar_coef(q64, q64[:, :s])
-        else:
-            if history is None:
-                raise ValueError("ar needs the query history")
-            w = history.astype(np.float64)[:, -pool.shape[1]:]
-            tq = ar_coef(w, w[:, :s])
-        scale = tc.std(0, keepdims=True) + 1e-8
-        idx = nearest(tc / scale, tq / scale, k, limit)
-    elif method == "proxy":
-        if target is None:
-            raise ValueError("proxy needs a target future per query")
-        idx = nearest(p64[:, s:], target.astype(np.float64), k, limit)
-    else:
-        raise ValueError(method)
-    return pool[idx].copy(), idx
-
-
-def task_level(method: str, pool: np.ndarray, k: int, rng, seq_len: int = None):
-    if k > len(pool):
-        raise ValueError(f"k={k} exceeds the {len(pool)} train windows")
-    if method == "random":
-        idx = rng.choice(len(pool), size=k, replace=False)
-    elif method == "medoid":
-        p64 = pool.astype(np.float64)
-        idx = kmedoids(reader_view(p64, p64[:, :seq_len]), k, rng)
-    elif method == "strat":
-        idx = stratified(outcome(pool, seq_len), k, rng)
-    else:
-        raise ValueError(method)
-    return pool[idx][None].copy(), idx
-
-
-def ablate(ex: np.ndarray, mode: str, seq_len: int, rng) -> np.ndarray:
-    if mode == "none":
-        return ex
-    if mode == "shuffle-future":
-        out = ex.copy()
-        for i in range(len(out)):
-            out[i, :, seq_len:] = out[i, rng.permutation(out.shape[1]), seq_len:]
-        return out
-    raise ValueError(mode)
+def precomputed_attention(q: np.ndarray, k_self: np.ndarray, k_pool: np.ndarray,
+                          cand: np.ndarray, valid: np.ndarray) -> np.ndarray:
+    """q, k_self (heads, cols, d) of one query, k_pool (N, heads, cols, d) ->
+    (heads, cols, 1 + M) softmax over its own key and its candidates' keys."""
+    logit = np.einsum("hcd,mhcd->hcm", q, k_pool[cand])
+    logit = np.where(valid[None, None], logit, -np.inf)
+    full = np.concatenate([(q * k_self).sum(-1)[..., None], logit], -1)
+    full = np.exp(full - full.max(-1, keepdims=True))
+    return full / full.sum(-1, keepdims=True)

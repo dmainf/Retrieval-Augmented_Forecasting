@@ -1160,7 +1160,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
   </div>
   <div class="prose">
     <ul class="tight">
-      <li><strong>正解に近い事例を重く読むヘッドは少ない．</strong>ほとんどのヘッドは正解から遠い事例を重く読む（RQ2 と同じ）．</li>
+      <li><strong>正解に近い事例を重く読むヘッドは少ない．</strong>ほとんどのヘッドは正解から遠い事例を重く読む（1 節と同じ）．</li>
       <li><strong>train の末尾では，どのヘッドで選んでもランダムとの差は誤差の範囲である．</strong>相関の大きさと選んだときの性能もそろわない．</li>
     </ul>
   </div>
@@ -1241,7 +1241,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
   </div>
   <div class="prose">
     <ul class="tight">
-      <li><strong>ヘッドを選ばずに全ヘッドの平均の重みで選ぶと，ランダムと変わらないか悪い．</strong>多くのヘッドは正解から遠い事例を重く読むので（1 節），平均の重みはそちらに引っぱられる．</li>
+      <li><strong>ヘッドを選ばずに全ヘッドの平均の重みで選ぶと，ランダムと変わらないか悪い．</strong>多くのヘッドは正解から遠い事例を重く読むので（1 節），平均の重みはそちらに引っぱられる．Chronos-2 の group attention が学習した重み付けは文脈内学習ではかえって性能を下げる，という報告（Pooling Helps, Learned Weighting Hurts In-Context，arXiv 2610.01831）とも合う．</li>
       <li><strong>第 10〜12 レイヤーから相関で決めたヘッドで選ぶと，ランダムより良い．</strong>直近の悪化も小さくなる．</li>
       <li><strong>128 件を選べば，512 件を全部入れるのと同じかそれ以上になる．</strong></li>
       <li><strong>全レイヤーから相関で決めると，第 2 レイヤーのヘッドが混じって効かない．</strong>選ぶ目安になるのは後ろのレイヤーだけである．</li>
@@ -1553,6 +1553,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
       <li><strong>128 件に絞ると，照合はランダムとほとんど変わらず，ヘッドだけが効く．</strong></li>
       <li><strong>256 件では照合もヘッドに近づき，差は区別できない．</strong>ヘッドが照合に勝つのは，少ない件数に絞るときである．</li>
       <li><strong>MAE はどちらの件数でもヘッドが一番良い．</strong></li>
+      <li><strong>ヘッドが照合より当たる理由は確かめていない．</strong>重みはクエリの予測の列の query と事例の続きの列の key から決まり，モデルの予測の状態と事例の続きを突き合わせた値になっている．履歴だけを比べる照合には無い，予測の外れ方に関わる情報を含むためと考えている（未検証）．</li>
     </ul>
   </div>
   <div class="prose">

@@ -462,7 +462,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
 
 <header class="masthead">
   <div class="prose">
-    <p class="kicker">RAF 研究ノート · 論旨 · 改訂 2026-10-23 · ETTh1 / Chronos-2（凍結）</p>
+    <p class="kicker">RAF 研究ノート · 論旨 · 改訂 2026-11-03 · ETTh1 / Chronos-2（凍結）</p>
     <h1>参照予測を文脈内学習として読む</h1>
     <p class="standfirst">
       過去の窓（事例）を参照して予測する RAF を，凍結した時系列基盤モデルの<strong>文脈内学習</strong>として見る．
@@ -521,6 +521,10 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
       読む側の Chronos-2 には 2 種類の attention がある．<strong>time attention</strong> は 1 本の行の中のパッチを位置つきで双方向に混ぜ，文脈と未来をつなぐ．
       <strong>group attention</strong> は同じ列（同じ時刻）の行どうしを，位置も行の順番もなしで混ぜる．本来は並走する共変量のための仕組みである．
       この研究は，2 つの attention の役割分担に合わせてデモを渡し，読ませ方を学習なしで直す．
+    </p>
+    <p>
+      凍結したまま改善するのは，基盤モデルがこれからも大きくなると考えられるからである．モデルを大きくするほど性能が上がるというスケール則が言語モデルで知られ（Kaplan et al.），時系列でも同じ傾向が報告されている（Edwards et al.）．
+      大きくなるほど微調整にも計算と記憶が要り，微調整さえ難しくなる．文脈内学習なら重みを一切更新せず，入力の中で暗黙に学習させるので，基盤モデルが大きく良くなれば，その恩恵をそのまま受けられる．
     </p>
   </div>
 </section>
@@ -781,8 +785,9 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
         <p>従来の RAF の多くは，検索した事例とクエリをどう混ぜるか（融合）を改良してきた．融合の層やクロスアテンションを学習する，類似度で重み付けする，振幅や水準をそろえる，参照なしの予測と後から平均する，などである．
         並列に置くと，この融合を Chronos-2 の group attention がそのまま行う．事前学習で身につけた「並走する行を混ぜる仕組み」を流用するので，追加の部品も学習も要らない．
         しかも混ぜ方は，予測の列ごと，ヘッドごとに，クエリに応じて変わる．こちらが変えるのは，何を渡すかと，どの列で見せるかだけである．</p>
-        <p style="margin-top:0.7em">行の中を混ぜる attention と，行どうしを混ぜる attention を交互にかける 2 軸の設計は，最近の基盤モデルで広がっている（Chronos-2 の time / group attention，表データの TabPFN の行と列の attention，多変量予測の Crossformer の時間と系列の 2 段の attention など）．
-        並列の行で参照する方法は，この設計にそのまま乗る．専用の融合の部品を作り込まなくても，2 軸の attention を持つモデルなら同じやり方で事例を読ませられ，基盤モデルが良くなれば融合も一緒に良くなる．</p>
+        <p style="margin-top:0.7em">行の中を混ぜる attention と，行どうしを混ぜる attention を交互にかける 2 軸の設計は，最近の基盤モデルで広がっている（Chronos-2 の time / group attention，表データの TabPFN と TabFM の行と列の attention，多変量予測の Crossformer の時間と系列の 2 段の attention など）．
+        並列の行で参照する方法は，この設計にそのまま乗る．専用の融合の部品を作り込まなくても，2 軸の attention を持つモデルなら同じやり方で事例を読ませられ，基盤モデルが良くなれば融合も一緒に良くなる．
+        LLM でも，デモを並列のグループに分けて渡し，1,000 件まで扱う方法がある（Structured Prompting）．Chronos-2 の論文も，group attention を検索拡張に使うことを今後の課題に挙げている．</p>
       </div>
       <div class="down">↓</div>
       <div class="step done">
@@ -832,7 +837,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
     <div class="flow">
       <div class="down">↓</div>
       <div class="step now">
-        <h4><span class="tag now">(B) 検証中</span>最初の予測パッチだけ，クエリから事例を隠す</h4>
+        <h4><span class="tag now">(B) 提案</span>最初の予測パッチだけ，クエリから事例を隠す</h4>
         <p>最初の予測パッチの列でだけ group attention の相手から事例を外すと，1〜16 時間先の平均は参照なしとほぼ同じになる．先の時間の改善は残るだけでなく，少し大きくなる．後ろのパッチは time attention で最初のパッチを読むので，事例を読んでずれた最初のパッチのずれを受け継いでいたためである．そのため，隠さずに最初のパッチだけ参照なしの予測に差し替えるより少し良い（候補 1024 件からランダム 128 件で，隠すと −4.3%，差し替えると −4.0%．差は標準誤差の約 1.5 倍）．ただし 1〜2 時間先の悪化は残る．文脈の最後のパッチの列で読んだ事例の情報が，time attention を通って最初のパッチに届くためと考えられる（<a href="how-to-read/patch-mask.html">パッチを隠す</a> 1 節）．評価は val だけ．</p>
       </div>
       </div>
@@ -872,7 +877,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
       <div class="down">↓</div>
       <div class="step done">
         <h4><span class="tag done">分かったこと</span>少ない件数に絞ると，似たデモを選んでも効かない</h4>
-        <p>類似度で上位 k 件を選ぶ従来の検索は，128 件ではランダムとほとんど変わらない．似た文脈の窓は未来も予測と似ていて，予測に足すものがない．256 件に増やすと少し効くが，効き目の大半は件数と長さから来る（<a href="how-to-select/match-key.html">照合で選ぶ</a> 1〜3 節，<a href="how-to-select/attention-weight.html#rq3">attention で選ぶ</a> 2 節）．</p>
+        <p>類似度で上位 k 件を選ぶ従来の検索は，128 件ではランダムとほとんど変わらない．似た文脈の窓は未来も予測と似ていて，予測に足すものがない．類似度はクエリの履歴から作る基準だが，モデルは履歴から読み取れることをすでに予測に使っているので，予測の外れ方とは相関しにくい．LLM の many-shot でも件数が多いと選び方の差が小さくなり（Baek et al.，Bertsch et al.），時系列でも検索の効き目は窓に入らない情報で決まるという報告がある（When Does Retrieval Help）．256 件に増やすと少し効くが，効き目の大半は件数と長さから来る（<a href="how-to-select/match-key.html">照合で選ぶ</a> 1〜3 節，<a href="how-to-select/attention-weight.html#rq3">attention で選ぶ</a> 2 節）．</p>
       </div>
       </div>
   </div>
@@ -915,7 +920,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
         <h4><span class="tag now">(C)</span>どの事例を入れるかを，読む側の重みで決める</h4>
         <p>似たデモでは少ない件数で効かないことへの答えの候補である．人が決めた距離ではなく，モデルが事例を読むときの重みで選ぶ．</p>
         <p style="margin-top:0.7em">group attention のヘッドの多くは正解から遠い事例や振幅の大きい事例を重く読むが，後ろのレイヤーの一部のヘッドは正解に近い事例を重く読む．そこで候補を多めに入れて 1 回読ませ，そのヘッドの重みで K 件に絞ってから予測し直す．ヘッドは train の末尾のクエリで，重みと正解への近さの順位相関から第 10〜12 レイヤーの上位 3 つ（L12H1，L12H7，L11H10）に決めた．</p>
-        <p style="margin-top:0.7em">候補 1024 件から 128 件を選ぶと，ランダムよりも候補の全部入れよりも良く，MAE も参照なしを下回る．候補を全部入れても良くならないので，効き目は件数ではなく選ぶことから来る．(B) と重ねると，さらに少し良くなる．全ヘッドの平均の重みや前のレイヤーのヘッド，性能で決めたヘッドでは選べない．同じ候補から照合で選ぶと，128 件ではヘッドに負けるが，256 件では差が区別できない．ヘッドの強みは，少ない件数で効くことと MAE である．照合より当たる理由はまだ分からない（<a href="how-to-select/attention-weight.html#rq3">attention で選ぶ</a> 2 節）．</p>
+        <p style="margin-top:0.7em">候補 1024 件から 128 件を選ぶと，ランダムよりも候補の全部入れよりも良く，MAE も参照なしを下回る．候補を全部入れても良くならないので，効き目は件数ではなく選ぶことから来る．(B) と重ねると，さらに少し良くなる．全ヘッドの平均の重みや前のレイヤーのヘッド，性能で決めたヘッドでは選べない．同じ候補から照合で選ぶと，128 件ではヘッドに負けるが，256 件では差が区別できない．ヘッドの強みは，少ない件数で効くことと MAE である．照合より当たる理由は確かめていない．重みはクエリの予測の列の query と事例の続きの列の key から決まるので，モデルの予測の状態と事例の続きを突き合わせた値になっている．履歴だけを比べる照合には無い，予測の外れ方に関わる情報を含むためと考えている（未検証）（<a href="how-to-select/attention-weight.html#rq3">attention で選ぶ</a> 2 節）．</p>
       </div>
     </div>
   </div>
@@ -1029,8 +1034,8 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
     <div class="flow">
       <div class="down">↓</div>
       <div class="step done">
-        <h4><span class="tag done">問題</span>候補を増やすほど良く選べるが，重みを取る計算が増える</h4>
-        <p>ヘッドの重みで選ぶとき，候補が多いほど良い事例が見つかり，候補 2048 件までは増やすほど性能が上がる．しかし重みは，クエリと候補を全部まとめてモデルに通さないと得られない．前の層で行どうしが読み合い，重みが一緒に入れた候補に左右されるためである．計算は候補の数に比例し，候補 1024 件でも選ぶほうが予測より何倍もかかる．候補 2048 件はメモリに載らない．</p>
+        <h4><span class="tag done">問題</span>候補を増やすと良く選べるが，重みを取る計算が増える</h4>
+        <p>ヘッドの重みで選ぶとき，候補が多いほど良い事例が見つかり，候補 2048 件までは増やすと良くなるか変わらない．しかし重みは，クエリと候補を全部まとめてモデルに通さないと得られない．前の層で行どうしが読み合い，重みが一緒に入れた候補に左右されるためである．計算は候補の数に比例し，候補 1024 件でも選ぶほうが予測より何倍もかかる．候補 2048 件はメモリに載らない．</p>
       </div>
     </div>
   </div>
@@ -1282,7 +1287,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
     <p>
       どの段階でもモデルは凍結したままで，学習しない．変えるのは，事例をどこに置くか，どの列でどの行を見せるか，どの行を入れるかだけである．
       (C) まで重ねると MAE も参照なしを下回るようになった．区間（QL）はまだこの形で測っていない．
-      どの設定も val で選んだので，test と ETTh1 以外のデータでの確認が残る．
+      どの設定も val で選んだので，test，ETTh1 以外のデータ，クエリの履歴を上限の 8192 点にしたときでの確認が残る．
     </p>
   </div>
   <div class="wide">
@@ -1409,8 +1414,8 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
     </ul>
     <h3>まだ読んでいないもの（<code>../thesis/</code> の番号つき）</h3>
     <ul class="tight">
-      <li>RAFT: Retrieval Augmented Time Series Forecasting</li>
-      <li>In-Context Fine-Tuning for Time-Series Foundation Models</li>
+      <li>RAFT: Retrieval Augmented Time Series Forecasting（ICML 2025．類似度で事例を重み付けする．進捗報告 4 で引用）</li>
+      <li>In-Context Fine-Tuning for Time-Series Foundation Models（事例を履歴の前につなぐ．進捗報告 4 で引用）</li>
       <li>Transformers Learn to Implement Preconditioned Gradient Descent for In-Context Learning</li>
       <li>Large Language Models Are Zero-Shot Time Series Forecasters</li>
       <li>Are Language Models Actually Useful for Time Series Forecasting?</li>
@@ -1426,6 +1431,10 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
       <li>RACE（arXiv 2610.00405），ECHO（arXiv 2610.16433）：近い過去の誤差で予測を後から補正する．</li>
       <li>Delle Monache et al.（2013）の analog ensemble：予測＝予測照合の考え方の元．</li>
       <li>Han et al.（2023）：文脈内学習をカーネル回帰として見る．</li>
+      <li>TabPFN（Hollmann et al.，Nature 2025），TabFM（arXiv 2609.37959）：表データの基盤モデルで，行と列の attention を交互にかける．</li>
+      <li>Crossformer（ICLR 2023）：多変量予測で，時間方向と系列方向の 2 段の attention を持つ．</li>
+      <li>Informer（AAAI 2021）：ETTh1 を出したもとの論文で，train・val・test を 12・4・4 か月に分ける分け方もこれに従う．</li>
+      <li>Kaplan et al.（arXiv 2001.08361），Edwards et al.（arXiv 2405.13867）：言語モデルと時系列モデルのスケール則．凍結のまま改善する動機に使う．</li>
     </ul>
     <p>本筋とは別に，全クエリ共通のセットを勾配で選ぶ試み（CLG・Parallel-CLG）を<a href="others/clg-note.html">別冊</a>に残してある．</p>
   </div>
