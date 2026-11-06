@@ -1,17 +1,18 @@
-"""Choose the heads for --select attn on a dataset, from the train split only.
+"""Choose the heads for --select attn on a dataset, from its train or val split.
 
-Queries are the last --queries forecast origins of each channel's train split
-(--eval-stride apart, history inside train). Each query gets --candidates train
+Queries are --queries forecast origins per channel, --eval-stride apart: the last
+ones of the train split (--split train, history inside train) or evenly spread
+over the val split (--split val, 0 = all of them). Each query gets --candidates train
 windows that end GAP points before its origin. For every group-attention head,
 the weights the query row puts on its candidates (averaged over the forecast
 columns, as --select attn does) are rank-correlated (Spearman) with how near
 each candidate's future is to the query's true future (RMSE after standardizing
 both on their own context). The correlation is averaged over the queries, and
 the --top heads with the highest correlation inside --layers are proposed.
-No val or test data is used.
+No test data is used.
 
   python3 codes/heads.py
-  python3 codes/heads.py --dataset ETTh2 --head-weights precompute
+  python3 codes/heads.py --dataset ETTh2 --split train --head-weights precompute
 """
 import argparse
 import json
@@ -31,7 +32,8 @@ def parse_args():
     p.add_argument("--root-path", default="./Datasets/_parquet")
     p.add_argument("--dataset", default=DATASET)
     p.add_argument("--channels", default="", help="comma-separated; empty = every column")
-    p.add_argument("--queries", default=60, type=int, help="last train origins per channel")
+    p.add_argument("--split", default="val", choices=["train", "val"])
+    p.add_argument("--queries", default=60, type=int, help="origins per channel")
     p.add_argument("--candidates", default=512, type=int)
     p.add_argument("--head-weights", default="exact", choices=["exact", "precompute"],
                    help="exact: query and candidates in one forward (as the default heads were "
@@ -69,18 +71,21 @@ def main():
     corr = []
     for ch, name in enumerate(data.channels):
         t0 = time.time()
-        windows = data.windows("train", ch, a.eval_stride)
-        first = len(windows) - a.queries
-        if first < 0:
-            raise SystemExit(f"train has only {len(windows)} origins at stride {a.eval_stride}")
-        starts = np.arange(first, len(windows), dtype=np.int64) * a.eval_stride
-        query = windows[first:]
-        history = data.history("train", ch, starts, a.history)
+        windows = data.windows(a.split, ch, a.eval_stride)
+        if len(windows) < a.queries:
+            raise SystemExit(f"{a.split} has only {len(windows)} origins at stride {a.eval_stride}")
+        if a.split == "train":
+            idx = np.arange(len(windows) - a.queries, len(windows))
+        else:
+            idx = np.unique(np.linspace(0, len(windows) - 1, a.queries or len(windows)).round().astype(np.int64))
+        starts = idx * a.eval_stride
+        query = windows[idx]
+        history = data.history(a.split, ch, starts, a.history)
         pool = data.windows("train", ch, a.db_stride)
-        limit = data.past_limit("train", starts, a.db_stride, GAP)
+        limit = data.past_limit(a.split, starts, a.db_stride, GAP)
         cand, valid = candidates(limit, len(pool), a.candidates, a.seed, name)
         if not valid.all():
-            raise SystemExit(f"{name}: an early train origin has fewer than {a.candidates} windows "
+            raise SystemExit(f"{name}: an early origin has fewer than {a.candidates} windows "
                              "before it; lower --candidates or --queries")
         q_fut = standardize(query[:, s:].astype(np.float64), history[:, -s:].astype(np.float64))
         if a.head_weights == "precompute":
@@ -106,13 +111,13 @@ def main():
     chosen = sorted(inside, reverse=True)[:a.top]
     spec = ",".join(f"L{li + 1}H{h + 1}" for _, li, h in chosen)
     order = np.argsort(-mean, axis=None)[:20]
-    print(f"\ntop 20 heads by rank correlation (mean over {len(corr)} train queries)")
+    print(f"\ntop 20 heads by rank correlation (mean over {len(corr)} {a.split} queries)")
     for j in order:
         li, h = divmod(int(j), rows.n_heads)
         print(f"  L{li + 1}H{h + 1:<3d} {mean[li, h]:+.3f}")
     print(f"\nlayers {a.layers}, top {a.top}: --heads {spec}")
     os.makedirs(a.output_dir, exist_ok=True)
-    path = os.path.join(a.output_dir, f"heads_{a.dataset}_{a.head_weights}_h{a.history}.json")
+    path = os.path.join(a.output_dir, f"heads_{a.dataset}_{a.split}_{a.head_weights}_h{a.history}.json")
     with open(path, "w") as f:
         json.dump({**vars(a), "gap": GAP, "model": MODEL_NAME, "heads": spec,
                    "correlation": mean.round(4).tolist()}, f, indent=1)

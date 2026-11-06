@@ -46,10 +46,10 @@ DEFAULTS = {
     "head_weights": "precompute",
     "select_hide": False,
     # 512 / 64 as in TS-RAG, Cross-RAG, TimeRAF and Align-RAG; 8192 (the model's limit) is the
-    # long-history setting, 2032 the 10/28 report. K, seq_len and candidates were chosen at 2032
-    # and are to be re-chosen on val at 512
+    # long-history setting, 2032 the 10/28 report. K and candidates were chosen at 2032 and kept;
+    # an example's context is as long as the query history, as in RAFT and TS-RAG
     "history": 512,
-    "seq_len": 384,
+    "seq_len": 512,
     "pred_len": 64,
     # coprime with 24 and 168 so forecast origins cover every hour of the day and week
     "eval_stride": 17,

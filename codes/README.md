@@ -16,7 +16,7 @@
 | `codes/chronos2.py` | Chronos-2 の forward．並列と連結，隠す列，ヘッドの query・key と重みの取り出し |
 | `codes/selection.py` | 候補の引き方と選び方（ランダム，照合 5 種，ヘッドの重み） |
 | `codes/run.py` | 入口．予測と正解を `results/<名前>.parquet` に縦長で保存（1 行＝チャネル×クエリ×予測の何点目 `h`．列は `date` `true` `q0.1`〜`q0.9` など） |
-| `codes/heads.py` | `--select attn` で使う近さヘッドを，train の末尾のクエリだけで選び直す（val・test は使わない） |
+| `codes/heads.py` | `--select attn` で使う近さヘッドを，val（既定）か train の末尾のクエリで選び直す（test は使わない） |
 | `codes/evaluate.py` | MSE・MAE・分位点損失（QL）．各チャネルを train の標準偏差で割って 7 チャネルで平均する．`eMSE` などは評価区間の正解の標準偏差で割った補助指標 |
 
 ## 準備
@@ -54,7 +54,7 @@ python3 codes/evaluate.py results/*.parquet
 | `--head-weights` | `precompute` | `precompute`：各行を単独で通して key を前計算する．`exact`：クエリと候補をまとめて通す（候補 2048 件はメモリに載らない） |
 | `--select-hide` | なし | `exact` で選ぶ 1 回目の推論にも `--hide` をかける |
 | `--history` | `512` | クエリの履歴の長さ．先行研究（TS-RAG，Cross-RAG など）と同じ．長い履歴は 8192（上限），報告書は 2032 |
-| `--seq-len` / `--pred-len` | `384` / `64` | 事例の文脈の長さ（履歴より長くできない）/ 予測の長さ．K・事例の文脈・候補の数は履歴 2032 点で選んだ値で，512 点で選び直す予定 |
+| `--seq-len` / `--pred-len` | `512` / `64` | 事例の文脈の長さ（履歴より長くできない）/ 予測の長さ．事例の文脈はクエリの履歴と同じ長さにする（RAFT・TS-RAG と同じ）．K と候補の数は履歴 2032 点で選んだ値のまま |
 | `--eval-stride` | `17` | 予測の起点の間隔．24 と 168 と公約数を持たない |
 | `--db-stride` | `1` | train の窓を切る間隔（1 は全窓） |
 | `--seed` | `0` | 候補を引く乱数 |
@@ -71,11 +71,11 @@ python3 codes/evaluate.py results/*.parquet
 ## ヘッドを選び直す
 
 ```bash
-python3 codes/heads.py                                   # ETTh1，正確な重み
-python3 codes/heads.py --dataset ETTh2 --head-weights precompute
+python3 codes/heads.py                                   # ETTh1，val，正確な重み
+python3 codes/heads.py --dataset ETTh2 --split train --head-weights precompute
 ```
 
-各チャネルの train の最後の 60 個の起点（`--eval-stride` おき，履歴は train の中）をクエリにし，それぞれ train の窓を 512 件ランダムに候補にする．ヘッドごとに，クエリが候補に置く重み（予測の 4 列の平均）と，候補の未来がクエリの正解にどれだけ近いか（それぞれ自分の文脈で標準化した RMSE）の順位相関をとり，クエリで平均する．`--layers 10-12` の中で相関の高い `--top 3` 個を `--heads` の形で出し，144 ヘッドの相関を `results/heads_<データセット>_<重み>_h<履歴>.json` に保存する．
-既定の `--heads`（L12H1，L12H7，L11H10）は，ETTh1，履歴 2032 点，正確な重みで選んだもの．
+各チャネルの val に均等に散らばる 60 個の起点（`--split train` なら train の最後の 60 個，履歴は train の中．どちらも `--eval-stride` おき）をクエリにし，それぞれ train の窓を 512 件ランダムに候補にする．ヘッドごとに，クエリが候補に置く重み（予測の 4 列の平均）と，候補の未来がクエリの正解にどれだけ近いか（それぞれ自分の文脈で標準化した RMSE）の順位相関をとり，クエリで平均する．`--layers 10-12` の中で相関の高い `--top 3` 個を `--heads` の形で出し，144 ヘッドの相関を `results/heads_<データセット>_<分割>_<重み>_h<履歴>.json` に保存する．
+既定の `--heads`（L12H1，L12H7，L11H10）は，ETTh1，train の末尾，履歴 2032 点，正確な重みで選んだもの．
 
 `python3 codes/chronos2.py` で，並列の計算が Chronos-2 本来の forward と一致すること，全部の列を隠すと参照なしと一致することを確認できる．
