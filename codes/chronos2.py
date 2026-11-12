@@ -227,26 +227,44 @@ class Chronos2Rows:
         return out
 
     @torch.no_grad()
-    def head_vectors(self, context, future, heads):
-        """query and key vectors of the given (layer, head)s at the forecast columns,
-        each row run on its own: two arrays (N, n_heads_used, n_out, head_dim)."""
+    def head_vectors(self, context, future, heads, values=False):
+        """query and key (and value) vectors of the given (layer, head)s at the forecast
+        columns, each row run on its own: arrays (N, n_heads_used, n_out, head_dim)."""
         layers = sorted({li for li, _ in heads})
         chunk = self._chunk(context.shape[1], 0)
-        qs, ks = [], []
+        qs, ks, vs = [], [], []
         for lo in range(0, len(context), chunk):
             c = torch.as_tensor(context[lo:lo + chunk], dtype=torch.float32, device=self.device)
             f = None if future is None else torch.as_tensor(future[lo:lo + chunk], dtype=torch.float32,
                                                             device=self.device)
             st = self._alone_states(c, f, layers)
-            q, k = [], []
+            q, k, v = [], [], []
             for li, hi in heads:
                 mha = self.m.encoder.block[li].layer[1].self_attention
                 d = mha.kv_proj_dim
                 q.append(mha.q(st[li])[..., hi * d:(hi + 1) * d])
                 k.append(mha.k(st[li])[..., hi * d:(hi + 1) * d])
+                if values:
+                    v.append(mha.v(st[li])[..., hi * d:(hi + 1) * d])
             qs.append(torch.stack(q, 1).float().cpu().numpy())
             ks.append(torch.stack(k, 1).float().cpu().numpy())
+            if values:
+                vs.append(torch.stack(v, 1).float().cpu().numpy())
+        if values:
+            return np.concatenate(qs), np.concatenate(ks), np.concatenate(vs)
         return np.concatenate(qs), np.concatenate(ks)
+
+    @torch.no_grad()
+    def head_out_gram(self, heads) -> np.ndarray:
+        """(n_heads_used, head_dim, head_dim) Gram matrices W_O^T W_O of each head's slice of the
+        output projection, so that |v W_O| = sqrt(v G v^T) in the model's hidden space."""
+        out = []
+        for li, hi in heads:
+            mha = self.m.encoder.block[li].layer[1].self_attention
+            d = mha.kv_proj_dim
+            w = mha.o.weight[:, hi * d:(hi + 1) * d].float()
+            out.append((w.T @ w).cpu().numpy())
+        return np.stack(out)
 
     @torch.no_grad()
     def head_attention(self, context, ex_ctx, ex_fut, row_valid, heads, hide=()) -> np.ndarray:
