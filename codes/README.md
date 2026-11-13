@@ -6,7 +6,7 @@
 
 - (A) 事例を共変量の行として並列に置き，group attention で読ませる（`--fusion parallel`）
 - (B) 最初の予測パッチの列だけ，クエリから事例を隠す（`--hide P1`）
-- (C) クエリごとに train の窓から候補を 2048 件引き，近さヘッド 3 つの重みで 256 件に絞る．key は前計算する（`--select attn --candidates 2048 --top-k 256`）
+- (C) クエリごとに train の窓から候補を 2048 件引き，選択ヘッド 3 つの重みで 256 件に絞る．key は前計算する（`--select attn --candidates 2048 --top-k 256`）
 
 ## 構成
 
@@ -16,7 +16,7 @@
 | `codes/chronos2.py` | Chronos-2 の forward．並列と連結，隠す列，ヘッドの query・key と重みの取り出し |
 | `codes/selection.py` | 候補の引き方と選び方（ランダム，照合 5 種，ヘッドの重み） |
 | `codes/run.py` | 入口．予測と正解を `results/<名前>.parquet` に縦長で保存（1 行＝チャネル×クエリ×予測の何点目 `h`．列は `date` `true` `q0.1`〜`q0.9` など） |
-| `codes/heads.py` | `--select attn` で使う近さヘッドを，val（既定）か train の末尾のクエリで選び直す（test は使わない） |
+| `codes/heads.py` | `--select attn` で使う選択ヘッドを，val（既定）か train の末尾のクエリで選び直す（test は使わない） |
 | `codes/evaluate.py` | MSE・MAE・分位点損失（QL）．各チャネルを train の標準偏差で割って 7 チャネルで平均する．`eMSE` などは評価区間の正解の標準偏差で割った補助指標 |
 
 ## 準備
@@ -43,7 +43,7 @@ python3 codes/evaluate.py results/*.parquet
 
 | 引数 | 既定 | 意味 |
 |---|---|---|
-| `--select` | `none` | `none`：参照なし．`random`：候補の最初の K 件．照合：`ctx=ctx` `fc=fc` `fc=fut` `fut=fc` `fut=fut`．`attn`：近さヘッドの attention の重み |
+| `--select` | `none` | `none`：参照なし．`random`：候補の最初の K 件．照合：`ctx=ctx` `fc=fc` `fc=fut` `fut=fc` `fut=fut`．`attn`：選択ヘッドの attention の重み |
 | `--fusion` | `parallel` | `parallel`：事例を共変量の行に．`concat`：事例を履歴の前に時間方向につなぎ，あいだに欠測を 1 パッチ空ける |
 | `--top-k` | `256` | 事例の数 K．連結は履歴 512 点なら 16 件，2032 点なら 13 件まで |
 | `--candidates` | `2048` | クエリごとにランダムに引く候補の数．0 は使える全窓．どの選び方もこの中から選ぶ |

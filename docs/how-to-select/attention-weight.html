@@ -466,7 +466,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
     <h1>attention で事例を選ぶ</h1>
     <p class="standfirst">
       group attention の事例ごとの重みを見ると，<strong>第 1〜11 レイヤーは正解から遠い事例ほど重く読み</strong>，正解・文脈の近い事例を重く読むのは第 10〜12 レイヤーだけである．
-      候補を多めに入れて<strong>後ろのレイヤーの近さヘッドの重みで選ぶと，ランダムや候補の全部入れより良くなり</strong>，MAE も参照なしを下回る．
+      候補を多めに入れて<strong>後ろのレイヤーの選択ヘッドの重みで選ぶと，ランダムや候補の全部入れより良くなり</strong>，MAE も参照なしを下回る．
       行の並べ方と，最初の予測パッチを隠すことは<a href="../how-to-read/patch-mask.html">パッチを隠す</a>にまとめた．
     </p>
   </div>
@@ -1397,7 +1397,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
   </div>
   <div class="prose">
     <ul class="tight">
-      <li><strong>候補を増やすと，ヘッドで選ぶ効き目が大きくなる．</strong>選ぶ母集団が広いほど，近さヘッドが良い事例を拾える．</li>
+      <li><strong>候補を増やすと，ヘッドで選ぶ効き目が大きくなる．</strong>選ぶ母集団が広いほど，選択ヘッドが良い事例を拾える．</li>
       <li><strong>候補を全部入れても良くならない．</strong>1024 件全部はランダム 128 件と変わらない．多く入れるより選んで入れる方が良い．</li>
       <li><strong>ヘッドで選ぶと，MAE も参照なしより良くなる．</strong>ランダムや全部入れでは MAE は参照なしに届かない．</li>
       <li><strong>選ぶ件数は 128 件と 256 件で差がない．</strong>直近の悪化はヘッドで選ぶほど小さくなる．</li>

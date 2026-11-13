@@ -928,7 +928,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
     <div class="plate">
       <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 342" role="img" aria-label="ヘッドの重みで事例を選ぶ手順">
 <text class="t-ink" x="20" y="24" font-weight="600">① 候補を全部入れて 1 回読ませる</text>
-<text class="t-ink" x="270" y="24" font-weight="600">② 近さヘッドの重み</text>
+<text class="t-ink" x="270" y="24" font-weight="600">② 選択ヘッドの重み</text>
 <text class="t-ink" x="448" y="24" font-weight="600">③ 上位 K 件で予測し直す</text>
 <text x="128.0" y="44" text-anchor="middle" font-size="10">文脈</text><text x="201.0" y="44" text-anchor="middle" font-size="10">予測</text>
 <text class="t-ink" x="72" y="65" text-anchor="end">クエリ</text>
@@ -989,9 +989,9 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
 <text x="421.0" y="113.0" text-anchor="middle" font-size="10">上位 K 件</text>
 <rect x="20" y="280" width="640" height="50" rx="4" fill="var(--surface-sunk)" stroke="var(--rule)"/>
 <text class="t-ink" x="34" y="301">ヘッドの決め方：train の末尾のクエリで，各ヘッドの重みと正解への近さの順位相関を測る．</text>
-<text class="t-ink" x="34" y="319">第 10〜12 層の上位 3 つ（L12H1，L12H7，L11H10）を近さヘッドとして使う．val は見ない．</text>
+<text class="t-ink" x="34" y="319">第 10〜12 層の上位 3 つ（L12H1，L12H7，L11H10）を選択ヘッドとして使う．val は見ない．</text>
 </svg></div>
-      <div class="plate-cap"><b>ヘッドの重みで事例を選ぶ手順</b>候補は 6 件，K は 3 件だけ描いた．重みは近さヘッド 3 つのそれぞれで，予測の 4 列の重みを平均してから 3 ヘッドで平均する．1 回目の推論は選ぶためだけに使い，予測は選んだ K 件で 2 回目に行う．</div>
+      <div class="plate-cap"><b>ヘッドの重みで事例を選ぶ手順</b>候補は 6 件，K は 3 件だけ描いた．重みは選択ヘッド 3 つのそれぞれで，予測の 4 列の重みを平均してから 3 ヘッドで平均する．1 回目の推論は選ぶためだけに使い，予測は選んだ K 件で 2 回目に行う．</div>
     </div>
     <div class="plate">
       <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 300" role="img" aria-label="ヘッドで選ぶことと最初のパッチを隠すことを重ねたときの MSE">
@@ -1298,7 +1298,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
 <text class="t-ink" x="95" y="68" text-anchor="middle">候補の窓</text><text x="95" y="88" text-anchor="middle" font-size="10">train から 2048 件</text>
 <line class="arrow" x1="95" y1="110" x2="95" y2="146"/><path class="ah" d="M95,152 L90,142 L100,142 Z"/>
 <rect x="20" y="152" width="150" height="74" rx="4" fill="none" stroke="var(--accent)" stroke-dasharray="5 3"/>
-<text class="lbl-ctx" x="95" y="176" text-anchor="middle">近さヘッド 3 つの</text><text class="lbl-ctx" x="95" y="194" text-anchor="middle">重みで 256 件に絞る</text><text x="95" y="214" text-anchor="middle" font-size="10">key は前計算しておく</text>
+<text class="lbl-ctx" x="95" y="176" text-anchor="middle">選択ヘッド 3 つの</text><text class="lbl-ctx" x="95" y="194" text-anchor="middle">重みで 256 件に絞る</text><text x="95" y="214" text-anchor="middle" font-size="10">key は前計算しておく</text>
 <line class="arrow" x1="170" y1="189" x2="200" y2="189"/><path class="ah" d="M206,189 L196,184 L196,194 Z"/>
 <text class="t-ink" x="300" y="24">(A) 事例を並列の行に置く</text>
 <text x="322" y="44" text-anchor="middle" font-size="10">文脈（過去）</text>
@@ -1367,7 +1367,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
 <text x="427" y="246" text-anchor="middle" style="fill:var(--warn)">(B) 最初の予測パッチは隠す</text>
 <text x="20" y="282">(A) クエリの行は，事例の行の「文脈→未来」の組を列ごとに読む．行の順番は無く，件数は行を足すだけで増やせる．</text>
 <text x="20" y="300">(B) 最初の予測パッチ（1〜16 時間先）の列だけ，クエリから事例を見えなくする．</text>
-<text x="20" y="318">(C) 候補 2048 件の前計算した key とクエリの query から，近さヘッド 3 つの重みで 256 件に絞る．</text>
+<text x="20" y="318">(C) 候補 2048 件の前計算した key とクエリの query から，選択ヘッド 3 つの重みで 256 件に絞る．</text>
 </svg></div>
       <div class="plate-cap"><b>提案手法の全体</b>(A) は確定，(B) と (C) は val で決めた（test は未確認）．事例の文脈の終わりはクエリの予測の起点にそろえて置く．どの段階もモデルは凍結のまま．</div>
     </div>
