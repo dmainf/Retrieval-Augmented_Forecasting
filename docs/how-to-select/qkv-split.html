@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>q，k，v の使い方で選ぶ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root {
+  --ground: #F2F5F7;
+  --surface: #FFFFFF;
+  --surface-sunk: #E9EEF2;
+  --ink: #131A21;
+  --ink-soft: #5C6873;
+  --ink-faint: #8794A1;
+  --rule: #D6DEE5;
+  --rule-soft: #E5EBF0;
+  --accent: #2F5F8F;
+  --accent-wash: rgba(47, 95, 143, 0.10);
+  --oracle: #B0621C;
+  --oracle-wash: rgba(176, 98, 28, 0.12);
+  --f-display: "Zen Old Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --f-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --f-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0F141A;
+    --surface: #161E26;
+    --surface-sunk: #1C262F;
+    --ink: #E3EAF1;
+    --ink-soft: #97A5B3;
+    --ink-faint: #6E7D8C;
+    --rule: #2A3540;
+    --rule-soft: #222C36;
+    --accent: #7FB0DC;
+    --accent-wash: rgba(127, 176, 220, 0.13);
+    --oracle: #E0A164;
+    --oracle-wash: rgba(224, 161, 100, 0.14);
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0F141A;
+  --surface: #161E26;
+  --surface-sunk: #1C262F;
+  --ink: #E3EAF1;
+  --ink-soft: #97A5B3;
+  --ink-faint: #6E7D8C;
+  --rule: #2A3540;
+  --rule-soft: #222C36;
+  --accent: #7FB0DC;
+  --accent-wash: rgba(127, 176, 220, 0.13);
+  --oracle: #E0A164;
+  --oracle-wash: rgba(224, 161, 100, 0.14);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 16px;
+  line-height: 1.85;
+  -webkit-font-smoothing: antialiased;
+}
+.page { padding: 0 16px 96px; }
+.prose { max-width: 40rem; margin-inline: auto; }
+.wide  { max-width: 56rem; margin-inline: auto; }
+a { color: var(--accent); }
+.masthead { border-bottom: 1px solid var(--rule); padding: 64px 0 40px; margin-bottom: 56px; }
+.kicker {
+  font-family: var(--f-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0 0 18px;
+}
+h1 {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: clamp(2rem, 5.5vw, 2.9rem);
+  line-height: 1.3;
+  margin: 0 0 20px;
+  text-wrap: balance;
+  word-break: keep-all;
+}
+.standfirst { font-size: 1.03rem; color: var(--ink-soft); margin: 0; max-width: 36rem; }
+section { margin-bottom: 72px; }
+.sec-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 10px;
+  margin-bottom: 28px;
+}
+.sec-num { font-family: var(--f-mono); font-size: 0.78rem; font-weight: 600; color: var(--accent); letter-spacing: 0.06em; flex: none; }
+h2 { font-family: var(--f-display); font-weight: 700; font-size: 1.42rem; line-height: 1.45; margin: 0; }
+h3 { font-size: 1.02rem; font-weight: 700; margin: 38px 0 12px; }
+p { margin: 0 0 1.15em; }
+code {
+  font-family: var(--f-mono);
+  font-size: 0.85em;
+  background: var(--surface-sunk);
+  padding: 0.12em 0.4em;
+  border-radius: 3px;
+}
+pre {
+  font-family: var(--f-mono);
+  font-size: 0.78rem;
+  line-height: 1.6;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 14px 16px;
+  margin: 0.4em 0 1.15em;
+  overflow-x: auto;
+}
+.plate { background: var(--surface); border: 1px solid var(--rule); border-radius: 4px; margin: 32px 0; overflow: hidden; }
+.plate-body { padding: 18px 24px; }
+.plate-cap {
+  border-top: 1px solid var(--rule-soft);
+  padding: 12px 24px 14px;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  background: var(--surface-sunk);
+}
+.plate-cap b {
+  font-family: var(--f-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  color: var(--ink-faint);
+  display: block;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.table-scroll { overflow-x: auto; }
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 560px;
+  font-family: var(--f-mono);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+th, td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--rule-soft); white-space: nowrap; }
+thead th { font-weight: 600; font-size: 0.7rem; letter-spacing: 0.06em; color: var(--ink-faint); border-bottom: 1px solid var(--rule); vertical-align: bottom; }
+thead th.wrap { white-space: normal; min-width: 5.5em; }
+tbody th { text-align: left; font-family: var(--f-body); font-weight: 500; font-size: 0.86rem; color: var(--ink); }
+tr.main td, tr.main th { background: var(--accent-wash); }
+tr.sep td, tr.sep th { border-top: 1px solid var(--rule); }
+td.sub, .sub { color: var(--ink-faint); }
+td.hd { text-align: left; font-size: 0.74rem; color: var(--ink-soft); }
+.tl { font-family: var(--f-mono); font-size: 0.95em; }
+table.res { min-width: 1080px; }
+table.list { min-width: 720px; }
+table.list td.f { text-align: left; font-size: 0.8rem; white-space: normal; }
+table.res td.f { text-align: left; font-size: 0.78rem; }
+code.opt { font-size: 0.7rem; color: var(--ink-faint); background: none; padding: 0; }
+tbody tr:last-child td, tbody tr:last-child th { border-bottom: none; }
+ul.tight { padding-left: 1.2em; margin: 0 0 1.15em; }
+ul.tight li { margin-bottom: 0.5em; }
+.diagram { display: block; width: 100%; height: auto; }
+.diagram text { font-family: var(--f-body); }
+.diagram .d-key { font-size: 12px; fill: var(--ink-soft); }
+.diagram .d-title { font-size: 13px; font-weight: 700; fill: var(--ink); }
+.diagram .d-lab { font-size: 11px; fill: var(--ink-faint); }
+.diagram .d-key-strong { font-size: 12.5px; font-weight: 700; fill: var(--ink); }
+.diagram .d-sep { stroke: var(--rule-soft); stroke-width: 1; }
+.diagram .d-ctx { fill: var(--surface-sunk); stroke: var(--rule); stroke-width: 1; }
+.diagram .d-hid { fill: var(--surface); stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.diagram .d-fut { fill: var(--oracle-wash); stroke: var(--oracle); stroke-width: 1; }
+.diagram .d-flow { fill: none; stroke: var(--ink-faint); stroke-width: 1.5; }
+.diagram .d-ah { fill: var(--ink-faint); }
+.diagram .d-self { fill: var(--surface); stroke: var(--ink); stroke-width: 2; }
+.diagram .d-phid { fill: var(--surface); stroke: var(--accent); stroke-width: 2; }
+.diagram .d-ptrue { fill: var(--oracle); }
+.diagram .d-a-state { stroke: var(--ink-faint); stroke-width: 2.5; }
+.diagram .d-a-surp { stroke: var(--oracle); stroke-width: 2.5; }
+.diagram .d-a-recv { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 6 4; }
+.diagram .d-ah-state { fill: var(--ink-faint); }
+.diagram .d-ah-surp { fill: var(--oracle); }
+.diagram .d-ah-recv { fill: var(--accent); }
+.diagram .d-t-recv { font-size: 12px; font-weight: 700; fill: var(--accent); }
+.diagram .d-ah-q { fill: var(--ink); }
+.diagram .d-drop-h { stroke: var(--accent); stroke-width: 1; stroke-dasharray: 3 3; }
+.diagram .d-drop-k { stroke: var(--oracle); stroke-width: 1; stroke-dasharray: 3 3; }
+.diagram .d-pt { fill: var(--accent); }
+.diagram .d-box { fill: var(--surface-sunk); stroke: var(--rule); stroke-width: 1; }
+math[display="block"].eq { display: block math; margin: 18px 0 22px; padding: 14px 18px; background: var(--surface); border: 1px solid var(--rule-soft); border-left: 3px solid var(--accent); border-radius: 0 4px 4px 0; overflow-x: auto; font-size: 1.06em; }
+math.eq mtd { text-align: left; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="masthead">
+  <div class="prose">
+    <p class="kicker"><a href="../raf-note.html">RAF 研究ノート</a> · 選び方 · 2026-11-22 · ETTh1 / Chronos-2（凍結） · val</p>
+    <h1>q，k，v の<wbr>使い方で<wbr>選ぶ</h1>
+    <p class="standfirst">
+      提案手法は，クエリの q<sub>0</sub> と候補の k の内積で事例を選ぶ．ヘッドの出力を q，k，v で書き，q，k，v，qk，qkv のそれぞれを，全体・続きを見せる前の項（前項）・続きによる変化の項（変化項）の 3 通りにした 15 個の点数で，ヘッドを選び直した．そのうち 11 個で予測を流した．q と k の全体の点数は，選んだ事例の続きが，予測対象で選ぶ場合を除けば予測対象に最も近かったが，MSE は提案手法より大きかった（+0.80±0.55，+1.91±0.73 ポイント）．提案手法との MSE の差が標準誤差の 2 倍を超えて負になった点数はない．
+    </p>
+  </div>
+</header>
+
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">1</span><h2>ヘッドの出力を q，k，v で書く</h2></div>
+    <p>提案手法は，選択ヘッド 3 本（L12H1，L11H10，L10H12）で，クエリの query q<sub>0</sub> と候補の key k<sub>j</sub> の内積から求めた重みで，クエリごとに引いた候補 2048 件から 256 件を選ぶ（<a href="attention-weight.html">attention で選ぶ</a>）．</p>
+    <p>Chronos-2 の group attention では，列ごとに，クエリの行が自分の行と事例の行の value を重みづけて足す．ヘッド 1 本，列 1 つについて，重みの和が 1 になることを使うと，ヘッドの出力 o は次のように書ける．</p>
+    <math display="block" class="eq"><mrow><mi>o</mi><mo>−</mo><msub><mi>v</mi><mn>0</mn></msub><msub><mi>W</mi><mi>O</mi></msub><mo>=</mo><munderover><mo>∑</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></munderover><mfrac><mrow><mi>exp</mi><mo stretchy="false">(</mo><msub><mi>q</mi><mn>0</mn></msub><mo>·</mo><msub><mi>k</mi><mi>j</mi></msub><mo stretchy="false">)</mo></mrow><mrow><mi>exp</mi><mo stretchy="false">(</mo><msub><mi>q</mi><mn>0</mn></msub><mo>·</mo><msub><mi>k</mi><mn>0</mn></msub><mo stretchy="false">)</mo><mo>+</mo><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></munderover><mi>exp</mi><mo stretchy="false">(</mo><msub><mi>q</mi><mn>0</mn></msub><mo>·</mo><msub><mi>k</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow></mfrac><mo stretchy="false">(</mo><msub><mi>v</mi><mi>j</mi></msub><mo>−</mo><msub><mi>v</mi><mn>0</mn></msub><mo stretchy="false">)</mo><msub><mi>W</mi><mi>O</mi></msub></mrow></math>
+    <p>q<sub>0</sub>，k<sub>0</sub>，v<sub>0</sub> はクエリの query，key，value，q<sub>j</sub>，k<sub>j</sub>，v<sub>j</sub> は候補 j の query，key，value，N は候補の数，W<sub>O</sub> は出力の射影である．Chronos-2 は q<sub>0</sub>·k<sub>j</sub> を √d<sub>k</sub> で割らない．分母は全候補で共通なので，候補 j の分は exp(q<sub>0</sub>·k<sub>j</sub>)(v<sub>j</sub> − v<sub>0</sub>)W<sub>O</sub> に比例する．候補 j の分を決めるのは q<sub>0</sub>·k<sub>j</sub> と v<sub>j</sub> − v<sub>0</sub> で，候補自身の q<sub>j</sub> は使われない．</p>
+    <p>点数に使う q，k，v は，クエリと候補を 1 本ずつ単独で流して前計算したもので（提案手法の (D)），事例を並べて流したときの値とは一致しない．候補は train の窓で続きが分かっているので，同じ候補を，続きを入れた場合と隠した場合の 2 通りに流す．</p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body">
+        <svg class="diagram" viewBox="0 0 760 215" role="img" aria-label="候補を続きを入れて流す場合と隠して流す場合，クエリを流す場合に取り出す q，k，v"><defs><marker id="f1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="d-ah" d="M0,0 L10,5 L0,10 z"/></marker></defs><text x="200" y="22" class="d-lab">入力（1 本ずつ流す）</text><text x="638" y="22" class="d-lab">取り出すもの</text><text x="20" y="50" class="d-key-strong">候補 j（続きを入れる）</text><text x="20" y="66" class="d-lab">提案手法と同じ流し方</text><rect x="200" y="38" width="262" height="26" rx="3" class="d-ctx"/><text x="331" y="55" text-anchor="middle" class="d-key">文脈 512 時点</text><rect x="470" y="38" width="120" height="26" rx="3" class="d-fut"/><text x="530" y="55" text-anchor="middle" class="d-key">本当の続き</text><line x1="598" y1="51" x2="628" y2="51" class="d-flow" marker-end="url(#f1)"/><text x="638" y="55" class="d-key-strong">q<tspan dy="3" font-size="0.75em">j</tspan><tspan dy="-3"> </tspan>，k<tspan dy="3" font-size="0.75em">j</tspan><tspan dy="-3"> </tspan>，v<tspan dy="3" font-size="0.75em">j</tspan><tspan dy="-3"> </tspan></text><text x="20" y="112" class="d-key-strong">候補 j（続きを隠す）</text><text x="20" y="128" class="d-lab">クエリと同じ流し方</text><rect x="200" y="100" width="262" height="26" rx="3" class="d-ctx"/><text x="331" y="117" text-anchor="middle" class="d-key">文脈 512 時点</text><rect x="470" y="100" width="120" height="26" rx="3" class="d-hid"/><text x="530" y="117" text-anchor="middle" class="d-key">隠す</text><line x1="598" y1="113" x2="628" y2="113" class="d-flow" marker-end="url(#f1)"/><text x="638" y="117" class="d-key-strong">q<tspan dx="-0.72em" dy="-0.62em" font-size="0.8em">~</tspan><tspan dx="0.3em" dy="0.85em" font-size="0.75em">j</tspan><tspan dy="-0.25em"> </tspan>，k<tspan dx="-0.72em" dy="-0.62em" font-size="0.8em">~</tspan><tspan dx="0.3em" dy="0.85em" font-size="0.75em">j</tspan><tspan dy="-0.25em"> </tspan>，v<tspan dx="-0.72em" dy="-0.62em" font-size="0.8em">~</tspan><tspan dx="0.3em" dy="0.85em" font-size="0.75em">j</tspan><tspan dy="-0.25em"> </tspan></text><line x1="20" x2="740" y1="148" y2="148" class="d-sep"/><text x="20" y="178" class="d-key-strong">クエリ</text><text x="20" y="194" class="d-lab">続きは分からない</text><rect x="200" y="166" width="262" height="26" rx="3" class="d-ctx"/><text x="331" y="183" text-anchor="middle" class="d-key">文脈 512 時点</text><rect x="470" y="166" width="120" height="26" rx="3" class="d-hid"/><text x="530" y="183" text-anchor="middle" class="d-key">隠す</text><line x1="598" y1="179" x2="628" y2="179" class="d-flow" marker-end="url(#f1)"/><text x="638" y="183" class="d-key-strong">q₀，k₀，v₀</text></svg>
+      </div>
+      <div class="plate-cap"><b>候補を 2 通りに流す</b>続きを隠すとは，クエリと同じく，4 つの予測パッチを欠測として入れること．続きを隠して流したときのベクトルには ~ を付けて <span class="tl">q̃</span><sub>j</sub>，<span class="tl">k̃</span><sub>j</sub>，<span class="tl">ṽ</span><sub>j</sub> と書く．どのベクトルも予測パッチ 4 列で取り，窓ごとに 1 回の前計算で求まる．クエリには続きがないので，q<sub>0</sub>，k<sub>0</sub>，v<sub>0</sub> は続きを隠したものだけである．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <p>2 通りの値を使うと，候補とクエリの差は，q，k，v のどれでも，続きを見せる前の項（前項）と，続きを見せたことによる変化の項（変化項）に分かれる．q<sub>0</sub> と k の内積も同じように分かれる．v は W<sub>O</sub> を掛けたヘッドの出力の空間で測る．</p>
+    <math display="block" class="eq"><mtable columnalign="left" rowspacing="1.2em"><mtr><mtd><mrow><msub><mi>x</mi><mi>j</mi></msub><mo>−</mo><msub><mi>x</mi><mn>0</mn></msub><mo>=</mo><munder><munder><mrow><mo stretchy="false">(</mo><msub><mover accent="true"><mi>x</mi><mo stretchy="false">~</mo></mover><mi>j</mi></msub><mo>−</mo><msub><mi>x</mi><mn>0</mn></msub><mo stretchy="false">)</mo></mrow><mo>⏟</mo></munder><mtext>前項</mtext></munder><mo>+</mo><munder><munder><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>j</mi></msub><mo>−</mo><msub><mover accent="true"><mi>x</mi><mo stretchy="false">~</mo></mover><mi>j</mi></msub><mo stretchy="false">)</mo></mrow><mo>⏟</mo></munder><mtext>変化項</mtext></munder><mo>,</mo><mspace width="1em"/><mi>x</mi><mo>∈</mo><mo stretchy="false">{</mo><mi>q</mi><mo>,</mo><mi>k</mi><mo>,</mo><mi>v</mi><mo stretchy="false">}</mo></mrow></mtd></mtr><mtr><mtd><mrow><msub><mi>q</mi><mn>0</mn></msub><mo>·</mo><msub><mi>k</mi><mi>j</mi></msub><mo>=</mo><munder><munder><mrow><msub><mi>q</mi><mn>0</mn></msub><mo>·</mo><msub><mover accent="true"><mi>k</mi><mo stretchy="false">~</mo></mover><mi>j</mi></msub></mrow><mo>⏟</mo></munder><mtext>前項</mtext></munder><mo>+</mo><munder><munder><mrow><msub><mi>q</mi><mn>0</mn></msub><mo>·</mo><mo stretchy="false">(</mo><msub><mi>k</mi><mi>j</mi></msub><mo>−</mo><msub><mover accent="true"><mi>k</mi><mo stretchy="false">~</mo></mover><mi>j</mi></msub><mo stretchy="false">)</mo></mrow><mo>⏟</mo></munder><mtext>変化項</mtext></munder></mrow></mtd></mtr></mtable></math>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body">
+        <svg class="diagram" viewBox="0 0 760 320" role="img" aria-label="左は q₀ と k の内積の数直線で，q₀·k_j が前項と変化項の和になる．右はヘッドの出力の空間で，v_j − v_0 が前項と変化項の和になる"><defs><marker id="m1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="d-ah-state" d="M0,0 L10,5 L0,10 z"/></marker><marker id="m2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="d-ah-surp" d="M0,0 L10,5 L0,10 z"/></marker><marker id="m3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="d-ah-recv" d="M0,0 L10,5 L0,10 z"/></marker><marker id="m4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="d-ah-q" d="M0,0 L10,5 L0,10 z"/></marker></defs><text x="20" y="24" class="d-title">q₀ と k の内積</text><text x="20" y="42" class="d-lab">softmax に入る前の数</text><line x1="42" y1="110" x2="292" y2="110" class="d-a-recv" marker-end="url(#m3)"/><text x="170" y="98" text-anchor="middle" class="d-t-recv">q₀·k<tspan dy="3" font-size="0.75em">j</tspan><tspan dy="-3"> </tspan></text><line x1="42" y1="155" x2="182" y2="155" class="d-a-state" marker-end="url(#m1)"/><line x1="198" y1="155" x2="292" y2="155" class="d-a-surp" marker-end="url(#m2)"/><text x="115" y="180" text-anchor="middle" class="d-lab">q₀·k<tspan dx="-0.72em" dy="-0.62em" font-size="0.8em">~</tspan><tspan dx="0.3em" dy="0.85em" font-size="0.75em">j</tspan><tspan dy="-0.25em"> </tspan></text><text x="245" y="180" text-anchor="middle" class="d-lab">q₀·(k<tspan dy="3" font-size="0.75em">j</tspan><tspan dy="-3"> </tspan>− k<tspan dx="-0.72em" dy="-0.62em" font-size="0.8em">~</tspan><tspan dx="0.3em" dy="0.85em" font-size="0.75em">j</tspan><tspan dy="-0.25em"> </tspan>)</text><line x1="190" y1="162" x2="190" y2="225" class="d-drop-h"/><line x1="300" y1="117" x2="300" y2="225" class="d-drop-k"/><line x1="40" y1="232" x2="355" y2="232" class="d-flow" marker-end="url(#m4)"/><circle cx="40" cy="232" r="4" style="fill:var(--ink)"/><text x="40" y="254" text-anchor="middle" class="d-lab">0</text><circle cx="190" cy="232" r="7" class="d-phid"/><circle cx="300" cy="232" r="7" class="d-ptrue"/><text x="190" y="256" text-anchor="middle" class="d-lab">続きを隠す</text><text x="300" y="256" text-anchor="middle" class="d-lab">続きを入れる</text><text x="355" y="278" text-anchor="end" class="d-lab">大きいほど強く読まれる</text><line x1="380" x2="380" y1="20" y2="285" class="d-sep"/><text x="400" y="24" class="d-title">ヘッドの出力の空間</text><text x="400" y="42" class="d-lab">value × W<tspan dy="3" font-size="0.75em">O</tspan><tspan dy="-3"> </tspan></text><line x1="438" y1="225" x2="630" y2="225" class="d-a-state" marker-end="url(#m1)"/><line x1="640" y1="215" x2="640" y2="78" class="d-a-surp" marker-end="url(#m2)"/><line x1="436" y1="219" x2="633" y2="75" class="d-a-recv" marker-end="url(#m3)"/><circle cx="430" cy="225" r="7" class="d-self"/><circle cx="640" cy="225" r="7" class="d-phid"/><circle cx="640" cy="70" r="7" class="d-ptrue"/><text x="430" y="251" text-anchor="middle" class="d-key">v₀（クエリ）</text><text x="640" y="251" text-anchor="middle" class="d-key">v<tspan dx="-0.72em" dy="-0.62em" font-size="0.8em">~</tspan><tspan dx="0.3em" dy="0.85em" font-size="0.75em">j</tspan><tspan dy="-0.25em"> </tspan></text><text x="652" y="66" class="d-key">v<tspan dy="3" font-size="0.75em">j</tspan><tspan dy="-3"> </tspan></text><text x="535" y="278" text-anchor="middle" class="d-lab">v<tspan dx="-0.72em" dy="-0.62em" font-size="0.8em">~</tspan><tspan dx="0.3em" dy="0.85em" font-size="0.75em">j</tspan><tspan dy="-0.25em"> </tspan>− v₀</text><text x="652" y="150" class="d-lab">v<tspan dy="3" font-size="0.75em">j</tspan><tspan dy="-3"> </tspan>− v<tspan dx="-0.72em" dy="-0.62em" font-size="0.8em">~</tspan><tspan dx="0.3em" dy="0.85em" font-size="0.75em">j</tspan><tspan dy="-0.25em"> </tspan></text><text x="525" y="128" text-anchor="end" class="d-t-recv">v<tspan dy="3" font-size="0.75em">j</tspan><tspan dy="-3"> </tspan>− v₀</text><line x1="20" x2="740" y1="292" y2="292" class="d-sep"/><line x1="40" y1="310" x2="70" y2="310" class="d-a-state"/><text x="78" y="314" class="d-lab">前項：続きを見せる前</text><line x1="230" y1="310" x2="260" y2="310" class="d-a-surp"/><text x="268" y="314" class="d-lab">変化項：続きを見せたことによる変化</text><line x1="490" y1="310" x2="520" y2="310" class="d-a-recv"/><text x="528" y="314" class="d-lab">続きを入れた全体</text></svg>
+      </div>
+      <div class="plate-cap"><b>前項と変化項に分ける</b>左は q<sub>0</sub> と k の内積の数直線，右はヘッドの出力の空間（v に W<sub>O</sub> を掛けたもの）の模式図（ヘッド 1 本，予測パッチ 1 つ）．灰は前項，橙は変化項，破線は続きを入れた全体．左はスカラーの和で，足すと q<sub>0</sub>·k<sub>j</sub> になる．右はベクトルの和で，足すと v<sub>j</sub> − v<sub>0</sub> になる．q と k の差も右と同じベクトルの和になる．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <p><span class="tl">ṽ</span><sub>j</sub> が v<sub>0</sub> に近い候補では，v<sub>j</sub> − v<sub>0</sub> はほぼ変化項 v<sub>j</sub> − <span class="tl">ṽ</span><sub>j</sub> だけになる．<span class="tl">k̃</span><sub>j</sub> が k<sub>0</sub> に近い候補では，q<sub>0</sub>·k<sub>j</sub> はほぼ q<sub>0</sub>·k<sub>0</sub> + q<sub>0</sub>·(k<sub>j</sub> − <span class="tl">k̃</span><sub>j</sub>) になる．どちらの場合も，候補の分は候補の続きによる変化だけで決まる．</p>
+  </div>
+</section>
+
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">2</span><h2>予測を流した結果</h2></div>
+    <p>ETTh1 の val の全起点（1162 クエリ）で予測を流した．どれも候補，件数，入れ方（並列の行，P1 を隠す）は同じで，点数とヘッドだけが違う．15 個の点数のうち予測を流したのは，前回までに流した 5 個（qk，qk 前項，qk 変化項，v 前項，v 変化項）と，今回加えた 6 個（q，q 前項，k，qkv の 3 つ）の 11 個である．2 行ある点数は，1 行目が点数ごとに選び直した 3 本で，2 行目が提案手法の 3 本に固定したもの．ヘッドは，<code>codes/heads.py</code> で点数ごとに選び直した．val の各チャネルに均等に散らばる 60 起点（計 420 クエリ）で train の窓 512 件を候補にし，候補の点数と，候補の続きがクエリの予測対象に近い順の順位相関をクエリで平均して，全 12 層の 144 ヘッドから相関の高い 3 本を選んだ．今回加えた q，q 前項，k は，予測を流していない点数のうち，選んだ 3 本の相関の平均が高いもの．下の「分かったこと」の提案手法との差は，MSE（MAE）の変化率の差（ポイント）で，± はチャネルごとに起点を 1000 回復元抽出した標準誤差．</p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body table-scroll">
+        <table class="res">
+          <thead><tr><th style="text-align:left">使うもの</th><th style="text-align:left">項</th><th>MSE</th><th>MAE</th><th class="wrap">事例の続きと予測対象の RMSE</th><th style="text-align:left">式（大きい順に選ぶ）</th><th style="text-align:left">ヘッド</th></tr></thead>
+          <tbody>
+            <tr class="sep"><th>ランダム</th><td class="hd" style="font-family:var(--f-body)"></td><td>−4.77%</td><td>−0.55%</td><td>1.592</td><td class="f">−</td><td class="hd">−</td></tr>
+            <tr class="sep"><th>q</th><td class="hd" style="font-family:var(--f-body)">全体</td><td>−4.43%</td><td>−0.93%</td><td>1.196</td><td class="f">−Σ‖q<sub>j</sub> − q<sub>0</sub>‖<br><code class="opt">q</code></td><td class="hd">L12H1 L12H8 L12H6</td></tr>
+            <tr><th></th><td class="hd" style="font-family:var(--f-body)">前項</td><td>−4.84%</td><td>−0.59%</td><td>1.256</td><td class="f">−Σ‖<span class="tl">q̃</span><sub>j</sub> − q<sub>0</sub>‖<br><code class="opt">qpre</code></td><td class="hd">L12H1 L12H6 L12H5</td></tr>
+            <tr><th></th><td class="hd" style="font-family:var(--f-body)">変化項（大きい順）</td><td class="sub">−</td><td class="sub">−</td><td class="sub">−</td><td class="f">Σ‖q<sub>j</sub> − <span class="tl">q̃</span><sub>j</sub>‖<br><code class="opt">qchange</code></td><td class="sub">−</td></tr>
+            <tr><th></th><td class="hd" style="font-family:var(--f-body)">変化項（小さい順）</td><td class="sub">−</td><td class="sub">−</td><td class="sub">−</td><td class="f">−Σ‖q<sub>j</sub> − <span class="tl">q̃</span><sub>j</sub>‖<br><code class="opt">qchange_s</code></td><td class="sub">−</td></tr>
+            <tr class="sep"><th>k</th><td class="hd" style="font-family:var(--f-body)">全体</td><td>−3.32%</td><td>−0.29%</td><td>1.200</td><td class="f">−Σ‖k<sub>j</sub> − k<sub>0</sub>‖<br><code class="opt">k</code></td><td class="hd">L12H9 L12H3 L12H8</td></tr>
+            <tr><th></th><td class="hd" style="font-family:var(--f-body)">前項</td><td class="sub">−</td><td class="sub">−</td><td class="sub">−</td><td class="f">−Σ‖<span class="tl">k̃</span><sub>j</sub> − k<sub>0</sub>‖<br><code class="opt">kpre</code></td><td class="sub">−</td></tr>
+            <tr><th></th><td class="hd" style="font-family:var(--f-body)">変化項（大きい順）</td><td class="sub">−</td><td class="sub">−</td><td class="sub">−</td><td class="f">Σ‖k<sub>j</sub> − <span class="tl">k̃</span><sub>j</sub>‖<br><code class="opt">kchange</code></td><td class="sub">−</td></tr>
+            <tr><th></th><td class="hd" style="font-family:var(--f-body)">変化項（小さい順）</td><td class="sub">−</td><td class="sub">−</td><td class="sub">−</td><td class="f">−Σ‖k<sub>j</sub> − <span class="tl">k̃</span><sub>j</sub>‖<br><code class="opt">kchange_s</code></td><td class="sub">−</td></tr>
+            <tr class="sep"><th>v</th><td class="hd" style="font-family:var(--f-body)">全体</td><td class="sub">−</td><td class="sub">−</td><td class="sub">−</td><td class="f">Σ‖(v<sub>j</sub> − v<sub>0</sub>)W<sub>O</sub>‖<br><code class="opt">v</code></td><td class="sub">−</td></tr>
+            <tr><th></th><td class="hd" style="font-family:var(--f-body)">前項</td><td>−5.02%</td><td>−0.34%</td><td>1.260</td><td class="f">−Σ‖(<span class="tl">ṽ</span><sub>j</sub> − v<sub>0</sub>)W<sub>O</sub>‖<br><code class="opt">vpre</code></td><td class="hd">L12H1 L12H8 L11H7</td></tr>
+            <tr><th></th><td class="hd" style="font-family:var(--f-body)"></td><td>−5.33%</td><td>−0.42%</td><td>1.274</td><td class="f"></td><td class="hd">提案手法の 3 本</td></tr>
+            <tr><th></th><td class="hd" style="font-family:var(--f-body)">変化項（大きい順）</td><td>+4.67%</td><td>+6.45%</td><td>1.509</td><td class="f">Σ‖(v<sub>j</sub> − <span class="tl">ṽ</span><sub>j</sub>)W<sub>O</sub>‖<br><code class="opt">vchange</code></td><td class="hd">L7H3 L8H7 L8H1</td></tr>
+            <tr><th></th><td class="hd" style="font-family:var(--f-body)"></td><td>+0.12%</td><td>+2.96%</td><td>1.721</td><td class="f"></td><td class="hd">提案手法の 3 本</td></tr>
+            <tr><th></th><td class="hd" style="font-family:var(--f-body)">変化項（小さい順）</td><td class="sub">−</td><td class="sub">−</td><td class="sub">−</td><td class="f">−Σ‖(v<sub>j</sub> − <span class="tl">ṽ</span><sub>j</sub>)W<sub>O</sub>‖<br><code class="opt">vchange_s</code></td><td class="sub">−</td></tr>
+            <tr class="main sep"><th>qk</th><td class="hd" style="font-family:var(--f-body)">全体（提案手法）</td><td>−5.23%</td><td>−1.02%</td><td>1.283</td><td class="f">w(q<sub>0</sub>·k<sub>j</sub>)<br><code class="opt">（なし）</code></td><td class="hd">L12H1 L11H10 L10H12</td></tr>
+            <tr><th></th><td class="hd" style="font-family:var(--f-body)"></td><td>−3.13%</td><td>−0.03%</td><td>1.316</td><td class="f"></td><td class="hd">L12H1 L12H7 L2H9</td></tr>
+            <tr><th></th><td class="hd" style="font-family:var(--f-body)">前項</td><td>−5.40%</td><td>−0.94%</td><td>1.265</td><td class="f">w(q<sub>0</sub>·<span class="tl">k̃</span><sub>j</sub>)<br><code class="opt">qkpre</code></td><td class="hd">L12H1 L10H12 L11H4</td></tr>
+            <tr><th></th><td class="hd" style="font-family:var(--f-body)"></td><td>−5.67%</td><td>−1.11%</td><td>1.277</td><td class="f"></td><td class="hd">提案手法の 3 本</td></tr>
+            <tr><th></th><td class="hd" style="font-family:var(--f-body)">変化項</td><td>−5.29%</td><td>−0.55%</td><td>1.463</td><td class="f">w(q<sub>0</sub>·(k<sub>j</sub> − <span class="tl">k̃</span><sub>j</sub>))，クエリ自身の項は 0<br><code class="opt">qkchange</code></td><td class="hd">L12H12 L11H5 L4H3</td></tr>
+            <tr><th></th><td class="hd" style="font-family:var(--f-body)"></td><td>−1.47%</td><td>+1.15%</td><td>1.720</td><td class="f"></td><td class="hd">提案手法の 3 本</td></tr>
+            <tr class="sep"><th>qkv</th><td class="hd" style="font-family:var(--f-body)">全体</td><td>−4.92%</td><td>−1.01%</td><td>1.284</td><td class="f">Σ s(q<sub>0</sub>·k<sub>j</sub>) ‖(v<sub>j</sub> − v<sub>0</sub>)W<sub>O</sub>‖<br><code class="opt">qkv</code></td><td class="hd">L12H1 L2H9 L2H10</td></tr>
+            <tr><th></th><td class="hd" style="font-family:var(--f-body)">前項</td><td>−5.81%</td><td>−1.27%</td><td>1.311</td><td class="f">Σ s(q<sub>0</sub>·<span class="tl">k̃</span><sub>j</sub>) ‖(<span class="tl">ṽ</span><sub>j</sub> − v<sub>0</sub>)W<sub>O</sub>‖<br><code class="opt">qkvpre</code></td><td class="hd">L12H1 L10H12 L11H7</td></tr>
+            <tr><th></th><td class="hd" style="font-family:var(--f-body)">変化項</td><td>−4.68%</td><td>−0.96%</td><td>1.272</td><td class="f">Σ s(q<sub>0</sub>·k<sub>j</sub>) ‖(v<sub>j</sub> − <span class="tl">ṽ</span><sub>j</sub>)W<sub>O</sub>‖<br><code class="opt">qkvchange</code></td><td class="hd">L12H1 L2H9 L2H10</td></tr>
+            <tr class="sep"><th>予測対象で選ぶ</th><td class="hd" style="font-family:var(--f-body)"></td><td>−19.02%</td><td>−8.98%</td><td>0.973</td><td class="f">−</td><td class="hd">−</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="plate-cap"><b>点数ごとの結果（ETTh1，val，全起点 1162 クエリ）</b>添字 0 はクエリ，j は候補，~ は続きを隠して流した値．‖·‖ は L2 ノルムで，Σ はヘッドと予測パッチ 4 列の和．s(·) は，列ごとにクエリ自身と候補の上で取った softmax（クエリ自身の項は q<sub>0</sub>·k<sub>0</sub>）．w(·) は s(·) を予測パッチ 4 列で平均し，ヘッドごとに候補の和が 1 になるようにそろえてから，ヘッドで平均したもの．式の下はオプション（<code>codes/run.py --select attn</code> の <code>--value-score</code> の値）．− は予測を流していない点数．事例の続きと予測対象の RMSE は，クエリごとに，選んだ 256 件それぞれの続き 64 時点（その事例の文脈 512 時点の平均と標準偏差で標準化）と，クエリの予測対象 64 時点（クエリの履歴の最後 512 時点の平均と標準偏差で標準化）の差の L2 ノルムを √64 で割った値を，256 件で平均し，全 1162 クエリで平均したもの．予測対象で選ぶ 256 件は，同じ候補 2048 件の中でこの値が小さい順の 256 件なので，その行の値（0.973）が取りうる最小値である．MSE と MAE は，参照なし（MSE 0.5383，MAE 0.4696）に対する変化率で，チャネルの平均．qk 全体の 2 行目は，提案手法の点数のままヘッドだけを選び直したもの．予測対象で選ぶは，クエリの予測対象を使って選ぶので手法ではない．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <h3>点数について</h3>
+    <ul class="tight">
+      <li><strong>qk だけは，内積がそのまま数になる．</strong>q，k，v を単独で使うときは，差の L2 ノルムで数にする．</li>
+      <li><strong>qkv はベクトル s(q<sub>0</sub>·k<sub>j</sub>)(v<sub>j</sub> − v<sub>0</sub>)W<sub>O</sub> なので，L2 ノルムを取ると，候補がヘッドの出力を動かす量の大きさになる．</strong>向きは使わない．</li>
+      <li><strong>q，k，v の変化項は，クエリを使わない．</strong>どのクエリでも候補の並びが同じになるので，大きい順と小さい順の両方を点数にした．</li>
+      <li><strong>q，k，v の全体の点数は，続きを入れた候補と，続きを隠したクエリを比べる．</strong></li>
+      <li><strong>q<sub>j</sub> は 1 節の式に出てこない．</strong>q だけの点数は，ヘッドの出力の計算には使われないベクトルの近さである．</li>
+      <li><strong>qk の重みを v 前項の大きさで割る点数（qk ÷ v 前項）は，2 つの点数の組み合わせなので 15 個に入れず，<a href="qk-and-v.html">qk と v を組み合わせて選ぶ</a>に書いた．</strong></li>
+    </ul>
+    <h3>分かったこと</h3>
+    <ul class="tight">
+      <li><strong>q と k の全体の点数は，事例の続きと予測対象の RMSE が予測対象で選ぶ場合を除いて表の中で最も小さかったが，MSE は提案手法より大きかった．</strong>RMSE は 1.196 と 1.200（提案手法は 1.283）．提案手法との差は q が +0.80±0.55，k が +1.91±0.73（標準誤差の 2.6 倍）．</li>
+      <li><strong>q 前項は，提案手法との差が標準誤差の中だった．</strong>+0.39±0.68．</li>
+      <li><strong>提案手法との MSE の差が標準誤差の 2 倍を超えて負になった点数はない．</strong>差が最も負に大きかったのは qkv 前項（−0.58±0.62）．</li>
+      <li><strong>提案手法より MSE が標準誤差の 2 倍を超えて大きかったのは 5 本である．</strong>k（+1.91±0.73），ヘッドだけを選び直した qk（+2.10±0.62），提案手法の 3 本での qk 変化項（+3.76±1.24），v 変化項の 2 本（+9.90±2.40，+5.35±1.63）．</li>
+      <li><strong>事例の続きと予測対象の RMSE の順は，MSE の順と一致しない．</strong>RMSE が提案手法（1.283）より小さい 8 本（q，q 前項，k，v 前項 2 本，qk 前項 2 本，qkv 変化項）のうち，MSE の差が標準誤差の 2 倍を超えたのは k だけで，向きは正（提案手法より大きい）．</li>
+      <li><strong>qkv の 3 つは，どれも提案手法との MSE の差が標準誤差の 2 倍の中だった．</strong>全体 +0.31±0.33，前項 −0.58±0.62，変化項 +0.56±0.31．事例の続きと予測対象の RMSE は 1.284，1.311，1.272 で，提案手法（1.283）との違いは 0.03 以下．</li>
+      <li><strong>ランダムと提案手法の MSE の差は +0.46±0.84 ポイントで，標準誤差の中である．</strong>事例の続きと予測対象の RMSE は 1.592 と 1.283 で違う．</li>
+      <li><strong>OT では，表のすべての点数（ランダムをふくむ）で MSE が提案手法より小さかった．</strong>提案手法に対する変化率は −0.7（qkv 全体）〜−11.4%（提案手法の 3 本での v 変化項）で，予測対象で選ぶと −33.3%．</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">次</span><h2>次の一手</h2></div>
+    <ul class="tight">
+      <li><strong>q と k で選んだ事例で，MSE が下がらない理由を調べる．</strong>事例の続きと予測対象の RMSE は，予測対象で選ぶ場合を除いて表で最も小さかったが，MSE は提案手法より大きかった．</li>
+      <li><strong>流していない 4 個（q 変化項，k 前項，k 変化項，v 全体）を流すかを決める．</strong>k 前項の上位 3 本の平均（+0.472）は，流した q 前項（+0.479）に次いで 4 番目だった．</li>
+      <li><strong>ほかのデータセットの val で，qk 前項を提案手法と比べる．</strong>ETTh1 の val は，ヘッドの選び直しと評価の両方に使った．</li>
+      <li><strong>test は，val で 1〜2 本に決めてから 1 回だけ流す．</strong></li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">条件</span><h2>実験条件</h2></div>
+    <ul class="tight">
+      <li><strong>データと指標</strong>：ETTh1（7 チャネル，train 12 か月，val 4 か月），履歴 512 時点，予測 64 時点，起点は val の中に 17 時点おき（チャネルあたり 166 本，計 1162 クエリ）．MSE・MAE は中央値の誤差をチャネルごとに train の標準偏差で割り，チャネルで平均する．モデルは Chronos-2（<code>amazon/chronos-2</code>）で重みは凍結．test は使っていない．</li>
+      <li><strong>共通の設定</strong>：候補はクエリごとに，起点より 96 時点以上前に終わる train の窓からランダムに 2048 件（どの点数も同じ seed で同じ候補）．上位 K=256 件を並列の行として入れ，P1 を隠す．</li>
+      <li><strong>前計算</strong>：train の 1 時点おきの窓すべて（チャネルあたり 8065 件）を，続きを入れた場合と隠した場合に 1 本ずつ流し，予測パッチ 4 列で，ヘッドの q，k，v を取り出して <code>results/cache/</code> に保存する（q は今回から保存）．クエリは続きを隠して流す．v は，ヘッドごとに W<sub>O,h</sub> のグラム行列のコレスキー因子を掛けてから差の L2 ノルムを取る（W<sub>O,h</sub> を掛けた空間で測るのと同じ）．</li>
+      <li><strong>再現の確認</strong>：点数のコードを q，k，v の 15 個を共通に扱う形（<code>codes/selection.py</code> の <code>candidate_terms</code> と <code>head_terms</code>）に書き直した．提案手法の 3 本で，提案手法，qk 前項，qk 変化項，v 前項，v 変化項の 5 つの点数が選ぶ事例は，書き直す前と全起点で一致した．ヘッドの選び直しに使う順位相関も，前回までに測った点数では書き直す前と一致した（差 0）．</li>
+      <li><strong>名前の変更</strong>：前回までの <code>--value-score kpre</code> と <code>kchange</code>（q<sub>0</sub>·<span class="tl">k̃</span><sub>j</sub> と q<sub>0</sub>·(k<sub>j</sub> − <span class="tl">k̃</span><sub>j</sub>) の softmax）は，<code>qkpre</code> と <code>qkchange</code> に名前を変えた．結果のファイルも <code>_vkpre</code> → <code>_vqkpre</code>，<code>_vkchange</code> → <code>_vqkchange</code> に変えた．<code>kpre</code> と <code>kchange</code> は，いまは k の差の L2 ノルムの点数である．</li>
+      <li><strong>実行</strong>（リポジトリの直下で．予測は 1 本あたり約 35 分，<code>heads.py</code> は約 30 分）：
+<pre>python3 codes/heads.py --head-weights precompute --layers 1-12
+python3 codes/run.py
+python3 codes/run.py --select fut=fut
+python3 codes/run.py --select random
+python3 codes/run.py --select attn --heads L12H1,L11H10,L10H12
+python3 codes/run.py --select attn --heads L12H1,L12H7,L2H9
+python3 codes/run.py --select attn --heads L12H1,L12H8,L12H6 --value-score q
+python3 codes/run.py --select attn --heads L12H1,L12H6,L12H5 --value-score qpre
+python3 codes/run.py --select attn --heads L12H9,L12H3,L12H8 --value-score k
+python3 codes/run.py --select attn --heads L12H1,L12H8,L11H7 --value-score vpre
+python3 codes/run.py --select attn --heads L7H3,L8H7,L8H1 --value-score vchange
+python3 codes/run.py --select attn --heads L12H1,L10H12,L11H4 --value-score qkpre
+python3 codes/run.py --select attn --heads L12H12,L11H5,L4H3 --value-score qkchange
+# 提案手法の 3 本に固定：--heads L12H1,L11H10,L10H12 で
+#   --value-score vpre / vchange / qkpre / qkchange
+python3 codes/evaluate.py --compare results/ETTh1_val_none results/ETTh1_val_attn_L12H1+L11H10+L10H12 \
+    results/ETTh1_val_fut-fut results/ETTh1_val_random ... --out results/ETTh1_val_select_eval.json
+python3 codes/evaluate.py --picks results/ETTh1_val_fut-fut results/ETTh1_val_attn_L12H1+L11H10+L10H12 \
+    results/ETTh1_val_random ... --out results/ETTh1_val_select_picks.json</pre>
+        表の値は <code>results/ETTh1_val_select_eval.json</code>（予測），<code>results/ETTh1_val_select_picks.json</code>（事例の続きと予測対象の RMSE），<code>results/heads_ETTh1_val_precompute_h512.json</code>（ヘッドの選び直し）．2 つの JSON には，このノートに載せていない文脈の L2 距離（<code>ctx=ctx</code>）と層の状態（<code>--select state</code>）3 つの結果も入っている．</li>
+    </ul>
+  </div>
+</section>
+
+</div>
+</body>
+</html>

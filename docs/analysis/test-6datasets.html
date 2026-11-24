@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>test の結果</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root {
+  --ground: #F2F5F7;
+  --surface: #FFFFFF;
+  --surface-sunk: #E9EEF2;
+  --ink: #131A21;
+  --ink-soft: #5C6873;
+  --ink-faint: #8794A1;
+  --rule: #D6DEE5;
+  --rule-soft: #E5EBF0;
+  --accent: #2F5F8F;
+  --accent-wash: rgba(47, 95, 143, 0.10);
+  --oracle: #B0621C;
+  --oracle-wash: rgba(176, 98, 28, 0.12);
+  --warn: #A03A2E;
+  --s1: #2A6BB8;
+  --s2: #B0621C;
+  --f-display: "Zen Old Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --f-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --f-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0F141A;
+    --surface: #161E26;
+    --surface-sunk: #1C262F;
+    --ink: #E3EAF1;
+    --ink-soft: #97A5B3;
+    --ink-faint: #6E7D8C;
+    --rule: #2A3540;
+    --rule-soft: #222C36;
+    --accent: #7FB0DC;
+    --accent-wash: rgba(127, 176, 220, 0.13);
+    --oracle: #E0A164;
+    --oracle-wash: rgba(224, 161, 100, 0.14);
+    --warn: #E08476;
+    --s1: #3987e5;
+    --s2: #d95926;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0F141A;
+  --surface: #161E26;
+  --surface-sunk: #1C262F;
+  --ink: #E3EAF1;
+  --ink-soft: #97A5B3;
+  --ink-faint: #6E7D8C;
+  --rule: #2A3540;
+  --rule-soft: #222C36;
+  --accent: #7FB0DC;
+  --accent-wash: rgba(127, 176, 220, 0.13);
+  --oracle: #E0A164;
+  --oracle-wash: rgba(224, 161, 100, 0.14);
+  --warn: #E08476;
+  --s1: #3987e5;
+  --s2: #d95926;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 16px;
+  line-height: 1.85;
+  -webkit-font-smoothing: antialiased;
+}
+.page { padding: 0 20px 96px; }
+.prose { max-width: 40rem; margin-inline: auto; }
+.wide  { max-width: 52rem; margin-inline: auto; }
+a { color: var(--accent); }
+.masthead { border-bottom: 1px solid var(--rule); padding: 64px 0 40px; margin-bottom: 56px; }
+.kicker {
+  font-family: var(--f-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0 0 18px;
+}
+h1 {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: clamp(2rem, 5.5vw, 2.9rem);
+  line-height: 1.3;
+  margin: 0 0 20px;
+  text-wrap: balance;
+}
+.standfirst { font-size: 1.03rem; color: var(--ink-soft); margin: 0; max-width: 34rem; }
+section { margin-bottom: 72px; }
+.sec-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 10px;
+  margin-bottom: 28px;
+}
+.sec-num { font-family: var(--f-mono); font-size: 0.78rem; font-weight: 600; color: var(--accent); letter-spacing: 0.06em; flex: none; }
+h2 { font-family: var(--f-display); font-weight: 700; font-size: 1.42rem; line-height: 1.45; margin: 0; }
+h3 { font-size: 1.02rem; font-weight: 700; margin: 38px 0 12px; }
+p { margin: 0 0 1.15em; }
+code {
+  font-family: var(--f-mono);
+  font-size: 0.85em;
+  background: var(--surface-sunk);
+  padding: 0.12em 0.4em;
+  border-radius: 3px;
+}
+pre {
+  font-family: var(--f-mono);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 14px 16px;
+  margin: 0 0 1.15em;
+  overflow-x: auto;
+}
+.plate { background: var(--surface); border: 1px solid var(--rule); border-radius: 4px; margin: 32px 0; overflow: hidden; }
+.plate-body { padding: 18px 24px; }
+.plate-cap {
+  border-top: 1px solid var(--rule-soft);
+  padding: 12px 24px 14px;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  background: var(--surface-sunk);
+}
+.plate-cap b {
+  font-family: var(--f-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  color: var(--ink-faint);
+  display: block;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.table-scroll { overflow-x: auto; }
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 560px;
+  font-family: var(--f-mono);
+  font-size: 0.84rem;
+  font-variant-numeric: tabular-nums;
+}
+th, td { padding: 9px 12px; text-align: right; border-bottom: 1px solid var(--rule-soft); white-space: nowrap; }
+thead th { font-weight: 600; font-size: 0.72rem; letter-spacing: 0.08em; color: var(--ink-faint); border-bottom: 1px solid var(--rule); }
+tbody th { text-align: left; font-family: var(--f-body); font-weight: 500; font-size: 0.86rem; color: var(--ink); }
+tr.main td, tr.main th { background: var(--accent-wash); }
+tr.sep td, tr.sep th { border-top: 1px solid var(--rule); }
+td.better { color: var(--accent); font-weight: 600; }
+td.worse { color: var(--warn); font-weight: 600; }
+td.sub { color: var(--ink-faint); }
+tbody tr:last-child td, tbody tr:last-child th { border-bottom: none; }
+ul.tight { padding-left: 1.2em; margin: 0 0 1.15em; }
+ul.tight li { margin-bottom: 0.5em; }
+
+.rfig { --warn-wash: rgba(160, 58, 46, 0.09); --s1: var(--accent); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .rfig { --warn-wash: rgba(224, 132, 118, 0.12); } }
+:root[data-theme="dark"] .rfig { --warn-wash: rgba(224, 132, 118, 0.12); }
+.rfig svg { display: block; width: 100%; height: auto; }
+td.note { text-align: left; white-space: normal; font-family: var(--f-body); font-size: 0.8rem; color: var(--ink-soft); }
+.eq { display: block math; margin: 0.6em 0 1.2em; font-size: 1.05rem; overflow-x: auto; }
+.eqrow { display: flex; align-items: center; gap: 12px; margin: 0.6em 0 1.2em; }
+.eqrow .eq { flex: 1; margin: 0; }
+.eqno { font-family: var(--f-mono); font-size: 0.85rem; color: var(--ink-faint); }
+.takeaway { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; margin: 0 0 1.15em; }
+.flowbox { background: var(--surface); border: 1px solid var(--rule); border-radius: 4px; padding: 14px 18px; margin: 0 0 1.15em; }
+.flowbox dt { font-weight: 700; margin-top: 8px; }
+.flowbox dt:first-child { margin-top: 0; }
+.flowbox dd { margin: 2px 0 0 0; color: var(--ink-soft); font-size: 0.92rem; }
+.rfig .chart text { font-family: var(--f-mono); font-size: 11px; fill: var(--ink-soft); }
+.rfig .chart .t-ink { fill: var(--ink); }
+.rfig .chart .t-small { font-size: 10px; }
+.rfig .chart .t-head { fill: var(--ink); font-size: 12px; font-weight: 600; }
+.rfig .chart .lbl-ctx { fill: var(--accent); }
+.rfig .chart .lbl-orc { fill: var(--oracle); }
+.rfig .chart .lbl-warn { fill: var(--warn); }
+.rfig .chart .box { fill: var(--surface-sunk); stroke: var(--rule); }
+.rfig .chart .box-ctx { fill: var(--accent-wash); stroke: var(--accent); }
+.rfig .chart .box-orc { fill: var(--oracle-wash); stroke: var(--oracle); }
+.rfig .chart .box-q { fill: none; stroke: var(--ink-faint); stroke-dasharray: 4 3; }
+.rfig .chart .frame { fill: none; stroke: var(--ink-faint); stroke-dasharray: 5 4; }
+.rfig .chart .arrow { stroke: var(--ink-soft); stroke-width: 1.5; fill: none; }
+.rfig .chart .ah { fill: var(--ink-soft); }
+.rfig .chart .g-line { stroke: var(--accent); stroke-width: 2.4; }
+.rfig .chart .g-ah { fill: var(--accent); }
+.rfig .chart .mask-band { fill: var(--warn-wash); }
+.rfig .chart .mask { stroke: var(--warn); stroke-width: 1.5; stroke-dasharray: 3 3; }
+.rfig .chart .x { stroke: var(--warn); stroke-width: 2.2; }
+.rfig .flow text { font-family: var(--f-body); font-size: 11.5px; fill: var(--ink); }
+.rfig .flow .hd { font-size: 12px; font-weight: 700; fill: var(--ink-soft); letter-spacing: 0.08em; }
+.rfig .flow .tag { font-family: var(--f-mono); font-weight: 700; font-size: 12px; }
+.rfig .flow .prob { fill: var(--warn-wash); stroke: var(--warn); }
+.rfig .flow .sol { fill: var(--accent-wash); stroke: var(--accent); }
+.rfig .flow .note { font-size: 10.5px; fill: var(--ink-soft); }
+.rfig .flow .arrow { stroke: var(--ink-soft); stroke-width: 1.5; fill: none; }
+.rfig .flow .ah { fill: var(--ink-soft); }
+.rfig .plot text { font-family: var(--f-mono); font-size: 10.5px; fill: var(--ink-faint); }
+.rfig .plot .ax { font-family: var(--f-body); font-size: 11.5px; fill: var(--ink-soft); }
+.rfig .plot .ttl { font-family: var(--f-body); font-size: 12.5px; font-weight: 700; fill: var(--ink); }
+.rfig .plot .cat { font-family: var(--f-body); font-size: 11.5px; fill: var(--ink); }
+.rfig .plot .val { fill: var(--ink-soft); font-size: 10px; }
+.rfig .plot .key { font-family: var(--f-body); font-size: 11.5px; fill: var(--ink-soft); }
+.rfig .plot .grid { stroke: var(--rule-soft); stroke-width: 1; }
+.rfig .plot .zero { stroke: var(--ink-faint); stroke-width: 1; }
+.rfig .plot .ref { stroke: var(--ink-faint); stroke-width: 1; stroke-dasharray: 4 3; }
+.rfig .plot .better { fill: var(--accent); }
+.rfig .plot .worse { fill: var(--warn); }
+.rfig .plot .ci { stroke: var(--ink); stroke-width: 1.2; }
+.rfig .diagram text { font-family: var(--f-body); }
+.rfig .diagram .d-key { font-size: 12px; fill: var(--ink-soft); }
+.rfig .diagram .d-title { font-size: 13px; font-weight: 700; fill: var(--ink); }
+.rfig .diagram .d-lab { font-size: 11px; fill: var(--ink-faint); }
+.rfig .diagram .d-lab-move { fill: var(--ink-soft); font-weight: 700; }
+.rfig .diagram .d-verdict { font-size: 12.5px; font-weight: 700; fill: var(--ink); }
+.rfig .diagram .d-verdict-sub { font-size: 11.5px; fill: var(--ink-soft); }
+.rfig .diagram .d-sep { stroke: var(--rule-soft); stroke-width: 1; }
+.rfig .diagram .d-truth { stroke: var(--ink); stroke-width: 3; stroke-linecap: round; }
+.rfig .diagram .d-need { stroke: var(--ink-faint); stroke-width: 2; }
+.rfig .diagram .d-move { stroke: var(--s1); stroke-width: 2.5; }
+.rfig .diagram .d-ah-need { fill: var(--ink-faint); }
+.rfig .diagram .d-ah-move { fill: var(--s1); }
+.rfig .diagram .d-guide { stroke: var(--rule); stroke-width: 1; }
+.rfig .diagram .d-none { fill: var(--surface); stroke: var(--ink-soft); stroke-width: 2; }
+.rfig .diagram .d-attn { fill: var(--s1); stroke: var(--surface); stroke-width: 2; }
+.rfig .plot .lb { fill: none; stroke: var(--ink-faint); stroke-width: 2; }
+.rfig .plot .lp { fill: none; stroke: var(--accent); stroke-width: 2; }
+.rfig .plot .db { fill: var(--surface); stroke: var(--ink-faint); stroke-width: 2; }
+.rfig .plot .dp { fill: var(--accent); stroke: var(--surface); stroke-width: 1.5; }
+.rfig .plot .rb { fill: var(--ink-faint); font-size: 10px; }
+.rfig .plot .rp { fill: var(--accent); font-size: 10px; }
+.rfig .plot .bb { fill: var(--ink-faint); }
+.rfig .plot .bp { fill: var(--accent); }
+table.t3 th, table.t3 td { padding: 9px 8px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="masthead">
+  <div class="prose">
+    <p class="kicker"><a href="../raf-note.html">RAF 研究ノート</a> · 結果 · 2026-11-05（2026-11-24 更新） · 6 データセット / Chronos-2（凍結） · test</p>
+    <h1>6 つのデータセットの test の結果</h1>
+    <p class="standfirst">
+      512 時点から 64 時点を予測する設定で，提案手法（<code>--select attn</code>）と参照なしを 6 つのデータセットの test で比べた．選択ヘッドだけをデータごとに val で選び，test は 1 回だけ流した．
+      <strong>MSE はすべてのデータで下がったが，MAE はほとんど下がらなかった．</strong>誤差が減った時点の割合は，どのデータでも半分前後である．
+      ヘッドを precompute で選び直した qk と qk ÷ v 前項も 5 つのデータで流した（3 節）．qk ÷ v 前項の MSE は，ETT の 4 つでは qk より小さく，exchange_rate では大きかった．
+    </p>
+  </div>
+</header>
+
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">1</span><h2>データ</h2></div>
+    <p>表 1 の 6 つのデータで，test の中に 17 時点おきに起点を置き，512 時点から 64 時点を予測した．ETT は 12 か月，4 か月，4 か月に，weather と exchange_rate は 70%，10%，20% に分けた．誤差はチャネルごとに train の標準偏差で割り，チャネルで平均した．</p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body table-scroll">
+        <table>
+          <thead><tr><th style="text-align:left">データ</th><th style="text-align:left">内容</th><th>間隔</th><th>チャネル数</th><th>起点の数</th></tr></thead>
+          <tbody>
+            <tr><th>ETTh1</th><td style="text-align:left">中国の変電所の変圧器の油温と電力負荷</td><td>1 時間</td><td>7</td><td>166</td></tr>
+            <tr><th>ETTh2</th><td style="text-align:left">ETTh1 と別の変電所の同じ記録</td><td>1 時間</td><td>7</td><td>166</td></tr>
+            <tr><th>ETTm1</th><td style="text-align:left">ETTh1 と同じ記録を 15 分ごとにしたもの</td><td>15 分</td><td>7</td><td>674</td></tr>
+            <tr><th>ETTm2</th><td style="text-align:left">ETTh2 と同じ記録を 15 分ごとにしたもの</td><td>15 分</td><td>7</td><td>674</td></tr>
+            <tr><th>weather</th><td style="text-align:left">ドイツの観測所の気温，湿度，気圧など</td><td>10 分</td><td>21</td><td>617</td></tr>
+            <tr><th>exchange_rate</th><td style="text-align:left">8 か国の通貨の対ドルの為替レート</td><td>1 日</td><td>8</td><td>86</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="plate-cap"><b>表 1．データ</b>起点の数はチャネルあたり．</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">2</span><h2>参照なしと提案手法</h2></div>
+    <p>結果を図 1 と表 2 に示す．</p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body rfig"><svg class="plot" viewBox="0 0 680 268" role="img" aria-label="test の結果"><text class="cat" x="96" y="59.0" text-anchor="end">ETTh1</text><text class="cat" x="96" y="89.0" text-anchor="end">ETTh2</text><text class="cat" x="96" y="119.0" text-anchor="end">ETTm1</text><text class="cat" x="96" y="149.0" text-anchor="end">ETTm2</text><text class="cat" x="96" y="179.0" text-anchor="end">weather</text><text class="cat" x="96" y="209.0" text-anchor="end">exchange_rate</text><text class="ttl" x="110" y="26">MSE</text><line class="grid" x1="110.0" y1="40" x2="110.0" y2="220"/><text x="110.0" y="234" text-anchor="middle">−10%</text><line class="grid" x1="225.3846153846154" y1="40" x2="225.3846153846154" y2="220"/><text x="225.3846153846154" y="234" text-anchor="middle">−5%</text><line class="zero" x1="340.7692307692308" y1="40" x2="340.7692307692308" y2="220"/><text x="340.7692307692308" y="234" text-anchor="middle">0%</text><rect class="better" x="204.6153846153846" y="48.0" width="136.15384615384616" height="14" rx="2"/><text class="val" x="200.6153846153846" y="58.5" text-anchor="end">−5.9%</text><rect class="better" x="313.0769230769231" y="78.0" width="27.69230769230768" height="14" rx="2"/><text class="val" x="309.0769230769231" y="88.5" text-anchor="end">−1.2%</text><rect class="better" x="160.76923076923077" y="108.0" width="180.0" height="14" rx="2"/><text class="val" x="156.76923076923077" y="118.5" text-anchor="end">−7.8%</text><rect class="better" x="262.3076923076923" y="138.0" width="78.46153846153845" height="14" rx="2"/><text class="val" x="258.3076923076923" y="148.5" text-anchor="end">−3.4%</text><rect class="better" x="324.61538461538464" y="168.0" width="16.153846153846153" height="14" rx="2"/><text class="val" x="320.61538461538464" y="178.5" text-anchor="end">−0.7%</text><rect class="better" x="331.53846153846155" y="198.0" width="9.230769230769226" height="14" rx="2"/><text class="val" x="327.53846153846155" y="208.5" text-anchor="end">−0.4%</text><text class="ttl" x="470" y="26">MAE</text><line class="grid" x1="501.6666666666667" y1="40" x2="501.6666666666667" y2="220"/><text x="501.6666666666667" y="234" text-anchor="middle">−2%</text><line class="zero" x1="565.0" y1="40" x2="565.0" y2="220"/><text x="565.0" y="234" text-anchor="middle">0%</text><line class="grid" x1="628.3333333333334" y1="40" x2="628.3333333333334" y2="220"/><text x="628.3333333333334" y="234" text-anchor="middle">+2%</text><text class="val" x="569.0" y="58.5">±0.0%</text><rect class="worse" x="565.0" y="78.0" width="22.16666666666663" height="14" rx="2"/><text class="val" x="591.1666666666666" y="88.5">+0.7%</text><rect class="worse" x="565.0" y="108.0" width="63.33333333333337" height="14" rx="2"/><text class="val" x="632.3333333333334" y="118.5">+2.0%</text><rect class="better" x="558.6666666666666" y="138.0" width="6.333333333333371" height="14" rx="2"/><text class="val" x="554.6666666666666" y="148.5" text-anchor="end">−0.2%</text><rect class="better" x="549.1666666666666" y="168.0" width="15.833333333333371" height="14" rx="2"/><text class="val" x="545.1666666666666" y="178.5" text-anchor="end">−0.5%</text><rect class="worse" x="565.0" y="198.0" width="31.666666666666668" height="14" rx="2"/><text class="val" x="600.6666666666666" y="208.5">+1.0%</text><rect class="better" x="110" y="249" width="12" height="10" rx="2"/><text class="key" x="128" y="258">参照なしより下がる</text><rect class="worse" x="250" y="249" width="12" height="10" rx="2"/><text class="key" x="268" y="258">参照なしより上がる</text></svg></div>
+      <div class="plate-cap"><b>図 1．test での，参照なしに対する MSE と MAE の変化率</b>MAE は横軸の目盛りが MSE と違う．</div>
+    </div>
+    <div class="plate">
+      <div class="plate-body table-scroll">
+        <table>
+          <thead><tr><th style="text-align:left">データ</th><th>MSE 参照なし</th><th>MSE 提案</th><th>MAE 参照なし</th><th>MAE 提案</th><th>誤差が減った時点の割合</th></tr></thead>
+          <tbody>
+            <tr><th>ETTh1</th><td>0.3772</td><td class="better">0.3550 <span class="sub">(−5.9%)</span></td><td>0.3668</td><td>0.3668 <span class="sub">(±0.0%)</span></td><td>49.1%</td></tr>
+            <tr><th>ETTh2</th><td>0.2592</td><td class="better">0.2562 <span class="sub">(−1.2%)</span></td><td>0.2962</td><td class="worse">0.2982 <span class="sub">(+0.7%)</span></td><td>47.6%</td></tr>
+            <tr><th>ETTm1</th><td>0.3044</td><td class="better">0.2805 <span class="sub">(−7.8%)</span></td><td>0.3088</td><td class="worse">0.3151 <span class="sub">(+2.0%)</span></td><td>47.4%</td></tr>
+            <tr><th>ETTm2</th><td>0.1485</td><td class="better">0.1433 <span class="sub">(−3.4%)</span></td><td>0.2186</td><td class="better">0.2182 <span class="sub">(−0.2%)</span></td><td>47.3%</td></tr>
+            <tr><th>weather</th><td>0.1454</td><td class="better">0.1443 <span class="sub">(−0.7%)</span></td><td>0.1621</td><td class="better">0.1613 <span class="sub">(−0.5%)</span></td><td>51.8%</td></tr>
+            <tr><th>exchange_rate</th><td>0.0566</td><td class="better">0.0564 <span class="sub">(−0.4%)</span></td><td>0.1617</td><td class="worse">0.1632 <span class="sub">(+1.0%)</span></td><td>47.3%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="plate-cap"><b>表 2．test の結果</b>提案の括弧は参照なしに対する変化．誤差が減った時点の割合は，予測した全時点のうち，提案手法の誤差の絶対値が参照なしより小さくなった時点の割合．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <p>MSE はすべてのデータで下がり，ETTh1，ETTm1，ETTm2 で下がる幅が大きい．MAE はほとんど変わらず，ETTm1 では上がった．誤差が減った時点の割合はどのデータでも半分前後である．</p>
+    <p class="takeaway">→ MSE は下がるが，MAE はほとんど下がらない．その理由は <a href="mae-vs-mse.html">MAE が下がらず MSE が下がる理由</a>で調べた</p>
+  </div>
+</section>
+
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">3</span><h2>qk と qk ÷ v 前項</h2></div>
+    <p>2 節の提案手法は，attention の重み qk で事例を選び，ヘッドを val で exact（クエリと候補を一緒に流した attention の重み）により選んでいる．ここでは，ヘッドを val で precompute（行を 1 本ずつ流す．事例を選ぶときと同じ計算）により選び直した qk と，qk の重みを v 前項の大きさで割った点数 qk ÷ v 前項（<a href="../how-to-select/qk-and-v.html">qk と v を組み合わせて選ぶ</a>）を，weather を除く 5 つのデータの test で流した．候補，件数，入れ方は 2 節と同じで，点数とヘッドだけが違う．</p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body rfig"><svg class="plot" viewBox="0 0 680 282" role="img" aria-label="test での選び方ごとの MSE と MAE の変化率"><text class="cat" x="96" y="64.0" text-anchor="end">ETTh1</text><text class="cat" x="96" y="104.0" text-anchor="end">ETTh2</text><text class="cat" x="96" y="144.0" text-anchor="end">ETTm1</text><text class="cat" x="96" y="184.0" text-anchor="end">ETTm2</text><text class="cat" x="96" y="224.0" text-anchor="end">exchange_rate</text><text class="ttl" x="130" y="26">MSE</text><line class="grid" x1="165.0" y1="40" x2="165.0" y2="240"/><text x="165.0" y="254" text-anchor="middle">−10%</text><line class="grid" x1="252.5" y1="40" x2="252.5" y2="240"/><text x="252.5" y="254" text-anchor="middle">−5%</text><line class="zero" x1="340.0" y1="40" x2="340.0" y2="240"/><text x="340.0" y="254" text-anchor="middle">0%</text><rect class="bb" x="250.8" y="46" width="89.2" height="13" rx="2"><title>ETTh1 qk（precompute）：−5.10%</title></rect><text class="val" x="246.8" y="56" text-anchor="end">−5.1%</text><rect class="bp" x="228.2" y="61" width="111.8" height="13" rx="2"><title>ETTh1 qk ÷ v 前項：−6.39%</title></rect><text class="val" x="224.2" y="71" text-anchor="end">−6.4%</text><rect class="bb" x="296.9" y="86" width="43.1" height="13" rx="2"><title>ETTh2 qk（precompute）：−2.46%</title></rect><text class="val" x="292.9" y="96" text-anchor="end">−2.5%</text><rect class="bp" x="220.7" y="101" width="119.3" height="13" rx="2"><title>ETTh2 qk ÷ v 前項：−6.82%</title></rect><text class="val" x="216.7" y="111" text-anchor="end">−6.8%</text><rect class="bb" x="200.5" y="126" width="139.5" height="13" rx="2"><title>ETTm1 qk（precompute）：−7.97%</title></rect><text class="val" x="196.5" y="136" text-anchor="end">−8.0%</text><rect class="bp" x="166.5" y="141" width="173.5" height="13" rx="2"><title>ETTm1 qk ÷ v 前項：−9.91%</title></rect><text class="val" x="162.5" y="151" text-anchor="end">−9.9%</text><rect class="bb" x="273.0" y="166" width="67.0" height="13" rx="2"><title>ETTm2 qk（precompute）：−3.83%</title></rect><text class="val" x="269.0" y="176" text-anchor="end">−3.8%</text><rect class="bp" x="247.3" y="181" width="92.7" height="13" rx="2"><title>ETTm2 qk ÷ v 前項：−5.30%</title></rect><text class="val" x="243.3" y="191" text-anchor="end">−5.3%</text><rect class="bb" x="243.9" y="206" width="96.1" height="13" rx="2"><title>exchange_rate qk（precompute）：−5.49%</title></rect><text class="val" x="239.9" y="216" text-anchor="end">−5.5%</text><rect class="bp" x="305.4" y="221" width="34.6" height="13" rx="2"><title>exchange_rate qk ÷ v 前項：−1.98%</title></rect><text class="val" x="301.4" y="231" text-anchor="end">−2.0%</text><text class="ttl" x="470" y="26">MAE</text><line class="grid" x1="470.0" y1="40" x2="470.0" y2="240"/><text x="470.0" y="254" text-anchor="middle">−2%</text><line class="zero" x1="565.0" y1="40" x2="565.0" y2="240"/><text x="565.0" y="254" text-anchor="middle">0%</text><line class="grid" x1="660.0" y1="40" x2="660.0" y2="240"/><text x="660.0" y="254" text-anchor="middle">+2%</text><rect class="bb" x="565.0" y="46" width="8.4" height="13" rx="2"><title>ETTh1 qk（precompute）：+0.18%</title></rect><text class="val" x="577.4" y="56" text-anchor="start">+0.2%</text><rect class="bp" x="565.0" y="61" width="2.4" height="13" rx="2"><title>ETTh1 qk ÷ v 前項：+0.05%</title></rect><text class="val" x="571.4" y="71" text-anchor="start">+0.1%</text><rect class="bb" x="565.0" y="86" width="2.3" height="13" rx="2"><title>ETTh2 qk（precompute）：+0.05%</title></rect><text class="val" x="571.3" y="96" text-anchor="start">+0.0%</text><rect class="bp" x="496.9" y="101" width="68.1" height="13" rx="2"><title>ETTh2 qk ÷ v 前項：−1.43%</title></rect><text class="val" x="492.9" y="111" text-anchor="end">−1.4%</text><rect class="bb" x="565.0" y="126" width="74.7" height="13" rx="2"><title>ETTm1 qk（precompute）：+1.57%</title></rect><text class="val" x="643.7" y="136" text-anchor="start">+1.6%</text><rect class="bp" x="565.0" y="141" width="50.9" height="13" rx="2"><title>ETTm1 qk ÷ v 前項：+1.07%</title></rect><text class="val" x="619.9" y="151" text-anchor="start">+1.1%</text><rect class="bb" x="545.5" y="166" width="19.5" height="13" rx="2"><title>ETTm2 qk（precompute）：−0.41%</title></rect><text class="val" x="541.5" y="176" text-anchor="end">−0.4%</text><rect class="bp" x="500.0" y="181" width="65.0" height="13" rx="2"><title>ETTm2 qk ÷ v 前項：−1.37%</title></rect><text class="val" x="496.0" y="191" text-anchor="end">−1.4%</text><rect class="bb" x="477.5" y="206" width="87.5" height="13" rx="2"><title>exchange_rate qk（precompute）：−1.84%</title></rect><text class="val" x="473.5" y="216" text-anchor="end">−1.8%</text><rect class="bp" x="549.6" y="221" width="15.4" height="13" rx="2"><title>exchange_rate qk ÷ v 前項：−0.32%</title></rect><text class="val" x="545.6" y="231" text-anchor="end">−0.3%</text><rect class="bb" x="110" y="261" width="12" height="10" rx="2"/><text class="key" x="128" y="270">qk（precompute）</text><rect class="bp" x="270" y="261" width="12" height="10" rx="2"/><text class="key" x="288" y="270">qk ÷ v 前項</text></svg></div>
+      <div class="plate-cap"><b>図 2．test での，選び方ごとの参照なしに対する MSE と MAE の変化率</b>MAE は横軸の目盛りが MSE と違う．qk（precompute）と qk ÷ v 前項のヘッドは，データごとに val で点数ごとに選んだ 3 本（実験条件）．</div>
+    </div>
+    <div class="plate">
+      <div class="plate-body table-scroll">
+        <table class="t3">
+          <thead><tr><th rowspan="2" style="text-align:left;vertical-align:bottom">データ</th><th colspan="3" style="text-align:center">MSE</th><th colspan="3" style="text-align:center">MAE</th><th colspan="2" style="text-align:center">誤差が減った<br>時点の割合</th></tr>
+          <tr><th>参照なし</th><th>qk</th><th>qk ÷ v 前項</th><th>参照なし</th><th>qk</th><th>qk ÷ v 前項</th><th>qk</th><th>qk ÷ v 前項</th></tr></thead>
+          <tbody>
+            <tr><th>ETTh1</th><td>0.3772</td><td class="better" style="line-height:1.4">0.3580<br><span class="sub">(−5.1%)</span></td><td class="better" style="line-height:1.4">0.3531<br><span class="sub">(−6.4%)</span></td><td>0.3668</td><td class="worse" style="line-height:1.4">0.3675<br><span class="sub">(+0.2%)</span></td><td class="worse" style="line-height:1.4">0.3670<br><span class="sub">(+0.1%)</span></td><td>49.1%</td><td>49.1%</td></tr>
+            <tr><th>ETTh2</th><td>0.2592</td><td class="better" style="line-height:1.4">0.2528<br><span class="sub">(−2.5%)</span></td><td class="better" style="line-height:1.4">0.2415<br><span class="sub">(−6.8%)</span></td><td>0.2962</td><td style="line-height:1.4">0.2963<br><span class="sub">(±0.0%)</span></td><td class="better" style="line-height:1.4">0.2919<br><span class="sub">(−1.4%)</span></td><td>47.7%</td><td>48.3%</td></tr>
+            <tr><th>ETTm1</th><td>0.3044</td><td class="better" style="line-height:1.4">0.2801<br><span class="sub">(−8.0%)</span></td><td class="better" style="line-height:1.4">0.2742<br><span class="sub">(−9.9%)</span></td><td>0.3088</td><td class="worse" style="line-height:1.4">0.3137<br><span class="sub">(+1.6%)</span></td><td class="worse" style="line-height:1.4">0.3122<br><span class="sub">(+1.1%)</span></td><td>48.1%</td><td>48.4%</td></tr>
+            <tr><th>ETTm2</th><td>0.1485</td><td class="better" style="line-height:1.4">0.1428<br><span class="sub">(−3.8%)</span></td><td class="better" style="line-height:1.4">0.1406<br><span class="sub">(−5.3%)</span></td><td>0.2186</td><td class="better" style="line-height:1.4">0.2177<br><span class="sub">(−0.4%)</span></td><td class="better" style="line-height:1.4">0.2156<br><span class="sub">(−1.4%)</span></td><td>47.4%</td><td>47.7%</td></tr>
+            <tr><th>exchange_rate</th><td>0.0566</td><td class="better" style="line-height:1.4">0.0535<br><span class="sub">(−5.5%)</span></td><td class="better" style="line-height:1.4">0.0555<br><span class="sub">(−2.0%)</span></td><td>0.1617</td><td class="better" style="line-height:1.4">0.1587<br><span class="sub">(−1.8%)</span></td><td class="better" style="line-height:1.4">0.1611<br><span class="sub">(−0.3%)</span></td><td>49.2%</td><td>49.3%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="plate-cap"><b>表 3．選び方ごとの test の結果</b>qk は qk（precompute）．括弧は参照なしに対する変化．誤差が減った時点の割合は表 2 と同じ数え方．qk ÷ v 前項と qk（precompute）の MSE の変化率の差（ポイント，± 標準誤差．同じ起点の組をチャネルごとに 1000 回復元抽出）は ETTh1 −1.29±0.55，ETTh2 −4.35±0.90，ETTm1 −1.94±0.49，ETTm2 −1.47±0.38，exchange_rate +3.52±0.76．値は <code>results/&lt;データ&gt;_test_qkv_eval.json</code> と <code>results/&lt;データ&gt;_test_qkv_eval_vsqk.json</code>．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <p>MSE は，どちらの選び方でもすべてのデータで下がる．qk ÷ v 前項は ETT の 4 つで qk（precompute）より大きく下がり，exchange_rate では qk（precompute）より下がる幅が小さい．MAE はどちらもほとんど変わらず，ETTm1 では上がる．誤差が減った時点の割合はどのデータでも半分前後である．</p>
+    <p class="takeaway">→ qk ÷ v 前項と qk（precompute）の MSE の差は，どのデータでも標準誤差の 2 倍より大きく，向きは ETT の 4 つと exchange_rate で逆である．</p>
+  </div>
+</section>
+
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">次</span><h2>次の一手</h2></div>
+    <ul class="tight">
+      <li>従来手法（ランダム，文脈照合，全窓 <code>--candidates 0</code>，K=10）を同じ条件で出す．設定は val で決め，test は 1 回だけ流す．</li>
+      <li>exchange_rate で qk ÷ v 前項の MSE が qk（precompute）より大きいのが何から来るかを調べる．ETT の 4 つでは逆の向きだった．</li>
+      <li>3 節の 2 つの選び方を weather でも流す（提案手法の test は約 7 時間かかった）．</li>
+      <li>electricity は 321 チャネルあり，提案手法だけで約 19 時間かかるため外した．入れるならチャネルを絞るかどうかを決める．</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">条件</span><h2>実験条件</h2></div>
+    <ul class="tight">
+      <li><strong>データ</strong>：各チャネルを独立な 1 変量系列とし，生のスケールのまま入力する．electricity は外した．</li>
+      <li><strong>起点と指標</strong>：起点までの 512 時点から直後の 64 時点を予測する．履歴は前の区間にさかのぼってよい．MSE・MAE は中央値（0.5 分位）の誤差で，チャネルごとに train の標準偏差（ddof 0）で割ってチャネルで平均する．変化率は平均どうしの比．モデルは Chronos-2（<code>amazon/chronos-2</code>，chronos-forecasting 2.2.2）で，重みは凍結し，Apple M4（16 GB）で推論する．</li>
+      <li><strong>提案手法</strong>：事例を並列の行として入れ，最初の予測パッチ P1 を隠し，attention で選ぶ．候補はクエリごとに，起点より 96 時点以上前に終わる train の 1 時点おきの窓からランダムに 2048 件（seed [0, crc32(チャネル), クエリ番号]）．選択ヘッドの key を前計算し，上位 K=256 件を入れる．事例の文脈は 512 時点．</li>
+      <li><strong>選択ヘッド</strong>：<code>codes/heads.py --split val</code>．各チャネルの val に均等に散らばる 60 本の起点（exchange_rate は val の起点が 41 本なので全部，<code>--queries 0</code>）をクエリにし，train の窓 512 件を候補にする．attention weight と候補の続きの予測対象への近さの順位相関が高い第 10〜12 層の 3 ヘッドを選ぶ．結果は <code>results/heads_&lt;データ&gt;_val_exact_h512.json</code>．
+        <ul class="tight">
+          <li>ETTh1：L12H1，L11H10，L10H12</li>
+          <li>ETTh2：L12H1，L10H12，L12H6</li>
+          <li>ETTm1：L12H1，L10H3，L12H8</li>
+          <li>ETTm2：L12H1，L12H8，L12H6</li>
+          <li>weather：L12H1，L12H8，L10H3</li>
+          <li>exchange_rate：L12H1，L10H3，L12H12</li>
+        </ul>
+      </li>
+      <li><strong>3 節の選び方</strong>：ヘッドは <code>codes/heads.py --split val --head-weights precompute</code>（クエリは上と同じ）で全ヘッドの順位相関を求め，10〜12 層から点数ごとに上位 3 本を選んだ．qk は attention の重み，qk ÷ v 前項は <code>--value-score avpre</code> の点数の順位相関．結果は <code>results/heads_&lt;データ&gt;_val_precompute_h512.json</code>．
+        <ul class="tight">
+          <li>ETTh1：qk L12H1，L12H7，L12H6／qk ÷ v 前項 L12H1，L12H7，L12H8</li>
+          <li>ETTh2：qk L12H1，L12H7，L12H6／qk ÷ v 前項 L12H1，L12H7，L12H12</li>
+          <li>ETTm1：qk L12H1，L11H7，L12H7／qk ÷ v 前項 L12H1，L11H7，L12H7</li>
+          <li>ETTm2：qk L12H1，L12H7，L11H7／qk ÷ v 前項 L12H1，L11H7，L12H7</li>
+          <li>exchange_rate：qk L12H1，L11H7，L12H8／qk ÷ v 前項 L12H1，L12H8，L11H7</li>
+        </ul>
+<pre>python3 codes/heads.py --dataset &lt;データ&gt; --split val --head-weights precompute
+python3 codes/run.py --dataset &lt;データ&gt; --eval-split test --select attn --heads &lt;qk のヘッド&gt;
+python3 codes/run.py --dataset &lt;データ&gt; --eval-split test --select attn --heads &lt;qk ÷ v 前項のヘッド&gt; --value-score avpre
+python3 codes/evaluate.py --compare results/&lt;データ&gt;_test_none results/&lt;データ&gt;_test_none &lt;3 つの実行&gt; --out results/&lt;データ&gt;_test_qkv_eval.json</pre>
+        ETTm1 と ETTm2 は 1 つの実行が約 2.4 時間．</li>
+      <li><strong>固定した値</strong>：K=256 と候補 2048 件は ETTh1 の val（履歴 2032 時点）で選んだ値．事例の文脈 512 時点は val で選ばず，クエリの履歴と同じ長さにした．</li>
+      <li><strong>実行</strong>：
+<pre>python3 codes/heads.py --dataset &lt;データ&gt; --split val
+python3 codes/run.py --dataset &lt;データ&gt; --eval-split test
+python3 codes/run.py --dataset &lt;データ&gt; --eval-split test --select attn --heads &lt;選んだヘッド&gt;
+python3 codes/evaluate.py results/*_test_*.parquet</pre>
+        結果は <code>results/&lt;データ&gt;_test_none.*</code> と <code>results/&lt;データ&gt;_test_attn_&lt;ヘッド&gt;.*</code>．誤差が減った時点の割合は，2 つの parquet の中央値の予測を時点ごとに比べて数えた．提案手法の test は ETTh1 で約 35 分，weather で約 7 時間．図 1 は報告書の図（<code>lab_weekly/Second_Semester/documents/ShnseiNARAHARA_5_figures.html</code>）と同じもの．</li>
+    </ul>
+  </div>
+</section>
+
+</div>
+</body>
+</html>

@@ -1,22 +1,27 @@
 """Forecast every query window with a frozen Chronos-2 and save predictions with ground truth.
 
   --fusion   parallel (examples as covariate rows) or concat (examples spliced in front)
-  --select   none, random, a match (ctx=ctx, fc=fc, fc=fut, fut=fc, fut=fut) or attn;
+  --select   none, random, a match (ctx=ctx, fc=fc, fc=fut, fut=fc, fut=fut), attn or state;
              see selection.py
   --hide     columns where the query row does not read the example rows (parallel only)
 
-Every setting but --select defaults to the proposed method, so --select attn is the
-proposal and the other selections are compared under the same conditions.
+Every setting but --select and --heads defaults to the proposed method, so --select attn
+with the dataset's selection heads (heads.py) is the proposal and the other selections are
+compared under the same conditions.
 
 The output table is long: one row per channel, query window and horizon step h,
 with the timestamp of that step, the true value and one column per quantile
 (q0.1 ... q0.9). evaluate.py turns it into MSE, MAE and QL.
 
   python3 codes/run.py                      # no reference
-  python3 codes/run.py --select attn        # the proposed method
-  python3 codes/run.py --select attn --hide ""
+  python3 codes/run.py --select attn --heads L12H1,L11H10,L10H12     # the proposed method on ETTh1
+  python3 codes/run.py --select attn --heads L12H1,L11H10,L10H12 --hide ""
   python3 codes/run.py --select random
   python3 codes/run.py --select ctx=ctx --top-k 8 --fusion concat
+
+--select-only picks the examples but does not forecast: it writes only <name>_selected.parquet
+and <name>_args.json, which evaluate.py --picks compares with the examples nearest to the true
+future without running the model.
 """
 import argparse
 import json
@@ -29,8 +34,8 @@ import pandas as pd
 
 from chronos2 import Chronos2Rows, concat_context, load_chronos2, parse_heads
 from dataset import TimeSeriesData
-from selection import (MATCHES, METRICS, VALUE_SCORES, candidates, diverse_top_k, head_score, match,
-                       past_head_mix, precomputed_attention, spread_match, top_k, value_score)
+from selection import (JOINT_SCORES, MASKED_NEEDS, RAW_SCORES, MATCHES, METRICS, STATES, VALUE_SCORES, candidates, head_score,
+                       joint_projection, masked_score, match, out_projection, precomputed_attention, state_distance, top_k)
 
 # settings an argument can change: the proposed method but for --select; a run is named by
 # the ones that differ from these
@@ -42,15 +47,13 @@ DEFAULTS = {
     "hide": "P1",
     "metric": "l2",
     "match_norm": "context",
-    "heads": "L12H1,L12H7,L11H10",
+    # no default: --select attn needs --heads (per dataset, from heads.py on val)
+    "heads": "",
+    "state": "",
+    "layers": "",
     "head_weights": "precompute",
     "select_hide": False,
     "value_score": "none",
-    "select_cols": "P1,P2,P3,P4",
-    "head_adapt": "none",
-    "diversity": 0.0,
-    "spread_match": 0,
-    "origins": "all",
     # 512 / 64 as in TS-RAG, Cross-RAG, TimeRAF and Align-RAG; 8192 (the model's limit) is the
     # long-history setting, 2032 the 10/28 report. K and candidates were chosen at 2032 and kept;
     # an example's context is as long as the query history, as in RAFT and TS-RAG
@@ -72,6 +75,8 @@ TEST_FRAC = 0.2
 MODEL_NAME = "amazon/chronos-2"
 # Apple GPU; falls back to CPU where MPS is unavailable
 DEVICE = "mps"
+# vectors of the train windows, saved per dataset, channel and head or layer (see pool_features)
+CACHE_DIR = "./results/cache"
 REPORT_QUANTILES = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 MEDIAN = REPORT_QUANTILES.index(0.5)
 TOKEN_BUDGET = 24576
@@ -84,7 +89,7 @@ def parse_args():
     p.add_argument("--dataset", default=DATASET)
     p.add_argument("--channels", default="", help="comma-separated; empty = every column")
     p.add_argument("--eval-split", default="val", choices=["val", "test"])
-    p.add_argument("--select", choices=("none", "random") + MATCHES + ("attn",))
+    p.add_argument("--select", choices=("none", "random") + MATCHES + ("attn", "state"))
     p.add_argument("--fusion", choices=["parallel", "concat"])
     p.add_argument("--top-k", type=int)
     p.add_argument("--candidates", type=int, help="drawn per query at random; 0 = every usable window")
@@ -92,24 +97,16 @@ def parse_args():
                                   "origin back, REG); empty = read everywhere")
     p.add_argument("--metric", choices=METRICS)
     p.add_argument("--match-norm", choices=["context", "raw"])
-    p.add_argument("--heads", help="e.g. L12H1,L12H7,L11H10 (1-based layer and head); "
-                                   "L12H1*0.5,L12H7*0.3 weights the average over the heads")
+    p.add_argument("--heads", help="needed by --select attn, e.g. L12H1,L11H10,L10H12 (1-based layer and "
+                                   "head, as heads.py proposes); L12H1*0.5,L12H7*0.3 weights the average")
     p.add_argument("--head-weights", choices=["precompute", "exact"])
     p.add_argument("--select-hide", action="store_const", const=True,
                    help="exact: apply --hide in the forward that picks the examples too")
     p.add_argument("--value-score", choices=VALUE_SCORES,
-                   help="attn, precompute: score the candidates with their values too (selection.py)")
-    p.add_argument("--select-cols", help="forecast columns whose attention picks the examples, e.g. P2,P3,P4")
-    p.add_argument("--head-adapt", choices=["none", "past"],
-                   help="attn, precompute: past weights the heads per query by how well each picks "
-                        "candidates near the query's last patch when the query is cut one patch back")
-    p.add_argument("--diversity", type=float,
-                   help="attn, precompute: lambda > 0 picks the K examples one by one by log score - "
-                        "lambda * the largest cosine of the candidate's keys to the picked ones'")
-    p.add_argument("--spread-match", type=int,
-                   help="attn: M > K picks the K examples among the M best-scoring candidates whose "
-                        "futures spread like the query's no-reference forecast (selection.py)")
-    p.add_argument("--origins", choices=["all", "odd", "even"], help="forecast only odd or even origins")
+                   help="attn, precompute: score with the candidates run with their future hidden (selection.py)")
+    p.add_argument("--state", choices=STATES, help="needed by --select state (selection.py)")
+    p.add_argument("--layers", help="--state out or in: 1-based layers, e.g. L10,L11,L12")
+    p.add_argument("--select-only", action="store_true", help="pick the examples without forecasting")
     p.add_argument("--history", type=int, help="query history fed to the model")
     p.add_argument("--seq-len", type=int, help="context length of an example")
     p.add_argument("--pred-len", type=int)
@@ -131,18 +128,21 @@ def parse_args():
         if hide_given and a.hide:
             p.error("--hide applies to parallel rows only")
         a.hide = ""
-    if (a.value_score != "none" or a.select_cols != DEFAULTS["select_cols"]) \
-            and a.head_weights != "precompute":
-        p.error("--value-score and --select-cols need --head-weights precompute")
-    if a.head_adapt != "none" and (a.head_weights != "precompute" or a.value_score != "none"
-                                   or a.select_cols != DEFAULTS["select_cols"]
-                                   or "*" in a.heads or a.db_stride != 1):
-        p.error("--head-adapt needs --head-weights precompute, --db-stride 1, unweighted --heads "
-                "and no --value-score or --select-cols")
-    if a.diversity and (a.head_weights != "precompute" or a.value_score != "none"):
-        p.error("--diversity needs --head-weights precompute and no --value-score")
-    if a.spread_match and (a.select != "attn" or a.diversity or a.spread_match <= a.top_k):
-        p.error("--spread-match needs --select attn, no --diversity and M > --top-k")
+    if a.value_score != "none" and (a.select != "attn" or a.head_weights != "precompute"):
+        p.error("--value-score needs --select attn and --head-weights precompute")
+    if a.value_score != "none" and ("*" in a.heads or a.db_stride != 1 or a.candidates == 0):
+        p.error(f"--value-score {a.value_score} needs unweighted --heads, --db-stride 1 and --candidates > 0")
+    if a.select == "attn" and not a.heads:
+        p.error("--select attn needs --heads; take them from heads.py (results/heads_<dataset>_val_*.json)")
+    if a.select == "state":
+        if not a.state:
+            p.error("--select state needs --state")
+        if a.state in ("out", "in") and not a.layers:
+            p.error(f"--state {a.state} needs --layers (heads.py --score {a.state})")
+    elif a.state or a.layers:
+        p.error("--state and --layers go with --select state")
+    if a.select_only and a.select == "none":
+        p.error("--select-only needs a --select")
     if a.select_hide and a.head_weights != "exact":
         p.error("--select-hide needs --head-weights exact (precomputed rows never read each other)")
     return a
@@ -164,19 +164,18 @@ def run_name(a) -> str:
             parts += [a.metric] if a.metric != d["metric"] else []
             parts += [a.match_norm] if a.match_norm != d["match_norm"] else []
         if a.select == "attn":
-            parts += [a.heads.replace(",", "+").replace("*", "x")] if a.heads != d["heads"] else []
+            parts += [a.heads.replace(",", "+").replace("*", "x")]
             parts += [a.head_weights] if a.head_weights != d["head_weights"] else []
             parts += ["selhide"] if a.select_hide else []
             parts += [f"v{a.value_score}"] if a.value_score != d["value_score"] else []
-            parts += [f"div{a.diversity:g}"] if a.diversity != d["diversity"] else []
-            parts += [f"spread{a.spread_match}"] if a.spread_match != d["spread_match"] else []
-            parts += [f"adapt{a.head_adapt}"] if a.head_adapt != d["head_adapt"] else []
-            parts += ["sc" + re.sub(r"[^0-9]", "", a.select_cols)] if a.select_cols != d["select_cols"] else []
+        if a.select == "state":
+            parts += [a.state]
+            parts += [a.layers.replace(",", "+")] if a.state in ("out", "in") else []
         parts += [f"sl{a.seq_len}"] if a.seq_len != d["seq_len"] else []
         parts += [f"db{a.db_stride}"] if a.db_stride != d["db_stride"] else []
     for tag, key in (("pl", "pred_len"), ("h", "history"), ("es", "eval_stride")):
         parts += [f"{tag}{getattr(a, key)}"] if getattr(a, key) != d[key] else []
-    parts += [a.origins] if a.origins != d["origins"] else []
+    parts += ["selonly"] if a.select_only else []
     if a.channels:
         parts.append("ch" + "+".join(re.sub(r"[^0-9A-Za-z]", "", c) for c in a.channels.split(",")))
     return "_".join(parts)
@@ -188,49 +187,76 @@ def head_mix(spec: str):
     return parse_heads(",".join(names)), np.array(w)
 
 
-def select_head(a, rows, heads, mix, history, pool, cand, valid, hide, history_past=None):
-    """{"score": (n, M) scores of the candidates by the group attention of the chosen heads}, with
-    --head-adapt the per-query head weights "pi" and correlations "rho" (n, heads) and with
-    --diversity the "order" (n, K) of the picked candidates' positions."""
+def parse_layers(spec: str) -> list:
+    """"L10,L11" -> 0-based layer indices."""
+    return [int(x.strip().lstrip("Ll")) - 1 for x in spec.split(",")]
+
+
+def pool_features(a, rows, name, pool, future: bool, heads=(), layers=(), want=("k",)):
+    """Arrays want of rows.alone_features over the train windows pool, with their true future or with
+    it hidden. Saved per head (q, k, v) or layer (in, out) under CACHE_DIR and read back on later runs
+    with the same dataset, channel, lengths and --db-stride."""
+    tag = (f"{a.dataset}_{re.sub(r'[^0-9A-Za-z]', '', name)}_s{a.seq_len}_p{a.pred_len}_db{a.db_stride}_"
+           + ("fut" if future else "mask"))
+    def paths(x):
+        if x in ("q", "k", "v"):
+            return [os.path.join(CACHE_DIR, f"{tag}_L{h[0] + 1}H{h[1] + 1}_{x}.npy") for h in heads]
+        if x in ("in", "out"):
+            return [os.path.join(CACHE_DIR, f"{tag}_L{li + 1}_{x}.npy") for li in layers]
+        return [os.path.join(CACHE_DIR, f"{tag}_{x}.npy")]
+    if not all(os.path.exists(f) for x in want for f in paths(x)):
+        s = a.seq_len
+        got = rows.alone_features(pool[:, :s], pool[:, s:] if future else None, heads, layers, want)
+        os.makedirs(CACHE_DIR, exist_ok=True)
+        for x, arr in zip(want, got):
+            for j, f in enumerate(paths(x)):
+                if not os.path.exists(f):
+                    np.save(f, arr[:, j])
+        return got
+    return tuple(np.stack([np.load(f) for f in paths(x)], 1) for x in want)
+
+
+def select_head(a, rows, heads, mix, history, pool, cand, valid, hide, name):
+    """(n, M) scores of the candidates by the group attention of the chosen heads (with
+    --value-score, of the candidates run with their future hidden too; see selection.py)."""
     score = np.empty(cand.shape)
-    pis, rhos = np.empty((len(cand), len(heads))), np.empty((len(cand), len(heads)))
     s = a.seq_len
     if a.head_weights == "precompute":
-        plain = a.value_score == "none" and a.select_cols == DEFAULTS["select_cols"]
-        if plain:
-            q, k_self = rows.head_vectors(history, None, heads)
-            _, k_pool = rows.head_vectors(pool[:, :s], pool[:, s:], heads)
-        else:
+        if a.value_score != "none":
+            if a.value_score in RAW_SCORES:
+                proj = lambda v: v
+            elif a.value_score in JOINT_SCORES:
+                proj = joint_projection(rows.head_out_joint_gram(heads), len(heads))
+            else:
+                proj = out_projection(rows.head_out_gram(heads))
             q, k_self, v_self = rows.head_vectors(history, None, heads, values=True)
-            _, k_pool, v_pool = rows.head_vectors(pool[:, :s], pool[:, s:], heads, values=True)
-            gram = rows.head_out_gram(heads)
-            cols = [int(c.strip()[1:]) - 1 for c in a.select_cols.split(",")]
-        if a.head_adapt == "past":
-            q_p, k_self_p = rows.head_vectors(history_past, None, heads)
-            sh = rows.patch
+            need = MASKED_NEEDS[a.value_score]
+            vecs = {}
+            fut = [x for x in ("q", "k", "v") if x in need]
+            mask = [x for x in ("q", "k", "v") if x + "m" in need]
+            if fut:
+                vecs.update(zip(fut, pool_features(a, rows, name, pool, True, heads, want=tuple(fut))))
+            if mask:
+                vecs.update(zip([x + "m" for x in mask], pool_features(a, rows, name, pool, False, heads,
+                                                                      want=tuple(mask))))
+            vecs = {x: proj(y) if x.startswith("v") else y for x, y in vecs.items()}
+            v_self = proj(v_self)
+            jac, cols = [None] * len(cand), None
+            if a.value_score in RAW_SCORES:
+                jac = rows.head_jacobian(history, heads)
+                cols = np.ones(rows.n_out)
+                cols[[c - rows.n_ctx - 1 for c in hide if c > rows.n_ctx]] = 0
+            for i in range(len(cand)):
+                if not valid[i].all():
+                    raise ValueError(f"--value-score {a.value_score} needs every candidate valid")
+                score[i] = masked_score(a.value_score, q[i], k_self[i], v_self[i], cand[i], vecs, jac[i], cols)
+            return score
+        q, k_self = rows.head_vectors(history, None, heads)
+        k_pool, = pool_features(a, rows, name, pool, True, heads, want=("k",))
         for i in range(len(cand)):
             att = precomputed_attention(q[i], k_self[i], k_pool, cand[i], valid[i])
-            if a.head_adapt == "past":
-                vp = valid[i] & (cand[i] >= sh)
-                cp = np.maximum(cand[i] - sh, 0)
-                att_p = precomputed_attention(q_p[i], k_self_p[i], k_pool, cp, vp)
-                dist = np.sqrt(((pool[cp, s:s + sh] - history[i, -sh:]) ** 2).sum(-1))
-                pis[i], rhos[i] = past_head_mix(att_p, vp, dist)
-                score[i] = head_score(att, valid[i], pis[i])
-            elif plain:
-                score[i] = head_score(att, valid[i], mix)
-            else:
-                score[i] = value_score(att, v_self[i], v_pool[cand[i]], gram, a.value_score, cols,
-                                       valid[i], mix)
-        out = {"score": score}
-        if a.head_adapt != "none":
-            out.update(pi=pis, rho=rhos)
-        if a.diversity:
-            kn = k_pool.reshape(len(k_pool), -1).astype(np.float64)
-            kn /= np.maximum(np.linalg.norm(kn, axis=1, keepdims=True), 1e-30)
-            out["order"] = np.stack([diverse_top_k(score[i], kn[cand[i]], valid[i], a.top_k, a.diversity)
-                                     for i in range(len(cand))])
-        return out
+            score[i] = head_score(att, valid[i], mix)
+        return score
     step = max(1, rows.token_budget // ((history.shape[1] // rows.patch + 1 + rows.n_out)
                                         + cand.shape[1] * rows.s))
     for lo in range(0, len(cand), step):
@@ -240,14 +266,29 @@ def select_head(a, rows, heads, mix, history, pool, cand, valid, hide, history_p
                                   hide if a.select_hide else ())
         for j, i in enumerate(range(lo, min(lo + step, len(cand)))):
             score[i] = head_score(att[j], valid[i], mix)
-    return {"score": score}
+    return score
+
+
+def select_state(a, rows, history, pool, cand, valid, name):
+    """(n, M) scores of the candidates by how near their state with the future hidden is to the
+    query's (--state, see selection.py): minus the distance."""
+    layers = parse_layers(a.layers) if a.state in ("out", "in") else ()
+    want = (a.state,)
+    x0, = rows.alone_features(history, None, (), layers, want)
+    x, = pool_features(a, rows, name, pool, False, (), layers, want)
+    score = np.full(cand.shape, -np.inf)
+    for i in range(len(cand)):
+        c = cand[i][valid[i]]
+        score[i, valid[i]] = -state_distance(x0[i], x[c])
+    return score
 
 
 def main():
     args = parse_args()
     stem = os.path.join(args.output_dir, run_name(args))
-    if os.path.exists(f"{stem}.parquet") and not args.overwrite:
-        raise SystemExit(f"{stem}.parquet exists; pass --overwrite or --run-name")
+    done = f"{stem}_selected.parquet" if args.select_only else f"{stem}.parquet"
+    if os.path.exists(done) and not args.overwrite:
+        raise SystemExit(f"{done} exists; pass --overwrite or --run-name")
     os.makedirs(args.output_dir, exist_ok=True)
     data = TimeSeriesData(args.root_path, args.dataset, args.seq_len, args.pred_len, args.channels,
                           ett_months=ETT_MONTHS, train_frac=TRAIN_FRAC, test_frac=TEST_FRAC)
@@ -256,17 +297,14 @@ def main():
     if args.history > rows.context_length:
         raise SystemExit(f"--history {args.history} exceeds the model's {rows.context_length}-point context")
     hide = rows.columns(args.hide)
-    heads, mix = head_mix(args.heads)
+    heads, mix = head_mix(args.heads) if args.heads else (None, None)
     s = args.seq_len
 
-    tables, logs, mixes = [], [], []
+    tables, logs = [], []
     for ch, name in enumerate(data.channels):
         t0 = time.time()
         query = data.windows(args.eval_split, ch, args.eval_stride)
         win = np.arange(len(query), dtype=np.int64)
-        if args.origins != "all":
-            win = win[win % 2 == (1 if args.origins == "odd" else 0)]
-            query = query[win]
         starts = win * args.eval_stride
         history = data.history(args.eval_split, ch, starts, args.history)
         futures = query[:, s:]
@@ -289,31 +327,16 @@ def main():
                     wparts["fc"] = rows.predict(pool[:, :s])[:, MEDIAN]
                 idx, score = match(args.select, qparts, wparts, cand, valid, args.top_k,
                                    args.metric, args.match_norm)
+            elif args.select == "attn":
+                idx, score = top_k(select_head(args, rows, heads, mix, history, pool, cand, valid, hide, name),
+                                   cand, valid, args.top_k)
             else:
-                if args.head_adapt == "past":
-                    past = data.history(args.eval_split, ch, starts - rows.patch, args.history)
-                    sel = select_head(args, rows, heads, mix, history, pool, cand, valid, hide, past)
-                    pi, rho = sel["pi"], sel["rho"]
-                    mixes.append(pd.DataFrame({"channel": name, "window": np.repeat(win, len(heads)),
-                                               "head": np.tile(args.heads.split(","), len(win)),
-                                               "pi": pi.reshape(-1), "rho": rho.reshape(-1)}))
-                else:
-                    sel = select_head(args, rows, heads, mix, history, pool, cand, valid, hide)
-                if args.spread_match:
-                    nr = rows.predict(history)
-                    q1, q9 = REPORT_QUANTILES.index(0.1), REPORT_QUANTILES.index(0.9)
-                    sigma = (nr[:, q9] - nr[:, q1]) / 2.56 / np.maximum(history.std(1, keepdims=True), 1e-5)
-                    ctx = pool[:, :s].astype(np.float64)
-                    fut = (pool[:, s:] - ctx.mean(1, keepdims=True)) / np.maximum(ctx.std(1, keepdims=True), 1e-5)
-                    sel["order"] = np.stack([spread_match(sel["score"][i], valid[i], fut[cand[i]], sigma[i],
-                                                          args.top_k, args.spread_match) for i in range(len(cand))])
-                if "order" in sel:
-                    idx = np.take_along_axis(cand, sel["order"], 1)
-                    score = np.take_along_axis(sel["score"], sel["order"], 1)
-                else:
-                    idx, score = top_k(sel["score"], cand, valid, args.top_k)
+                idx, score = top_k(select_state(args, rows, history, pool, cand, valid, name),
+                                   cand, valid, args.top_k)
             ex = pool[idx]
-            if args.fusion == "parallel":
+            if args.select_only:
+                out = None
+            elif args.fusion == "parallel":
                 out = rows.predict(history, ex[..., :s], ex[..., s:], hide)
             else:
                 out = rows.predict(concat_context(history, ex, rows.patch, rows.context_length))
@@ -323,6 +346,9 @@ def main():
                                       "db_index": idx.reshape(-1),
                                       "score": score.reshape(-1)}))
         n, p = len(query), args.pred_len
+        if out is None:
+            print(f"  [{ch + 1}/{data.n_channels}] {name}: {n} queries picked, {time.time() - t0:.0f} s", flush=True)
+            continue
         dates = data.future_dates(args.eval_split, starts)
         table = pd.DataFrame({"channel": name,
                               "window": np.repeat(win, p),
@@ -336,18 +362,17 @@ def main():
         tables.append(table)
         print(f"  [{ch + 1}/{data.n_channels}] {name}: {n} queries, {time.time() - t0:.0f} s", flush=True)
 
-    pd.concat(tables, ignore_index=True).to_parquet(f"{stem}.parquet", compression="zstd", index=False)
+    if tables:
+        pd.concat(tables, ignore_index=True).to_parquet(f"{stem}.parquet", compression="zstd", index=False)
     with open(f"{stem}_args.json", "w") as f:
         json.dump({**vars(args), "gap": GAP, "ett_months": ETT_MONTHS, "train_frac": TRAIN_FRAC,
                    "test_frac": TEST_FRAC, "model": MODEL_NAME, "quantiles": REPORT_QUANTILES,
                    "channels_used": data.channels}, f, indent=1)
-    if mixes:
-        pd.concat(mixes, ignore_index=True).to_parquet(f"{stem}_headmix.parquet", index=False)
     if logs:
         pd.concat(logs, ignore_index=True).to_parquet(f"{stem}_selected.parquet", index=False)
     elif os.path.exists(f"{stem}_selected.parquet"):
         os.remove(f"{stem}_selected.parquet")
-    print(f"saved {stem}.parquet")
+    print(f"saved {done}")
 
 
 if __name__ == "__main__":

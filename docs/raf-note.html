@@ -396,6 +396,74 @@ pre {
   margin: 0 0 1.15em;
   overflow-x: auto;
 }
+
+.rfig { --warn-wash: rgba(160, 58, 46, 0.09); --s1: var(--accent); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .rfig { --warn-wash: rgba(224, 132, 118, 0.12); } }
+:root[data-theme="dark"] .rfig { --warn-wash: rgba(224, 132, 118, 0.12); }
+.rfig svg { display: block; width: 100%; height: auto; }
+.rfig .chart text { font-family: var(--f-mono); font-size: 11px; fill: var(--ink-soft); }
+.rfig .chart .t-ink { fill: var(--ink); }
+.rfig .chart .t-small { font-size: 10px; }
+.rfig .chart .t-head { fill: var(--ink); font-size: 12px; font-weight: 600; }
+.rfig .chart .lbl-ctx { fill: var(--accent); }
+.rfig .chart .lbl-orc { fill: var(--oracle); }
+.rfig .chart .lbl-warn { fill: var(--warn); }
+.rfig .chart .box { fill: var(--surface-sunk); stroke: var(--rule); }
+.rfig .chart .box-ctx { fill: var(--accent-wash); stroke: var(--accent); }
+.rfig .chart .box-orc { fill: var(--oracle-wash); stroke: var(--oracle); }
+.rfig .chart .box-q { fill: none; stroke: var(--ink-faint); stroke-dasharray: 4 3; }
+.rfig .chart .frame { fill: none; stroke: var(--ink-faint); stroke-dasharray: 5 4; }
+.rfig .chart .arrow { stroke: var(--ink-soft); stroke-width: 1.5; fill: none; }
+.rfig .chart .ah { fill: var(--ink-soft); }
+.rfig .chart .g-line { stroke: var(--accent); stroke-width: 2.4; }
+.rfig .chart .g-ah { fill: var(--accent); }
+.rfig .chart .mask-band { fill: var(--warn-wash); }
+.rfig .chart .mask { stroke: var(--warn); stroke-width: 1.5; stroke-dasharray: 3 3; }
+.rfig .chart .x { stroke: var(--warn); stroke-width: 2.2; }
+.rfig .rflow text { font-family: var(--f-body); font-size: 11.5px; fill: var(--ink); }
+.rfig .rflow .hd { font-size: 12px; font-weight: 700; fill: var(--ink-soft); letter-spacing: 0.08em; }
+.rfig .rflow .tag { font-family: var(--f-mono); font-weight: 700; font-size: 12px; }
+.rfig .rflow .prob { fill: var(--warn-wash); stroke: var(--warn); }
+.rfig .rflow .sol { fill: var(--accent-wash); stroke: var(--accent); }
+.rfig .rflow .note { font-size: 10.5px; fill: var(--ink-soft); }
+.rfig .rflow .arrow { stroke: var(--ink-soft); stroke-width: 1.5; fill: none; }
+.rfig .rflow .ah { fill: var(--ink-soft); }
+.rfig .plot text { font-family: var(--f-mono); font-size: 10.5px; fill: var(--ink-faint); }
+.rfig .plot .ax { font-family: var(--f-body); font-size: 11.5px; fill: var(--ink-soft); }
+.rfig .plot .ttl { font-family: var(--f-body); font-size: 12.5px; font-weight: 700; fill: var(--ink); }
+.rfig .plot .cat { font-family: var(--f-body); font-size: 11.5px; fill: var(--ink); }
+.rfig .plot .val { fill: var(--ink-soft); font-size: 10px; }
+.rfig .plot .key { font-family: var(--f-body); font-size: 11.5px; fill: var(--ink-soft); }
+.rfig .plot .grid { stroke: var(--rule-soft); stroke-width: 1; }
+.rfig .plot .zero { stroke: var(--ink-faint); stroke-width: 1; }
+.rfig .plot .ref { stroke: var(--ink-faint); stroke-width: 1; stroke-dasharray: 4 3; }
+.rfig .plot .better { fill: var(--accent); }
+.rfig .plot .worse { fill: var(--warn); }
+.rfig .plot .ci { stroke: var(--ink); stroke-width: 1.2; }
+.rfig .diagram text { font-family: var(--f-body); }
+.rfig .diagram .d-key { font-size: 12px; fill: var(--ink-soft); }
+.rfig .diagram .d-title { font-size: 13px; font-weight: 700; fill: var(--ink); }
+.rfig .diagram .d-lab { font-size: 11px; fill: var(--ink-faint); }
+.rfig .diagram .d-lab-move { fill: var(--ink-soft); font-weight: 700; }
+.rfig .diagram .d-verdict { font-size: 12.5px; font-weight: 700; fill: var(--ink); }
+.rfig .diagram .d-verdict-sub { font-size: 11.5px; fill: var(--ink-soft); }
+.rfig .diagram .d-sep { stroke: var(--rule-soft); stroke-width: 1; }
+.rfig .diagram .d-truth { stroke: var(--ink); stroke-width: 3; stroke-linecap: round; }
+.rfig .diagram .d-need { stroke: var(--ink-faint); stroke-width: 2; }
+.rfig .diagram .d-move { stroke: var(--s1); stroke-width: 2.5; }
+.rfig .diagram .d-ah-need { fill: var(--ink-faint); }
+.rfig .diagram .d-ah-move { fill: var(--s1); }
+.rfig .diagram .d-guide { stroke: var(--rule); stroke-width: 1; }
+.rfig .diagram .d-none { fill: var(--surface); stroke: var(--ink-soft); stroke-width: 2; }
+.rfig .diagram .d-attn { fill: var(--s1); stroke: var(--surface); stroke-width: 2; }
+.rfig .plot .lb { fill: none; stroke: var(--ink-faint); stroke-width: 2; }
+.rfig .plot .lp { fill: none; stroke: var(--accent); stroke-width: 2; }
+.rfig .plot .db { fill: var(--surface); stroke: var(--ink-faint); stroke-width: 2; }
+.rfig .plot .dp { fill: var(--accent); stroke: var(--surface); stroke-width: 1.5; }
+.rfig .plot .rb { fill: var(--ink-faint); font-size: 10px; }
+.rfig .plot .rp { fill: var(--accent); font-size: 10px; }
+.rfig .plot .bb { fill: var(--ink-faint); }
+.rfig .plot .bp { fill: var(--accent); }
 </style>
 
 
@@ -462,15 +530,32 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
 
 <header class="masthead">
   <div class="prose">
-    <p class="kicker">RAF 研究ノート · 論旨 · 改訂 2026-11-03 · ETTh1 / Chronos-2（凍結）</p>
+    <p class="kicker">RAF 研究ノート · 論旨 · 改訂 2026-11-18 · Chronos-2（凍結）</p>
     <h1>参照予測を文脈内学習として読む</h1>
     <p class="standfirst">
       過去の窓（事例）を参照して予測する RAF を，凍結した時系列基盤モデルの<strong>文脈内学習</strong>として見る．
       Chronos-2 の <strong>time attention</strong> と <strong>group attention</strong> の性質に合わせて事例を渡し，読ませ方を学習なしで直す．
-      このノートには全体の論旨を書き，実験は渡し方（<a href="how-to-fuse/parallel-rows.html">並列と連結</a>・<a href="how-to-fuse/history-length.html">履歴の長さ</a>），選び方（<a href="how-to-select/match-key.html">照合で選ぶ</a>・<a href="how-to-select/attention-weight.html">attention で選ぶ</a>），読み方（<a href="how-to-read/patch-mask.html">パッチを隠す</a>・<a href="how-to-read/level-align.html">段差をそろえる</a>・<a href="how-to-read/time-shift.html">時間方向にずらす</a>）の 6 冊に置く．
+      このノートには全体の論旨を書き，提案手法の評価と解析は analysis（<a href="analysis/test-6datasets.html">test の結果</a>・<a href="analysis/mae-vs-mse.html">MAE が下がらず MSE が下がる理由</a>）に，実験は渡し方（<a href="how-to-fuse/parallel-rows.html">並列と連結</a>・<a href="how-to-fuse/history-length.html">履歴の長さ</a>），選び方（<a href="how-to-select/match-key.html">照合で選ぶ</a>・<a href="how-to-select/attention-weight.html">attention で選ぶ</a>・<a href="how-to-select/qkv-split.html">q，k，v の使い方で選ぶ</a>・<a href="how-to-select/qk-and-v.html">qk と v を組み合わせて選ぶ</a>），読ませ方（<a href="how-to-read/patch-mask.html">パッチを隠す</a>・<a href="how-to-read/level-align.html">段差をそろえる</a>・<a href="how-to-read/time-shift.html">時間方向にずらす</a>）の 8 冊に置く．
     </p>
   </div>
 </header>
+
+<!-- ============================== 0 -->
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">0</span><h2>全体の流れ</h2></div>
+    <p>図 1 に，提案手法に至るまでの問題と解決策を示す．各段の詳細は 2 節に書く．</p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body rfig"><svg class="rflow" viewBox="0 0 680 350" role="img" aria-label="問題と解決策"><text class="hd" x="16" y="20">問題</text><text class="hd" x="360" y="20">解決策</text><rect class="prob" x="16" y="34" width="270" height="58" rx="4"/><text class="" x="28" y="52.0" text-anchor="start">連結では，事例をクエリの前につないで</text><text class="" x="28" y="67.0" text-anchor="start">1 本の系列にするため，事例の続きが</text><text class="" x="28" y="82.0" text-anchor="start">ほとんど読まれない</text><line class="arrow" x1="290" y1="63.0" x2="354" y2="63.0"/><path class="ah" d="M358,63.0 L351,59.0 L351,67.0 Z"/><rect class="sol" x="360" y="34" width="304" height="58" rx="4"/><text class="tag lbl" x="372" y="67.0" style="fill:var(--accent)">(A)</text><text class="" x="406" y="59.5" text-anchor="start">事例を共変量の行として並列に置き，</text><text class="" x="406" y="74.5" text-anchor="start">group attention で読ませる</text><rect class="prob" x="16" y="118" width="270" height="58" rx="4"/><text class="" x="28" y="143.5" text-anchor="start">並列で読ませると，直近の予測が</text><text class="" x="28" y="158.5" text-anchor="start">事例に引っぱられて悪くなる</text><line class="arrow" x1="290" y1="147.0" x2="354" y2="147.0"/><path class="ah" d="M358,147.0 L351,143.0 L351,151.0 Z"/><rect class="sol" x="360" y="118" width="304" height="58" rx="4"/><text class="tag lbl" x="372" y="151.0" style="fill:var(--accent)">(B)</text><text class="" x="406" y="143.5" text-anchor="start">最初の予測パッチ P1 の列だけ，</text><text class="" x="406" y="158.5" text-anchor="start">クエリから事例を隠す</text><path class="arrow" d="M400,92 L400,105.0 L151.0,105.0 L151.0,113"/><path class="ah" d="M151.0,117 L147.0,110 L155.0,110 Z"/><text class="note" x="408" y="109.0">副作用</text><rect class="prob" x="16" y="202" width="270" height="58" rx="4"/><text class="" x="28" y="227.5" text-anchor="start">履歴が似た窓を類似度で選んでも，</text><text class="" x="28" y="242.5" text-anchor="start">ランダムに選ぶのと変わらない</text><line class="arrow" x1="290" y1="231.0" x2="354" y2="231.0"/><path class="ah" d="M358,231.0 L351,227.0 L351,235.0 Z"/><rect class="sol" x="360" y="202" width="304" height="58" rx="4"/><text class="tag lbl" x="372" y="235.0" style="fill:var(--accent)">(C)</text><text class="" x="406" y="227.5" text-anchor="start">予測対象に近い事例を重く読むヘッドの</text><text class="" x="406" y="242.5" text-anchor="start">attention weight で選ぶ</text><text class="note" x="16" y="193.0">別の問題</text><rect class="prob" x="16" y="286" width="270" height="58" rx="4"/><text class="" x="28" y="304.0" text-anchor="start">重みを正確に取るには候補を全部</text><text class="" x="28" y="319.0" text-anchor="start">まとめて通す必要があり，候補を</text><text class="" x="28" y="334.0" text-anchor="start">増やせない</text><line class="arrow" x1="290" y1="315.0" x2="354" y2="315.0"/><path class="ah" d="M358,315.0 L351,311.0 L351,319.0 Z"/><rect class="sol" x="360" y="286" width="304" height="58" rx="4"/><text class="tag lbl" x="372" y="319.0" style="fill:var(--accent)">(D)</text><text class="" x="406" y="311.5" text-anchor="start">候補ごとに key を前計算し，</text><text class="" x="406" y="326.5" text-anchor="start">候補 2048 件から 256 件を選ぶ</text><path class="arrow" d="M400,260 L400,273.0 L151.0,273.0 L151.0,281"/><path class="ah" d="M151.0,285 L147.0,278 L155.0,278 Z"/><text class="note" x="408" y="277.0">副作用</text></svg></div>
+      <div class="plate-cap"><b>図 1．問題と解決策</b>連結は従来の方法で，どの解決策もモデルを学習しない．(A) は事例の渡し方，(B) は読ませ方，(C) と (D) は選び方である．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <p>提案手法は (A)〜(D) をすべて使う．提案手法の評価として，6 つのデータセットの test で MSE はすべてのデータで下がり，MAE はほとんど下がらなかった（<a href="analysis/test-6datasets.html">test の結果</a>）．ETTh1 の val で調べると，動きが予測対象の方向を向く時点は参照なしの絶対誤差が大きい時点に偏り，予測対象で選ぶとこの割合が上がった（<a href="analysis/mae-vs-mse.html">MAE が下がらず MSE が下がる理由</a>）．</p>
+  </div>
+</section>
 
 <!-- ============================== 1 -->
 <section>
@@ -523,8 +608,8 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
       この研究は，2 つの attention の役割分担に合わせてデモを渡し，読ませ方を学習なしで直す．
     </p>
     <p>
-      凍結したまま改善するのは，基盤モデルがこれからも大きくなると考えられるからである．モデルを大きくするほど性能が上がるというスケール則が言語モデルで知られ（Kaplan et al.），時系列でも同じ傾向が報告されている（Edwards et al.）．
-      大きくなるほど微調整にも計算と記憶が要り，微調整さえ難しくなる．文脈内学習なら重みを一切更新せず，入力の中で暗黙に学習させるので，基盤モデルが大きく良くなれば，その恩恵をそのまま受けられる．
+      モデルは凍結したまま使う．モデルを大きくするほど性能が上がるというスケール則が言語モデルで報告され（Kaplan et al.），時系列でも同じ傾向が報告されている（Edwards et al.）．
+      モデルが大きいほど，微調整に要る計算と記憶は増える．文脈内学習は重みを更新しないので，基盤モデルを替えても同じ手順をそのまま使える．
     </p>
   </div>
 </section>
@@ -538,13 +623,13 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
         <h4><span class="tag done">問題</span>従来の連結は，事例を 1 本の時系列に押し込む</h4>
         <p>連結型の RAF や時系列基盤モデルの文脈内学習は，事例を履歴の前につなぐ．しかしモデルは入力を 1 本の連続した時系列としてしか読めない．そのため次のことが起きる．</p>
         <ul class="tight">
-          <li><strong>件数が限られる．</strong>事例と履歴がモデルの文脈長（Chronos-2 は 8192 点）を分け合う．事例を増やすほど履歴を削るか，件数をあきらめることになる．</li>
+          <li><strong>件数が限られる．</strong>事例と履歴がモデルの文脈長（Chronos-2 は 8192 時点）を分け合う．事例を増やすほど履歴を削るか，件数をあきらめることになる．</li>
           <li><strong>時間軸が壊れる．</strong>何か月も前の窓が「直前の過去」として並び，継ぎ目で周期・水準・傾きが途切れた，実在しない時系列になる．</li>
           <li><strong>事例の答えが予測区間から遠い．</strong>事例の未来は過去の領域の途中に置かれ，予測したい区間から離れる．遠い位置の続きを写すのは難しく，近くに置いた事例ほど有利になって，置く順番が結果を左右する．</li>
           <li><strong>入力と答えの境目が分からない．</strong>どこまでが事例の文脈でどこからが答えかを，モデルは区切りの値から推すしかない．</li>
           <li><strong>尺度が混ざる．</strong>正規化は入力 1 本全体で行うので，クエリ自身の平均と標準偏差が事例の値に引っぱられる．</li>
         </ul>
-        <p style="margin-top:0.7em">結果として，実在の窓の未来はほとんど読まれない．クエリ自身の文脈と正解を渡しても，並列より大きく劣る（<a href="how-to-fuse/parallel-rows.html">並列と連結</a> 1 節）．</p>
+        <p style="margin-top:0.7em">結果として，事例の続きはほとんど読まれない．クエリ自身の文脈と予測対象を事例として渡しても，連結の MSE は並列より大きい（<a href="how-to-fuse/parallel-rows.html">並列と連結</a> 1 節）．</p>
       </div>
 
       </div>
@@ -572,9 +657,9 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
             <text x="700" y="420" text-anchor="middle" fill="currentColor" stroke="none"
                   opacity="0.7">予測の起点</text>
             <text x="380" y="420" text-anchor="middle" fill="currentColor" stroke="none"
-                  opacity="0.7">← 観測ずみ（履歴 2032 点）</text>
+                  opacity="0.7">← 観測ずみ（履歴 2032 時点）</text>
             <text x="790" y="420" text-anchor="middle" fill="currentColor" stroke="none"
-                  opacity="0.7">予測 64 点 →</text>
+                  opacity="0.7">予測 64 時点 →</text>
 
             <text x="60" y="30" fill="currentColor" stroke="none" font-size="13"
                   font-weight="700">連結 — 1 行</text>
@@ -596,7 +681,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
             <rect x="480" y="44" width="220" height="34" rx="2"
                   fill="var(--accent-tint)" stroke="var(--accent)"/>
             <text x="590" y="66" text-anchor="middle" fill="currentColor" stroke="none">
-              クエリ履歴 2032 点</text>
+              クエリ履歴 2032 時点</text>
             <rect x="700" y="44" width="160" height="34" rx="2" stroke-dasharray="4 3"
                   opacity="0.6"/>
             <text x="780" y="66" text-anchor="middle" fill="currentColor" stroke="none"
@@ -607,7 +692,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
               事例の未来はここ — 過去の領域に置かれ，時刻特徴は「直近履歴」と偽る</text>
             <path d="M480 92 L480 108" stroke="var(--accent)" marker-end="url(#ar2)"/>
             <text x="492" y="130" fill="var(--accent)" stroke="none" font-size="11">
-              事例 1 件で入力が 176 点伸びる（8192 点に入るのは 35 件まで）</text>
+              事例 1 件で入力が 176 時点伸びる（8192 時点に入るのは 35 件まで）</text>
 
             <line x1="60" y1="152" x2="860" y2="152" opacity="0.25"/>
 
@@ -619,7 +704,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
             <rect x="60" y="196" width="640" height="30" rx="2"
                   fill="var(--accent-tint)" stroke="var(--accent)"/>
             <text x="380" y="216" text-anchor="middle" fill="currentColor" stroke="none">
-              クエリ履歴 2032 点 — 1 点も削らない</text>
+              クエリ履歴 2032 時点 — 1 時点も削らない</text>
             <rect x="700" y="196" width="160" height="30" rx="2" stroke-dasharray="4 3"
                   opacity="0.6"/>
             <text x="780" y="216" text-anchor="middle" fill="currentColor" stroke="none"
@@ -667,7 +752,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
             <text x="60" y="348" fill="var(--accent)" stroke="none" font-size="11">
               ↑ group attention — 同じ時刻位置の行どうしを混ぜる（時間方向の注意とは別軸）</text>
             <text x="60" y="368" fill="var(--oracle)" stroke="none" font-size="11">
-              事例の未来は，予測しようとしている 64 点の真上に載る（known future covariate）</text>
+              事例の未来は，予測しようとしている 64 時点の真上に載る（known future covariate）</text>
           </svg>
           <figcaption class="plate-cap" style="border:0;background:none;padding:14px 0 0">
             <b>同じ事例・同じ履歴・違う置き場所</b>
@@ -681,7 +766,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
       <div class="plate-body">
         <figure style="margin:0">
           <svg viewBox="0 0 880 340" role="img" style="max-width:100%;height:auto"
-               aria-label="選び方ごとに，並列と連結の MSE を比べた棒グラフ（K=8，低いほど良い）．test：クエリ＋未来 並列 0.136・連結 0.236，未来＝未来照合 0.286・0.343，文脈＝文脈照合 0.335・0.346，参照なし 0.351．val：クエリ＋未来 0.266・0.375，未来＝未来照合 0.467・0.516，文脈＝文脈照合 0.519・0.527，参照なし 0.525．"
+               aria-label="選び方ごとに，並列と連結の MSE を比べた棒グラフ（K=8）．test：クエリ＋未来 並列 0.136・連結 0.236，未来＝未来照合 0.286・0.343，文脈＝文脈照合 0.335・0.346，参照なし 0.351．val：クエリ＋未来 0.266・0.375，未来＝未来照合 0.467・0.516，文脈＝文脈照合 0.519・0.527，参照なし 0.525．"
                fill="none" font-family="inherit" font-size="12">
             <text x="70" y="30" fill="var(--ink)" stroke="none" font-size="13" font-weight="700">test</text>
             <line x1="70" y1="260.0" x2="440" y2="260.0" stroke="var(--rule)"/>
@@ -751,10 +836,10 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
             </g>
           </svg>
           <figcaption class="plate-cap" style="border:0;background:none;padding:14px 0 0">
-            <b>MSE（K=8，履歴 2032 点，事例の文脈 96 点）．低いほど良い．破線は参照なし</b>
+            <b>MSE（K=8，履歴 2032 時点，事例の文脈 96 時点）．破線は参照なし</b>
             棒にカーソルを合わせると値が出る．参照なし比は並列と連結の順に，test でクエリ＋未来 −61.3% と −32.7%，未来＝未来照合 −18.7% と −2.4%，文脈＝文脈照合 −4.5% と −1.5%．
             val で −49.5% と −28.7%，−11.1% と −1.7%，−1.3% と +0.3%．
-            連結は履歴 2032 点を残したまま前に足し，事例ごとに区切り 16 点を挟む．
+            連結は履歴 2032 時点を残したまま前に足し，事例ごとに区切り 16 時点を挟む．
           </figcaption>
         </figure>
       </div>
@@ -767,13 +852,13 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
         <h4><span class="tag now">(A) 確定</span>事例を並列の行に置き，group attention で読ませる</h4>
         <p>事例 1 件を，未来まで分かっている共変量の行として 1 本ずつ置く．連結の問題はそれぞれ次のように消える．</p>
         <ul class="tight">
-          <li><strong>件数</strong>：事例は行を足すだけで，クエリの履歴は 1 点も削らない．数百件の many-shot になる．</li>
+          <li><strong>件数</strong>：事例は行を足すだけで，クエリの履歴は 1 時点も削らない．数百件の many-shot になる．</li>
           <li><strong>時間軸</strong>：どの行も，それぞれ本物の連続した時系列のまま．クエリの行に偽の継ぎ目は入らない．</li>
           <li><strong>答えの位置</strong>：事例の未来は，クエリの予測区間と同じ列（予測の起点から同じ時間）に置かれ，group attention で直接読まれる．行には順番が無いので，どの事例も同じ近さにある．</li>
           <li><strong>入力と答えの境目</strong>：事例の文脈は過去の領域に，未来は既知の未来の値として未来の領域に入る．モデルの入口の区別が，そのままデモの入力と答えの区別になり，区切りが要らない．</li>
           <li><strong>尺度</strong>：行ごとに自分の文脈で正規化するので，クエリの尺度は事例に影響されない．</li>
         </ul>
-        <p style="margin-top:0.7em">事例の文脈と未来は事例自身の行の中で time attention がつなぎ，クエリはそれを列ごとに読む．実際に，事例は文脈と未来の組として読まれる（渡し方 1・2 節）．件数を増やすほど効き目は伸び，K=128〜256 あたりで頭打ちになる（選び方 1 節）．</p>
+        <p style="margin-top:0.7em">事例の文脈と未来は事例自身の行の中で time attention がつなぎ，クエリはそれを列ごとに読む．実際に，事例は文脈と未来の組として読まれる（渡し方 1・2 節）．件数を増やすほど MSE は下がり，K=128〜256 あたりでほぼ変わらなくなる（選び方 1 節）．</p>
       </div>
     </div>
   </div>
@@ -786,13 +871,13 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
         並列に置くと，この融合を Chronos-2 の group attention がそのまま行う．事前学習で身につけた「並走する行を混ぜる仕組み」を流用するので，追加の部品も学習も要らない．
         しかも混ぜ方は，予測の列ごと，ヘッドごとに，クエリに応じて変わる．こちらが変えるのは，何を渡すかと，どの列で見せるかだけである．</p>
         <p style="margin-top:0.7em">行の中を混ぜる attention と，行どうしを混ぜる attention を交互にかける 2 軸の設計は，最近の基盤モデルで広がっている（Chronos-2 の time / group attention，表データの TabPFN と TabFM の行と列の attention，多変量予測の Crossformer の時間と系列の 2 段の attention など）．
-        並列の行で参照する方法は，この設計にそのまま乗る．専用の融合の部品を作り込まなくても，2 軸の attention を持つモデルなら同じやり方で事例を読ませられ，基盤モデルが良くなれば融合も一緒に良くなる．
+        並列の行で参照する方法は，この設計にそのまま乗る．専用の融合の部品を作らなくても，2 軸の attention を持つモデルなら同じやり方で事例を読ませられる．
         LLM でも，デモを並列のグループに分けて渡し，1,000 件まで扱う方法がある（Structured Prompting）．Chronos-2 の論文も，group attention を検索拡張に使うことを今後の課題に挙げている．</p>
       </div>
       <div class="down">↓</div>
       <div class="step done">
         <h4><span class="tag done">問題</span>並列で読ませると，直近の予測が引っぱられる</h4>
-        <p>事例を読むと，1〜16 時間先は参照なしより悪くなる．デモの答えの始まりがクエリの現在値とつながらないことが一因で，値の段差をそろえると悪化は半分になる（<a href="how-to-read/level-align.html">段差をそろえる</a>）．group attention は時間方向に頑健でないという指摘とも合う．連結でも起きるかはまだ確かめていない．</p>
+        <p>事例を読むと，1〜16 時間先の MSE は参照なしより上がる．事例の続きの始まりの値とクエリの現在値の段差をそろえると，上がる幅は半分になる（<a href="how-to-read/level-align.html">段差をそろえる</a>）．連結でも起きるかは確かめていない．</p>
       </div>
       </div>
   </div>
@@ -830,7 +915,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
 <line class="s-faint" x1="64" x2="88" y1="320" y2="320"/><text class="t-ink" x="94" y="324">参照なし</text>
 <line class="s-ink" x1="194" x2="218" y1="320" y2="320"/><text class="t-ink" x="224" y="324">参照あり（ランダム 128 件）</text>
 </svg></div>
-      <div class="plate-cap"><b>何時間先かごとの MSE</b>上が MSE，下が参照なしとの差（3 点の移動平均）．参照ありの事例はクエリごとにランダムな 128 件．1〜16 時間先の平均 MSE は参照なし 0.272，参照あり 0.281（+3.2%），17〜64 時間先は 0.610 と 0.581（−4.7%），全体は 0.525 と 0.506（−3.7%）．</div>
+      <div class="plate-cap"><b>何時間先かごとの MSE</b>上が MSE，下が参照なしとの差（3 時点の移動平均）．参照ありの事例はクエリごとにランダムな 128 件．1〜16 時間先の平均 MSE は参照なし 0.272，参照あり 0.281（+3.2%），17〜64 時間先は 0.610 と 0.581（−4.7%），全体は 0.525 と 0.506（−3.7%）．</div>
     </div>
   </div>
   <div class="prose">
@@ -838,7 +923,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
       <div class="down">↓</div>
       <div class="step now">
         <h4><span class="tag now">(B) 提案</span>最初の予測パッチだけ，クエリから事例を隠す</h4>
-        <p>最初の予測パッチの列でだけ group attention の相手から事例を外すと，1〜16 時間先の平均は参照なしとほぼ同じになる．先の時間の改善は残るだけでなく，少し大きくなる．後ろのパッチは time attention で最初のパッチを読むので，事例を読んでずれた最初のパッチのずれを受け継いでいたためである．そのため，隠さずに最初のパッチだけ参照なしの予測に差し替えるより少し良い（候補 1024 件からランダム 128 件で，隠すと −4.3%，差し替えると −4.0%．差は標準誤差の約 1.5 倍）．ただし 1〜2 時間先の悪化は残る．文脈の最後のパッチの列で読んだ事例の情報が，time attention を通って最初のパッチに届くためと考えられる（<a href="how-to-read/patch-mask.html">パッチを隠す</a> 1 節）．評価は val だけ．</p>
+        <p>最初の予測パッチの列でだけ group attention の相手から事例を外すと，1〜16 時間先の平均は参照なしとほぼ同じになる．17 時間先以降の MSE の減少は残り，少し大きくなる．後ろのパッチは time attention で最初のパッチを読む．隠さずに最初のパッチだけ参照なしの予測に差し替えるより MSE は少し下がる（候補 1024 件からランダム 128 件で，隠すと −4.3%，差し替えると −4.0%．差は標準誤差の約 1.5 倍）．1〜2 時間先の MSE の上昇は残る（<a href="how-to-read/patch-mask.html">パッチを隠す</a> 1 節）．評価は val だけ．</p>
       </div>
       </div>
   </div>
@@ -870,20 +955,20 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
 <line class="s-faint" x1="76" x2="100" y1="196" y2="196"/><text class="t-ink" x="106" y="200">隠さない（全体 −3.7%）</text>
 <line class="s-ctx" x1="266" x2="290" y1="196" y2="196"/><text class="t-ink" x="296" y="200">隠す</text>
 <rect x="366" y="189" width="18" height="13" fill="var(--accent-wash)"/><text class="t-ink" x="390" y="200">隠したパッチ</text>
-</svg></div><div class="plate-cap"><b>最初の予測パッチを隠したときの，何時間先かごとの MSE の変化（参照なし比）</b>3 点の移動平均．色の付いた範囲が隠したパッチ．履歴 2032 点，事例の文脈 384 点，K=128，事例はクエリごとにランダム（<a href="how-to-read/patch-mask.html">パッチを隠す</a> 1 節）．</div></div>
+</svg></div><div class="plate-cap"><b>最初の予測パッチを隠したときの，何時間先かごとの MSE の変化（参照なし比）</b>3 時点の移動平均．色の付いた範囲が隠したパッチ．履歴 2032 時点，事例の文脈 384 時点，K=128，事例はクエリごとにランダム（<a href="how-to-read/patch-mask.html">パッチを隠す</a> 1 節）．</div></div>
   </div>
   <div class="prose">
     <div class="flow">
       <div class="down">↓</div>
       <div class="step done">
-        <h4><span class="tag done">分かったこと</span>少ない件数に絞ると，似たデモを選んでも効かない</h4>
-        <p>類似度で上位 k 件を選ぶ従来の検索は，128 件ではランダムとほとんど変わらない．似た文脈の窓は未来も予測と似ていて，予測に足すものがない．類似度はクエリの履歴から作る基準だが，モデルは履歴から読み取れることをすでに予測に使っているので，予測の外れ方とは相関しにくい．LLM の many-shot でも件数が多いと選び方の差が小さくなり（Baek et al.，Bertsch et al.），時系列でも検索の効き目は窓に入らない情報で決まるという報告がある（When Does Retrieval Help）．256 件に増やすと少し効くが，効き目の大半は件数と長さから来る（<a href="how-to-select/match-key.html">照合で選ぶ</a> 1〜3 節，<a href="how-to-select/attention-weight.html#rq3">attention で選ぶ</a> 2 節）．</p>
+        <h4><span class="tag done">問題</span>類似度で選んでも，ランダムに選ぶのと変わらない</h4>
+        <p>履歴が似た窓を類似度で上位 128 件選んでも，MSE はランダムに選ぶのとほとんど変わらない．256 件ではランダムより少し下がるが，MSE の減少の大半は件数と事例の文脈の長さで決まる．LLM の many-shot でも件数が多いと選び方の差が小さくなること（Baek et al.，Bertsch et al.），時系列でも検索で予測が変わるかは窓に入らない情報で決まること（When Does Retrieval Help）が報告されている（<a href="how-to-select/match-key.html">照合で選ぶ</a> 1〜3 節，<a href="how-to-select/attention-weight.html#rq3">attention で選ぶ</a> 2 節）．</p>
       </div>
       </div>
   </div>
   <div class="wide">
     <div class="plate">
-      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 210" role="img" aria-label="MSE の改善幅の比較（K=128，事例の文脈 384 点）">
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 210" role="img" aria-label="参照なしに対する MSE の変化の比較（K=128，事例の文脈 384 時点）">
 <line class="grid" x1="230.0" x2="230.0" y1="10" y2="184"/>
 <text x="230.0" y="200" text-anchor="middle">0</text>
 <line class="grid" x1="302.5" x2="302.5" y1="10" y2="184"/>
@@ -908,19 +993,19 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
 <text class="t-ink" x="335.4" y="133">−4.8%</text>
 <text class="t-ink" x="220" y="167" text-anchor="end">未来＝未来照合（診断）</text>
 <rect class="bar-orc" x="230" y="153" width="193.5" height="20" rx="2"><title>未来＝未来照合（診断）：9.3 pt</title></rect>
-<text class="t-ink" x="429.5" y="167">−9.3%　正解を使う上限</text>
+<text class="t-ink" x="429.5" y="167">−9.3%　予測対象を使う上限</text>
 </svg></div>
-      <div class="plate-cap"><b>参照なしからの MSE の改善幅（val）</b>どれも K=128，事例の文脈 384 点にそろえた（既定と同じ件数と長さ）．2 つの照合はランダムと 1 pt も違わず，正解を使う上限とは 4 pt 以上離れている．件数と長さを選び直すと上限は K=16 で −13.9% まで伸びる（1 節）．予測＝予測照合は scratchpad の別実装（3 節と同じ）．ETTh1 全 7 チャネル，履歴 2032 点，予測 64 点，事例は並列，候補は 11 点おき．参照なしの val MSE は 0.5254．</div>
+      <div class="plate-cap"><b>参照なしに対する MSE の変化（val）</b>どれも K=128，事例の文脈 384 時点にそろえた（当時の既定と同じ件数と長さ）．2 つの照合とランダムの差は 1 pt 未満で，予測対象を使う上限とは 4 pt 以上離れている．件数と長さを選び直すと上限は K=16 で −13.9% まで伸びる（1 節）．予測＝予測照合は scratchpad の別実装（3 節と同じ）．ETTh1 全 7 チャネル，履歴 2032 時点，予測 64 時点，事例は並列，候補は 11 時点おき．参照なしの val MSE は 0.5254．</div>
     </div>
   </div>
   <div class="prose">
     <div class="flow">
       <div class="down">↓</div>
       <div class="step now">
-        <h4><span class="tag now">(C)</span>どの事例を入れるかを，読む側の重みで決める</h4>
-        <p>似たデモでは少ない件数で効かないことへの答えの候補である．人が決めた距離ではなく，モデルが事例を読むときの重みで選ぶ．</p>
-        <p style="margin-top:0.7em">group attention のヘッドの多くは正解から遠い事例や振幅の大きい事例を重く読むが，後ろのレイヤーの一部のヘッドは正解に近い事例を重く読む．そこで候補を多めに入れて 1 回読ませ，そのヘッドの重みで K 件に絞ってから予測し直す．ヘッドは train の末尾のクエリで，重みと正解への近さの順位相関から第 10〜12 レイヤーの上位 3 つ（L12H1，L12H7，L11H10）に決めた．</p>
-        <p style="margin-top:0.7em">候補 1024 件から 128 件を選ぶと，ランダムよりも候補の全部入れよりも良く，MAE も参照なしを下回る．候補を全部入れても良くならないので，効き目は件数ではなく選ぶことから来る．(B) と重ねると，さらに少し良くなる．全ヘッドの平均の重みや前のレイヤーのヘッド，性能で決めたヘッドでは選べない．同じ候補から照合で選ぶと，128 件ではヘッドに負けるが，256 件では差が区別できない．ヘッドの強みは，少ない件数で効くことと MAE である．照合より当たる理由は確かめていない．重みはクエリの予測の列の query と事例の続きの列の key から決まるので，モデルの予測の状態と事例の続きを突き合わせた値になっている．履歴だけを比べる照合には無い，予測の外れ方に関わる情報を含むためと考えている（未検証）（<a href="how-to-select/attention-weight.html#rq3">attention で選ぶ</a> 2 節）．</p>
+        <h4><span class="tag now">(C)</span>予測対象に近い事例を重く読むヘッドの attention weight で選ぶ</h4>
+        <p>人が決めた距離ではなく，モデルが事例を読むときの attention weight で選ぶ．</p>
+        <p style="margin-top:0.7em">group attention のヘッドの多くは，続きが予測対象から遠い事例や振幅の大きい事例を重く読む．第 10〜12 層の一部のヘッドは，続きが予測対象に近い事例を重く読む．そこで候補を多めに入れて 1 回読ませ，そのヘッドの重みで K 件に絞ってから予測し直す．このヘッドを選択ヘッドと呼ぶ．選択ヘッドは，重みと事例の続きの予測対象への近さの順位相関が高い第 10〜12 層の 3 つで，当時は train の末尾のクエリで L12H1，L12H7，L11H10 に決めた．今はデータごとに val で選び直している（ETTh1 は L12H1，L11H10，L10H12）．</p>
+        <p style="margin-top:0.7em">候補 1024 件から 128 件を選ぶと，MSE はランダムに選ぶ場合とも候補を全部入れる場合とも比べて下がり，MAE も参照なしを下回る．候補を全部入れても MSE は下がらない．(B) と重ねると MSE はさらに少し下がる．全ヘッドの平均の重み，前の層のヘッド，予測の MSE で決めたヘッドで選ぶと，ランダムに選ぶ場合との MSE の差は標準誤差の中か，MSE が上がる．同じ候補から照合で選ぶと，128 件では選択ヘッドより MSE が大きく，256 件では差は標準誤差の中である．重みはクエリの予測の列の query と事例の続きの列の key から決まる．照合との差が何から来るかは確かめていない（<a href="how-to-select/attention-weight.html#rq3">attention で選ぶ</a> 2 節）．</p>
       </div>
     </div>
   </div>
@@ -988,8 +1073,8 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
 <line class="arrow" x1="390" y1="121.0" x2="446" y2="121.0"/><path class="ah" d="M452,121.0 L442,116.0 L442,126.0 Z"/>
 <text x="421.0" y="113.0" text-anchor="middle" font-size="10">上位 K 件</text>
 <rect x="20" y="280" width="640" height="50" rx="4" fill="var(--surface-sunk)" stroke="var(--rule)"/>
-<text class="t-ink" x="34" y="301">ヘッドの決め方：train の末尾のクエリで，各ヘッドの重みと正解への近さの順位相関を測る．</text>
-<text class="t-ink" x="34" y="319">第 10〜12 層の上位 3 つ（L12H1，L12H7，L11H10）を選択ヘッドとして使う．val は見ない．</text>
+<text class="t-ink" x="34" y="301">ヘッドの決め方：val のクエリで，各ヘッドの重みと続きの予測対象への近さの順位相関を測る．</text>
+<text class="t-ink" x="34" y="319">第 10〜12 層の上位 3 つを選択ヘッドとして使う（ETTh1 は L12H1，L11H10，L10H12）．</text>
 </svg></div>
       <div class="plate-cap"><b>ヘッドの重みで事例を選ぶ手順</b>候補は 6 件，K は 3 件だけ描いた．重みは選択ヘッド 3 つのそれぞれで，予測の 4 列の重みを平均してから 3 ヘッドで平均する．1 回目の推論は選ぶためだけに使い，予測は選んだ K 件で 2 回目に行う．</div>
     </div>
@@ -1027,15 +1112,15 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
 <rect class="bar-orc" x="330" y="264" width="14" height="12" rx="2"/><text class="t-ink" x="350" y="274">最初のパッチを隠す</text>
 <text x="395.0" y="296" text-anchor="middle">参照なしの MSE との差</text>
 </svg></div>
-      <div class="plate-cap"><b>(C) ヘッドで選ぶことと (B) 最初のパッチを隠すことを重ねたときの MSE（val）</b>どれも (A) の並列．履歴 2032 点，事例の文脈 384 点，候補はクエリごとにランダムな 1024 件で，どの棒も同じ候補．ランダムは候補の最初の 128 件と 256 件．ヘッドは第 10〜12 レイヤーの上位 3 つ．候補 1024 件を全部入れると −3.7%．MAE は参照なし 0.4634 に対し，ヘッドで 128 件＋隠す 0.4579．隠した上でのヘッドとランダムの差は，128 件 −1.3 pt（ブートストラップの標準誤差 ±0.5），256 件 −0.8 pt（±0.3）（<a href="how-to-select/attention-weight.html#rq3">attention で選ぶ</a> 2 節）．</div>
+      <div class="plate-cap"><b>(C) ヘッドで選ぶことと (B) 最初のパッチを隠すことを重ねたときの MSE（val）</b>どれも (A) の並列．履歴 2032 時点，事例の文脈 384 時点，ヘッドは当時の L12H1，L12H7，L11H10，候補はクエリごとにランダムな 1024 件で，どの棒も同じ候補．ランダムは候補の最初の 128 件と 256 件．ヘッドは第 10〜12 レイヤーの上位 3 つ．候補 1024 件を全部入れると −3.7%．MAE は参照なし 0.4634 に対し，ヘッドで 128 件＋隠す 0.4579．隠した上でのヘッドとランダムの差は，128 件 −1.3 pt（ブートストラップの標準誤差 ±0.5），256 件 −0.8 pt（±0.3）（<a href="how-to-select/attention-weight.html#rq3">attention で選ぶ</a> 2 節）．</div>
     </div>
   </div>
   <div class="prose">
     <div class="flow">
       <div class="down">↓</div>
       <div class="step done">
-        <h4><span class="tag done">問題</span>候補を増やすと良く選べるが，重みを取る計算が増える</h4>
-        <p>ヘッドの重みで選ぶとき，候補が多いほど良い事例が見つかり，候補 2048 件までは増やすと良くなるか変わらない．しかし重みは，クエリと候補を全部まとめてモデルに通さないと得られない．前の層で行どうしが読み合い，重みが一緒に入れた候補に左右されるためである．計算は候補の数に比例し，候補 1024 件でも選ぶほうが予測より何倍もかかる．候補 2048 件はメモリに載らない．</p>
+        <h4><span class="tag done">問題</span>重みを正確に取るには候補を全部まとめて通す必要があり，候補を増やせない</h4>
+        <p>ヘッドの重みで選ぶとき，候補 2048 件までは，候補を増やすと MSE は下がるか変わらない．しかし重みは，クエリと候補を全部まとめてモデルに通さないと得られない．前の層で行どうしが読み合い，重みが一緒に入れた候補に左右されるためである．計算は候補の数に比例し，候補 1024 件でも選ぶほうが予測より何倍もかかる．候補 2048 件はメモリに載らない．</p>
       </div>
     </div>
   </div>
@@ -1093,16 +1178,16 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
 <line class="s-orc" x1="300" x2="324" y1="296" y2="296"/><text class="t-ink" x="330" y="300">前計算 256 件</text>
 <line class="s-orcrv" x1="440" x2="464" y1="296" y2="296"/><text class="t-ink" x="470" y="300">前計算 128 件（どちらも隠す）</text>
 </svg></div>
-      <div class="plate-cap"><b>候補の数と MSE，候補の数と選ぶ時間（val）</b>左の正確な重みは 128 件を選んで隠さずに予測し，候補 512 件と 1024 件はクエリごとに別に引いた候補．前計算は 128 件と 256 件を選んで最初のパッチを隠し，候補 512 件と 2048 件は同じ並べ替えの先頭，1024 件は正確な重みと別の取り方．右は HUFL の 8 クエリの中央値（M4）で，正確な重みは候補を全部入れた推論，前計算はクエリ単独の推論と内積と並べ替え．正確な重みの 512 件の跳ね上がりはメモリの圧迫と考えられる（未確認）．×は候補 2048 件がメモリに載らないこと（<a href="how-to-select/attention-weight.html#rq3">attention で選ぶ</a> 2 節）．</div>
+      <div class="plate-cap"><b>候補の数と MSE，候補の数と選ぶ時間（val）</b>左の正確な重みは 128 件を選んで隠さずに予測し，候補 512 件と 1024 件はクエリごとに別に引いた候補．前計算は 128 件と 256 件を選んで最初のパッチを隠し，候補 512 件と 2048 件は同じ並べ替えの先頭，1024 件は正確な重みと別の取り方．右は HUFL の 8 クエリの中央値（M4）で，正確な重みは候補を全部入れた推論，前計算はクエリ単独の推論と内積と並べ替え．正確な重みの 512 件で時間が跳ね上がる理由は確かめていない．×は候補 2048 件がメモリに載らないこと（<a href="how-to-select/attention-weight.html#rq3">attention で選ぶ</a> 2 節）．</div>
     </div>
   </div>
   <div class="prose">
     <div class="flow">
       <div class="down">↓</div>
       <div class="step now">
-        <h4><span class="tag now">(C) 提案</span>重みを前計算して候補を増やし，2048 件から 256 件を選ぶ</h4>
-        <p>候補を 1 件ずつ単独で通し，ヘッドの key を前もって保存しておく．クエリの query は参照なしの推論から取れる．選ぶのはモデルの外で内積と softmax をとるだけなので，候補を増やしても，時間はランダムに選ぶのとほとんど変わらない．行どうしの読み合いを切るので重みは近似になるが，同じ候補 1024 件で比べると効き目は正確な重みと同じである．</p>
-        <p style="margin-top:0.7em">ただし増やしすぎると，選んだ事例が隣り合う窓に固まって悪くなる．そこで，候補 2048 件から 256 件を選ぶことを提案手法とする．候補 1024 件との差は区別できるほどではなく，test はまだ測っていない（<a href="how-to-select/attention-weight.html#rq3">attention で選ぶ</a> 2 節）．</p>
+        <h4><span class="tag now">(D)</span>候補ごとに key を前計算し，候補 2048 件から 256 件を選ぶ</h4>
+        <p>候補を 1 件ずつ単独で通し，ヘッドの key を前もって保存しておく．クエリの query は参照なしの推論から取れる．選ぶのはモデルの外で内積と softmax をとるだけなので，候補を増やしても，時間はランダムに選ぶのとほとんど変わらない．行どうしの読み合いを切るので重みは近似になる．同じ候補 1024 件で比べると，MSE は正確な重みと標準誤差の中で同じである．</p>
+        <p style="margin-top:0.7em">候補をさらに増やすと，選んだ事例が隣り合う窓に固まり，MSE が上がる．そこで，候補 2048 件から 256 件を選ぶことを提案手法とする．候補 1024 件との差は標準誤差の中である（<a href="how-to-select/attention-weight.html#rq3">attention で選ぶ</a> 2 節）．</p>
       </div>
     </div>
   </div>
@@ -1280,96 +1365,108 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
 <rect class="bar-orc" x="440" y="278" width="14" height="12"/><text class="t-ink" x="460" y="288">選ぶ</text>
 <rect class="bar-rnd" x="510" y="278" width="14" height="12"/><text class="t-ink" x="530" y="288">予測</text>
 </svg></div>
-      <div class="plate-cap"><b>(C) 提案手法と比べる手法の MSE とクエリ 1 本あたりの時間（val）</b>どれも (A) の並列で (B) 最初のパッチを隠し，256 件を選ぶ．ランダム，正確な重み，前計算の候補 1024 件は同じ候補で，候補 2048 件と全窓は別の取り方．提案との差（ブートストラップの標準誤差）は，前計算の候補 1024 件 −0.4 pt（±0.3），全窓 −1.0 pt（±0.3）．MAE は参照なし 0.4634 に対し，提案 0.4578．時間は HUFL の 8 クエリの中央値（M4）．前計算の選ぶ時間は候補の数によらず約 0.04 秒で，key の前計算（train の 8193 窓で 32 秒）は含めない．</div>
+      <div class="plate-cap"><b>(D) 提案手法と比べる手法の MSE とクエリ 1 本あたりの時間（val，履歴 2032 時点，事例の文脈 384 時点）</b>どれも (A) の並列で (B) 最初のパッチを隠し，256 件を選ぶ．ランダム，正確な重み，前計算の候補 1024 件は同じ候補で，候補 2048 件と全窓は別の取り方．提案との差（ブートストラップの標準誤差）は，前計算の候補 1024 件 −0.4 pt（±0.3），全窓 −1.0 pt（±0.3）．MAE は参照なし 0.4634 に対し，提案 0.4578．時間は HUFL の 8 クエリの中央値（M4）．前計算の選ぶ時間は候補の数によらず約 0.04 秒で，key の前計算（train の 8193 窓で 32 秒）は含めない．</div>
     </div>
   </div>
   <div class="prose">
     <p>
       どの段階でもモデルは凍結したままで，学習しない．変えるのは，事例をどこに置くか，どの列でどの行を見せるか，どの行を入れるかだけである．
-      (C) まで重ねると MAE も参照なしを下回るようになった．区間（QL）はまだこの形で測っていない．
-      どの設定も val で選んだので，test，ETTh1 以外のデータ，クエリの履歴を上限の 8192 点にしたときでの確認が残る．
+      ここまでの数値は，ETTh1 の val で，クエリの履歴 2032 時点，事例の文脈 384 時点で測った．その後，クエリの履歴を先行研究に合わせて 512 時点にし，事例の文脈も 512 時点にした．選択ヘッドはデータごとに val で選び直した．
+      この設定で 6 つのデータセットの test を 1 回だけ流すと，MSE はすべてのデータで下がり，MAE はほとんど下がらなかった（<a href="analysis/test-6datasets.html">test の結果</a>）．図 2 に提案手法の全体を示す．
     </p>
   </div>
   <div class="wide">
     <div class="plate">
-      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 334" role="img" aria-label="提案手法の全体">
-<text class="t-ink" x="20" y="24">(C) attention で選ぶ</text>
-<rect x="20" y="40" width="150" height="70" rx="4" fill="var(--surface-sunk)" stroke="var(--rule)"/>
-<text class="t-ink" x="95" y="68" text-anchor="middle">候補の窓</text><text x="95" y="88" text-anchor="middle" font-size="10">train から 2048 件</text>
-<line class="arrow" x1="95" y1="110" x2="95" y2="146"/><path class="ah" d="M95,152 L90,142 L100,142 Z"/>
-<rect x="20" y="152" width="150" height="74" rx="4" fill="none" stroke="var(--accent)" stroke-dasharray="5 3"/>
-<text class="lbl-ctx" x="95" y="176" text-anchor="middle">選択ヘッド 3 つの</text><text class="lbl-ctx" x="95" y="194" text-anchor="middle">重みで 256 件に絞る</text><text x="95" y="214" text-anchor="middle" font-size="10">key は前計算しておく</text>
-<line class="arrow" x1="170" y1="189" x2="200" y2="189"/><path class="ah" d="M206,189 L196,184 L196,194 Z"/>
-<text class="t-ink" x="300" y="24">(A) 事例を並列の行に置く</text>
-<text x="322" y="44" text-anchor="middle" font-size="10">文脈（過去）</text>
-<text x="394" y="44" text-anchor="middle" font-size="10">REG</text>
-<text x="490" y="44" text-anchor="middle" font-size="10">予測の 4 パッチ（未来）</text>
-<rect x="404" y="50" width="44" height="178" fill="var(--warn)" fill-opacity="0.08"/>
-<text class="t-ink" x="252" y="72" text-anchor="end">クエリ</text>
-<rect class="box-q" x="263" y="56" width="22" height="22" rx="2"/>
-<rect class="box-q" x="287" y="56" width="22" height="22" rx="2"/>
-<rect class="box-q" x="311" y="56" width="22" height="22" rx="2"/>
-<rect class="box-q" x="335" y="56" width="22" height="22" rx="2"/>
-<rect class="box-q" x="359" y="56" width="22" height="22" rx="2"/>
-<rect class="box" x="386" y="56" width="16" height="22" rx="2"/>
-<rect class="box-q" x="408" y="56" width="38" height="22" rx="2"/>
-<text x="427" y="71" text-anchor="middle" font-size="10">?</text>
-<rect class="box-q" x="450" y="56" width="38" height="22" rx="2"/>
-<text x="469" y="71" text-anchor="middle" font-size="10">?</text>
-<rect class="box-q" x="492" y="56" width="38" height="22" rx="2"/>
-<text x="511" y="71" text-anchor="middle" font-size="10">?</text>
-<rect class="box-q" x="534" y="56" width="38" height="22" rx="2"/>
-<text x="553" y="71" text-anchor="middle" font-size="10">?</text>
-<text class="t-ink" x="252" y="116" text-anchor="end">事例 1</text>
-<rect class="box-ctx" x="263" y="100" width="22" height="22" rx="2"/>
-<rect class="box-ctx" x="287" y="100" width="22" height="22" rx="2"/>
-<rect class="box-ctx" x="311" y="100" width="22" height="22" rx="2"/>
-<rect class="box-ctx" x="335" y="100" width="22" height="22" rx="2"/>
-<rect class="box-ctx" x="359" y="100" width="22" height="22" rx="2"/>
-<rect class="box" x="386" y="100" width="16" height="22" rx="2"/>
-<rect class="box-orc" x="408" y="100" width="38" height="22" rx="2"/>
-<rect class="box-orc" x="450" y="100" width="38" height="22" rx="2"/>
-<rect class="box-orc" x="492" y="100" width="38" height="22" rx="2"/>
-<rect class="box-orc" x="534" y="100" width="38" height="22" rx="2"/>
-<text class="t-ink" x="252" y="156" text-anchor="end">事例 2</text>
-<rect class="box-ctx" x="263" y="140" width="22" height="22" rx="2"/>
-<rect class="box-ctx" x="287" y="140" width="22" height="22" rx="2"/>
-<rect class="box-ctx" x="311" y="140" width="22" height="22" rx="2"/>
-<rect class="box-ctx" x="335" y="140" width="22" height="22" rx="2"/>
-<rect class="box-ctx" x="359" y="140" width="22" height="22" rx="2"/>
-<rect class="box" x="386" y="140" width="16" height="22" rx="2"/>
-<rect class="box-orc" x="408" y="140" width="38" height="22" rx="2"/>
-<rect class="box-orc" x="450" y="140" width="38" height="22" rx="2"/>
-<rect class="box-orc" x="492" y="140" width="38" height="22" rx="2"/>
-<rect class="box-orc" x="534" y="140" width="38" height="22" rx="2"/>
-<text class="t-ink" x="252" y="216" text-anchor="end">事例 K</text>
-<rect class="box-ctx" x="263" y="200" width="22" height="22" rx="2"/>
-<rect class="box-ctx" x="287" y="200" width="22" height="22" rx="2"/>
-<rect class="box-ctx" x="311" y="200" width="22" height="22" rx="2"/>
-<rect class="box-ctx" x="335" y="200" width="22" height="22" rx="2"/>
-<rect class="box-ctx" x="359" y="200" width="22" height="22" rx="2"/>
-<rect class="box" x="386" y="200" width="16" height="22" rx="2"/>
-<rect class="box-orc" x="408" y="200" width="38" height="22" rx="2"/>
-<rect class="box-orc" x="450" y="200" width="38" height="22" rx="2"/>
-<rect class="box-orc" x="492" y="200" width="38" height="22" rx="2"/>
-<rect class="box-orc" x="534" y="200" width="38" height="22" rx="2"/>
-<text class="t-ink" x="252" y="176" text-anchor="end">⋮</text>
-<line x1="427.0" x2="427.0" y1="80" y2="198" stroke="var(--ink-faint)" stroke-dasharray="3 3"/>
-<text x="427.0" y="96" text-anchor="middle" style="fill:var(--warn);font-size:22px">×</text>
-<line x1="469.0" x2="469.0" y1="80" y2="198" stroke="var(--accent)" stroke-width="2.2"/>
-<line x1="511.0" x2="511.0" y1="80" y2="198" stroke="var(--accent)" stroke-width="2.2"/>
-<line x1="553.0" x2="553.0" y1="80" y2="198" stroke="var(--accent)" stroke-width="2.2"/>
-<line x1="262" y1="67" x2="574" y2="67" stroke="var(--ink)" stroke-width="1.6"/>
-<path d="M580,67 L572,63 L572,71 Z" fill="var(--ink)"/>
-<path d="M256,67 L264,63 L264,71 Z" fill="var(--ink)"/>
-<text x="584" y="64" font-size="10">time</text><text x="584" y="77" font-size="10">attention</text><text x="584" y="90" font-size="10">（行の中）</text>
-<text class="lbl-ctx" x="584" y="150" font-size="10">group</text><text class="lbl-ctx" x="584" y="163" font-size="10">attention</text><text class="lbl-ctx" x="584" y="176" font-size="10">（同じ列）</text>
-<text x="427" y="246" text-anchor="middle" style="fill:var(--warn)">(B) 最初の予測パッチは隠す</text>
-<text x="20" y="282">(A) クエリの行は，事例の行の「文脈→未来」の組を列ごとに読む．行の順番は無く，件数は行を足すだけで増やせる．</text>
-<text x="20" y="300">(B) 最初の予測パッチ（1〜16 時間先）の列だけ，クエリから事例を見えなくする．</text>
-<text x="20" y="318">(C) 候補 2048 件の前計算した key とクエリの query から，選択ヘッド 3 つの重みで 256 件に絞る．</text>
+      <div class="plate-body rfig"><svg class="diagram chart" viewBox="0 0 680 470" role="img" aria-label="提案手法の全体">
+  <text class="t-head" x="16" y="18">事例を選ぶ</text>
+  <rect class="frame" x="16" y="28" width="292" height="122" rx="4"/>
+  <text class="t-head" x="24" y="44">(D) 前もって 1 回，key を計算する</text>
+  <rect class="box" x="26" y="54" width="70" height="40" rx="3"/>
+  <text class="t-ink" x="61" y="71" text-anchor="middle">train の窓</text>
+  <text class="t-small" x="61" y="86" text-anchor="middle">約 8,100 件</text>
+  <line class="arrow" x1="96" y1="74" x2="140" y2="74"/><path class="ah" d="M145,74 L138,78 L138,70 Z"/>
+  <text class="t-small" x="120" y="66" text-anchor="middle">ランダム</text>
+  <rect class="box" x="146" y="54" width="60" height="40" rx="3"/>
+  <text class="t-ink" x="176" y="71" text-anchor="middle">候補</text>
+  <text class="t-small" x="176" y="86" text-anchor="middle">2048 件</text>
+  <line class="arrow" x1="206" y1="74" x2="230" y2="74"/><path class="ah" d="M235,74 L228,78 L228,70 Z"/>
+  <rect class="box-orc" x="238" y="54" width="22" height="14" rx="2"/><text class="t-small" x="249" y="65" text-anchor="middle">k</text>
+  <rect class="box-orc" x="238" y="70" width="22" height="14" rx="2"/><text class="t-small" x="249" y="81" text-anchor="middle">k</text>
+  <rect class="box-orc" x="238" y="86" width="22" height="14" rx="2"/><text class="t-small" x="249" y="97" text-anchor="middle">k</text>
+  <text class="t-small" x="268" y="72">key を</text>
+  <text class="t-small" x="268" y="86">保存</text>
+  <text class="t-small" x="26" y="122">候補 j を 1 件ずつ単独でモデルに通し，</text>
+  <text class="t-small" x="26" y="136"><tspan dy="0">選択ヘッド 3 つの key k</tspan><tspan dy="2.5" font-size="7.5">j</tspan><tspan dy="-2.5"> = x</tspan><tspan dy="2.5" font-size="7.5">j</tspan><tspan dy="-2.5">W</tspan><tspan dy="-4" font-size="7.5">K</tspan><tspan dy="4"> を取り出しておく</tspan></text>
+
+  <rect class="frame" x="324" y="28" width="340" height="122" rx="4"/>
+  <text class="t-head" x="332" y="44">(C) クエリが来るたび，重みで選ぶ</text>
+  <rect class="box-q" x="334" y="54" width="62" height="24" rx="3"/>
+  <text class="t-ink" x="365" y="70" text-anchor="middle">クエリ</text>
+  <line class="arrow" x1="396" y1="66" x2="412" y2="66"/><path class="ah" d="M417,66 L410,70 L410,62 Z"/>
+  <rect class="box" x="418" y="54" width="104" height="24" rx="3"/>
+  <text class="t-small" x="470" y="70" text-anchor="middle">参照なしの推論</text>
+  <line class="arrow" x1="522" y1="66" x2="538" y2="66"/><path class="ah" d="M543,66 L536,70 L536,62 Z"/>
+  <rect class="box-ctx" x="544" y="54" width="22" height="24" rx="2"/><text class="t-small" x="555" y="70" text-anchor="middle">q</text><text class="t-small" x="571" y="70"><tspan dy="0">= x</tspan><tspan dy="2.5" font-size="7.5">0</tspan><tspan dy="-2.5">W</tspan><tspan dy="-4" font-size="7.5">Q</tspan><tspan dy="4"> </tspan></text>
+  <line class="arrow" x1="555" y1="78" x2="555" y2="94"/><path class="ah" d="M555,99 L551,92 L559,92 Z"/>
+  <path class="arrow" d="M260,93 L300,93 L300,114 L414,114"/><path class="ah" d="M419,114 L412,118 L412,110 Z"/>
+  <rect class="box" x="420" y="96" width="146" height="36" rx="3"/>
+  <text class="t-small" x="493" y="111" text-anchor="middle"><tspan dy="0">α</tspan><tspan dy="2.5" font-size="7.5">j</tspan><tspan dy="-2.5"> = softmax</tspan><tspan dy="2.5" font-size="7.5">j</tspan><tspan dy="-2.5">(q · k</tspan><tspan dy="2.5" font-size="7.5">j</tspan><tspan dy="-2.5">)</tspan></text>
+  <text class="t-small" x="493" y="126" text-anchor="middle">モデルの外で計算</text>
+  <line class="arrow" x1="566" y1="114" x2="582" y2="114"/><path class="ah" d="M587,114 L580,118 L580,110 Z"/>
+  <rect class="box-orc" x="586" y="100" width="72" height="28" rx="3"/>
+  <text class="t-small t-ink" x="622" y="118" text-anchor="middle">上位 256 件</text>
+  <line class="arrow" x1="622" y1="128" x2="622" y2="196"/><path class="ah" d="M622,201 L618,194 L626,194 Z"/>
+  <text class="t-small" x="614" y="170" text-anchor="end">選んだ 256 件を事例の行に置く</text>
+
+  <text class="t-head" x="16" y="196">(A) 事例を共変量の行として並列に置く</text>
+  
+  <text class="t-small" x="246" y="220" text-anchor="middle">履歴・文脈 512 時点</text>
+  <text class="t-small" x="346" y="220" text-anchor="middle">REG</text>
+  <text class="t-small" x="442" y="220" text-anchor="middle">予測 64 時点 P1〜P4</text>
+  <rect class="mask-band" x="357" y="226" width="44" height="138" rx="2"/>
+  <text class="lbl-warn" x="379" y="220" text-anchor="middle"></text>
+
+  <text class="t-ink" x="82" y="243" text-anchor="end">クエリ</text>
+  
+  <rect class="box-q" x="154" y="232" width="30" height="18" rx="2"/><rect class="box-q" x="185" y="232" width="30" height="18" rx="2"/><rect class="box-q" x="216" y="232" width="30" height="18" rx="2"/><rect class="box-q" x="247" y="232" width="30" height="18" rx="2"/><rect class="box-q" x="278" y="232" width="30" height="18" rx="2"/><rect class="box-q" x="309" y="232" width="30" height="18" rx="2"/>
+  <rect class="box" x="341" y="232" width="12" height="18" rx="2"/>
+  <rect class="box-q" x="359" y="232" width="40" height="18" rx="2"/><rect class="box-q" x="401" y="232" width="40" height="18" rx="2"/><rect class="box-q" x="443" y="232" width="40" height="18" rx="2"/><rect class="box-q" x="485" y="232" width="40" height="18" rx="2"/>
+  <text class="t-small" x="379" y="245" text-anchor="middle">?</text><text class="t-small" x="421" y="245" text-anchor="middle">?</text><text class="t-small" x="463" y="245" text-anchor="middle">?</text><text class="t-small" x="505" y="245" text-anchor="middle">?</text>
+  <line x1="160" y1="241" x2="522" y2="241" stroke="var(--ink)" stroke-width="1.6"/>
+  <path d="M530,241 L521,245 L521,237 Z" fill="var(--ink)"/>
+  <path d="M152,241 L161,237 L161,245 Z" fill="var(--ink)"/>
+
+  <text class="t-ink" x="82" y="275" text-anchor="end">事例 1</text>
+  <rect class="box-ctx" x="154" y="264" width="30" height="18" rx="2"/><rect class="box-ctx" x="185" y="264" width="30" height="18" rx="2"/><rect class="box-ctx" x="216" y="264" width="30" height="18" rx="2"/><rect class="box-ctx" x="247" y="264" width="30" height="18" rx="2"/><rect class="box-ctx" x="278" y="264" width="30" height="18" rx="2"/><rect class="box-ctx" x="309" y="264" width="30" height="18" rx="2"/>
+  <rect class="box" x="341" y="264" width="12" height="18" rx="2"/>
+  <rect class="box-orc" x="359" y="264" width="40" height="18" rx="2"/><rect class="box-orc" x="401" y="264" width="40" height="18" rx="2"/><rect class="box-orc" x="443" y="264" width="40" height="18" rx="2"/><rect class="box-orc" x="485" y="264" width="40" height="18" rx="2"/>
+  <text class="t-ink" x="82" y="301" text-anchor="end">事例 2</text>
+  <rect class="box-ctx" x="154" y="290" width="30" height="18" rx="2"/><rect class="box-ctx" x="185" y="290" width="30" height="18" rx="2"/><rect class="box-ctx" x="216" y="290" width="30" height="18" rx="2"/><rect class="box-ctx" x="247" y="290" width="30" height="18" rx="2"/><rect class="box-ctx" x="278" y="290" width="30" height="18" rx="2"/><rect class="box-ctx" x="309" y="290" width="30" height="18" rx="2"/>
+  <rect class="box" x="341" y="290" width="12" height="18" rx="2"/>
+  <rect class="box-orc" x="359" y="290" width="40" height="18" rx="2"/><rect class="box-orc" x="401" y="290" width="40" height="18" rx="2"/><rect class="box-orc" x="443" y="290" width="40" height="18" rx="2"/><rect class="box-orc" x="485" y="290" width="40" height="18" rx="2"/>
+  <text class="t-ink" x="82" y="326" text-anchor="end">⋮</text>
+  <text class="t-ink" x="82" y="353" text-anchor="end">事例 256</text>
+  <rect class="box-ctx" x="154" y="342" width="30" height="18" rx="2"/><rect class="box-ctx" x="185" y="342" width="30" height="18" rx="2"/><rect class="box-ctx" x="216" y="342" width="30" height="18" rx="2"/><rect class="box-ctx" x="247" y="342" width="30" height="18" rx="2"/><rect class="box-ctx" x="278" y="342" width="30" height="18" rx="2"/><rect class="box-ctx" x="309" y="342" width="30" height="18" rx="2"/>
+  <rect class="box" x="341" y="342" width="12" height="18" rx="2"/>
+  <rect class="box-orc" x="359" y="342" width="40" height="18" rx="2"/><rect class="box-orc" x="401" y="342" width="40" height="18" rx="2"/><rect class="box-orc" x="443" y="342" width="40" height="18" rx="2"/><rect class="box-orc" x="485" y="342" width="40" height="18" rx="2"/>
+
+  <line class="mask" x1="379" y1="254" x2="379" y2="360"/>
+  <path class="x" d="M373,251 L385,263 M385,251 L373,263"/>
+  <line class="g-line" x1="421" y1="256" x2="421" y2="360"/><path class="g-ah" d="M421,251 L417,259 L425,259 Z"/>
+  <line class="g-line" x1="463" y1="256" x2="463" y2="360"/><path class="g-ah" d="M463,251 L459,259 L467,259 Z"/>
+  <line class="g-line" x1="505" y1="256" x2="505" y2="360"/><path class="g-ah" d="M505,251 L501,259 L509,259 Z"/>
+
+  <text class="t-ink" x="540" y="238">time attention</text>
+  <text class="t-small" x="540" y="252">行の中をつなぐ</text>
+  <text class="lbl-ctx" x="540" y="298">group attention</text>
+  <text class="t-small lbl-ctx" x="540" y="312">同じ列の行を読む</text>
+
+  <text class="t-head" x="16" y="392">(B) 最初の予測パッチ P1 の列だけ，クエリから事例を隠す</text>
+  <text class="t-small" x="16" y="414">・事例の文脈と続きは，クエリの予測の起点にそろえて置く．事例の続きはクエリの予測区間と同じ列に入る</text>
+  <text class="t-small" x="16" y="430">・クエリの履歴も事例の文脈も 512 時点．正規化は行ごとに行う</text>
+  <text class="t-small" x="16" y="446">・Chronos-2 は凍結したままで，学習するものはない．出力はクエリの行の予測 64 時点</text>
 </svg></div>
-      <div class="plate-cap"><b>提案手法の全体</b>(A) は確定，(B) と (C) は val で決めた（test は未確認）．事例の文脈の終わりはクエリの予測の起点にそろえて置く．どの段階もモデルは凍結のまま．</div>
+      <div class="plate-cap"><b>図 2．提案手法の全体</b>(D) で前計算した key を使って (C) で 256 件を選び，(A) の並列の行に置き，(B) で P1 の列だけ事例を隠して予測する．</div>
     </div>
   </div>
 </section>

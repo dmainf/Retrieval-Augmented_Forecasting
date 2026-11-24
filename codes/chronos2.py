@@ -207,52 +207,109 @@ class Chronos2Rows:
         w = torch.softmax(torch.einsum("nhd,nhrd->nhr", q, k).float() + gmask[:, :, 0], dim=-1)
         return rearrange(w, "(b s) h r -> b s h r", b=b)[:, -self.n_out:]
 
-    def _alone_states(self, context, future, layers):
-        """Rows run on their own (group attention over themselves only), as when no
-        example is given. Returns {layer: (N, n_out, d)} input of that layer's group
-        attention (after its layer norm) at the forecast columns."""
-        x, mask, _ = self._embed(context, future)
-        tmask = self._invert(mask)[:, None, None, :]
-        pos = torch.arange(x.shape[1], device=self.device).unsqueeze(0)
-        alone = torch.zeros(1, 1, 1, 1, device=self.device)
-        out = {}
-        for li, block in enumerate(self.m.encoder.block[:max(layers) + 1]):
-            tsa, gsa, ffn = block.layer
-            x = tsa(x, attention_mask=tmask, position_ids=pos)[0]
-            normed = gsa.layer_norm(x)
-            if li in layers:
-                out[li] = normed[:, -self.n_out:]
-            x = x + gsa.self_attention(normed.reshape(-1, 1, x.shape[-1]), mask=alone)[0].reshape(x.shape)
-            x = ffn(x)
-        return out
-
     @torch.no_grad()
-    def head_vectors(self, context, future, heads, values=False):
-        """query and key (and value) vectors of the given (layer, head)s at the forecast
-        columns, each row run on its own: arrays (N, n_heads_used, n_out, head_dim)."""
-        layers = sorted({li for li, _ in heads})
+    def alone_features(self, context, future, heads=(), layers=(), want=("q", "k")):
+        """Rows run on their own (group attention over themselves only), as when no example is
+        given, at the forecast columns. want (a sequence of names) picks among
+          q, k, v  the (layer, head)s' vectors, each (N, len(heads), n_out, head_dim)
+          in       the input of a layer's group attention (after its layer norm), (N, len(layers), n_out, D)
+          out      the output of a layer's group attention, all heads (sum of v W_O), same shape
+          final    the encoder's final state (after the final layer norm), (N, 1, n_out, D)
+        and returns them in that order."""
+        need = sorted({li for li, _ in heads} | set(layers))
+        last = len(self.m.encoder.block) if "final" in want else max(need) + 1
         chunk = self._chunk(context.shape[1], 0)
-        qs, ks, vs = [], [], []
+        parts = {x: [] for x in want}
         for lo in range(0, len(context), chunk):
             c = torch.as_tensor(context[lo:lo + chunk], dtype=torch.float32, device=self.device)
             f = None if future is None else torch.as_tensor(future[lo:lo + chunk], dtype=torch.float32,
                                                             device=self.device)
-            st = self._alone_states(c, f, layers)
-            q, k, v = [], [], []
-            for li, hi in heads:
-                mha = self.m.encoder.block[li].layer[1].self_attention
-                d = mha.kv_proj_dim
-                q.append(mha.q(st[li])[..., hi * d:(hi + 1) * d])
-                k.append(mha.k(st[li])[..., hi * d:(hi + 1) * d])
-                if values:
-                    v.append(mha.v(st[li])[..., hi * d:(hi + 1) * d])
-            qs.append(torch.stack(q, 1).float().cpu().numpy())
-            ks.append(torch.stack(k, 1).float().cpu().numpy())
-            if values:
-                vs.append(torch.stack(v, 1).float().cpu().numpy())
-        if values:
-            return np.concatenate(qs), np.concatenate(ks), np.concatenate(vs)
-        return np.concatenate(qs), np.concatenate(ks)
+            x, mask, _ = self._embed(c, f)
+            tmask = self._invert(mask)[:, None, None, :]
+            pos = torch.arange(x.shape[1], device=self.device).unsqueeze(0)
+            alone = torch.zeros(1, 1, 1, 1, device=self.device)
+            st, go = {}, {}
+            for li, block in enumerate(self.m.encoder.block[:last]):
+                tsa, gsa, ffn = block.layer
+                x = tsa(x, attention_mask=tmask, position_ids=pos)[0]
+                normed = gsa.layer_norm(x)
+                out = gsa.self_attention(normed.reshape(-1, 1, x.shape[-1]), mask=alone)[0].reshape(x.shape)
+                if li in need:
+                    st[li], go[li] = normed[:, -self.n_out:], out[:, -self.n_out:]
+                x = ffn(x + out)
+            got = {}
+            for name in ("q", "k", "v"):
+                if name in want:
+                    vec = []
+                    for li, hi in heads:
+                        mha = self.m.encoder.block[li].layer[1].self_attention
+                        d = mha.kv_proj_dim
+                        vec.append(getattr(mha, name)(st[li])[..., hi * d:(hi + 1) * d])
+                    got[name] = torch.stack(vec, 1)
+            if "in" in want:
+                got["in"] = torch.stack([st[li] for li in layers], 1)
+            if "out" in want:
+                got["out"] = torch.stack([go[li] for li in layers], 1)
+            if "final" in want:
+                got["final"] = self.m.encoder.final_layer_norm(x[:, -self.n_out:])[:, None]
+            for name in want:
+                parts[name].append(got[name].float().cpu().numpy())
+        return tuple(np.concatenate(parts[name]) for name in want)
+
+    def forecast_jacobian(self, context, layers) -> dict:
+        """Rows run on their own (no example, as the forecast without reference): the Jacobian of the
+        normalized median forecast with respect to what is added to the residual stream by each layer's
+        group attention at the forecast columns -> {layer: (N, pred_len, n_out, D)}."""
+        need = sorted(set(layers))
+        med = self.m.chronos_config.quantiles.index(0.5)
+        chunk = self._chunk(context.shape[1], 0)
+        parts = {li: [] for li in need}
+        for lo in range(0, len(context), chunk):
+            c = torch.as_tensor(context[lo:lo + chunk], dtype=torch.float32, device=self.device)
+            with torch.enable_grad():
+                x, mask, _ = self._embed(c)
+                tmask = self._invert(mask)[:, None, None, :]
+                pos = torch.arange(x.shape[1], device=self.device).unsqueeze(0)
+                alone = torch.zeros(1, 1, 1, 1, device=self.device)
+                delta = {li: torch.zeros(len(c), self.n_out, x.shape[-1], device=self.device, requires_grad=True)
+                         for li in need}
+                for li, block in enumerate(self.m.encoder.block):
+                    tsa, gsa, ffn = block.layer
+                    x = tsa(x, attention_mask=tmask, position_ids=pos)[0]
+                    out = gsa.self_attention(gsa.layer_norm(x).reshape(-1, 1, x.shape[-1]), mask=alone)[0]
+                    out = out.reshape(x.shape)
+                    if li in delta:
+                        out = torch.cat([out[:, :-self.n_out], out[:, -self.n_out:] + delta[li]], 1)
+                    x = ffn(x + out)
+                h = self.m.encoder.final_layer_norm(x[:, -self.n_out:])
+                preds = rearrange(self.m.output_patch_embedding(h), "b n (q p) -> b q (n p)", n=self.n_out,
+                                  q=self.m.num_quantiles, p=self.m.chronos_config.output_patch_size)[:, med]
+                jac = {li: torch.empty(len(c), preds.shape[1], self.n_out, x.shape[-1]) for li in need}
+                for t in range(preds.shape[1]):
+                    g = torch.autograd.grad(preds[:, t].sum(), [delta[li] for li in need], retain_graph=True)
+                    for li, gi in zip(need, g):
+                        jac[li][:, t] = gi.float().cpu()
+            for li in need:
+                parts[li].append(jac[li].numpy())
+        return {li: np.concatenate(parts[li]) for li in need}
+
+    @torch.no_grad()
+    def head_jacobian(self, context, heads) -> np.ndarray:
+        """forecast_jacobian through each (layer, head)'s slice of W_O: (N, n_heads_used, n_out, pred_len,
+        head_dim), so that J (v W_O) = this times v for the head's value v at a forecast column."""
+        jac = self.forecast_jacobian(context, [li for li, _ in heads])
+        out = []
+        for li, hi in heads:
+            mha = self.m.encoder.block[li].layer[1].self_attention
+            d = mha.kv_proj_dim
+            w = mha.o.weight[:, hi * d:(hi + 1) * d].float().cpu().numpy()
+            out.append(np.einsum("ntcD,Dd->nctd", jac[li], w))
+        return np.stack(out, 1)
+
+    def head_vectors(self, context, future, heads, values=False):
+        """query and key (and value) vectors of the given (layer, head)s at the forecast
+        columns, each row run on its own: arrays (N, n_heads_used, n_out, head_dim)."""
+        return self.alone_features(context, future, heads, (), ("q", "k", "v") if values else ("q", "k"))
 
     @torch.no_grad()
     def head_out_gram(self, heads) -> np.ndarray:
@@ -265,6 +322,19 @@ class Chronos2Rows:
             w = mha.o.weight[:, hi * d:(hi + 1) * d].float()
             out.append((w.T @ w).cpu().numpy())
         return np.stack(out)
+
+    def head_out_joint_gram(self, heads) -> np.ndarray:
+        """(n_heads_used * head_dim,) ** 2 Gram matrix W^T W of the heads' slices of the output projections
+        side by side (W = [W_O,1 ... W_O,n], hidden x n * head_dim), so that |sum_h v_h W_O,h| =
+        sqrt(v G v^T) for v the heads' values concatenated; heads of different layers add in the residual
+        stream."""
+        w = []
+        for li, hi in heads:
+            mha = self.m.encoder.block[li].layer[1].self_attention
+            d = mha.kv_proj_dim
+            w.append(mha.o.weight[:, hi * d:(hi + 1) * d].float())
+        w = torch.cat(w, 1)
+        return (w.T @ w).cpu().numpy()
 
     @torch.no_grad()
     def head_attention(self, context, ex_ctx, ex_fut, row_valid, heads, hide=()) -> np.ndarray:

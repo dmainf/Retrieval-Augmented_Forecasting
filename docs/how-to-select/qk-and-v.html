@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>qk と v を組み合わせて選ぶ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root {
+  --ground: #F2F5F7;
+  --surface: #FFFFFF;
+  --surface-sunk: #E9EEF2;
+  --ink: #131A21;
+  --ink-soft: #5C6873;
+  --ink-faint: #8794A1;
+  --rule: #D6DEE5;
+  --rule-soft: #E5EBF0;
+  --accent: #2F5F8F;
+  --accent-wash: rgba(47, 95, 143, 0.10);
+  --oracle: #B0621C;
+  --oracle-wash: rgba(176, 98, 28, 0.12);
+  --f-display: "Zen Old Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --f-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --f-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0F141A;
+    --surface: #161E26;
+    --surface-sunk: #1C262F;
+    --ink: #E3EAF1;
+    --ink-soft: #97A5B3;
+    --ink-faint: #6E7D8C;
+    --rule: #2A3540;
+    --rule-soft: #222C36;
+    --accent: #7FB0DC;
+    --accent-wash: rgba(127, 176, 220, 0.13);
+    --oracle: #E0A164;
+    --oracle-wash: rgba(224, 161, 100, 0.14);
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0F141A;
+  --surface: #161E26;
+  --surface-sunk: #1C262F;
+  --ink: #E3EAF1;
+  --ink-soft: #97A5B3;
+  --ink-faint: #6E7D8C;
+  --rule: #2A3540;
+  --rule-soft: #222C36;
+  --accent: #7FB0DC;
+  --accent-wash: rgba(127, 176, 220, 0.13);
+  --oracle: #E0A164;
+  --oracle-wash: rgba(224, 161, 100, 0.14);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 16px;
+  line-height: 1.85;
+  -webkit-font-smoothing: antialiased;
+}
+.page { padding: 0 16px 96px; }
+.prose { max-width: 40rem; margin-inline: auto; }
+.wide  { max-width: 56rem; margin-inline: auto; }
+a { color: var(--accent); }
+.masthead { border-bottom: 1px solid var(--rule); padding: 64px 0 40px; margin-bottom: 56px; }
+.kicker {
+  font-family: var(--f-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0 0 18px;
+}
+h1 {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: clamp(2rem, 5.5vw, 2.9rem);
+  line-height: 1.3;
+  margin: 0 0 20px;
+  text-wrap: balance;
+  word-break: keep-all;
+}
+.standfirst { font-size: 1.03rem; color: var(--ink-soft); margin: 0; max-width: 36rem; }
+section { margin-bottom: 72px; }
+.sec-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 10px;
+  margin-bottom: 28px;
+}
+.sec-num { font-family: var(--f-mono); font-size: 0.78rem; font-weight: 600; color: var(--accent); letter-spacing: 0.06em; flex: none; }
+h2 { font-family: var(--f-display); font-weight: 700; font-size: 1.42rem; line-height: 1.45; margin: 0; }
+h3 { font-size: 1.02rem; font-weight: 700; margin: 38px 0 12px; }
+p { margin: 0 0 1.15em; }
+code {
+  font-family: var(--f-mono);
+  font-size: 0.85em;
+  background: var(--surface-sunk);
+  padding: 0.12em 0.4em;
+  border-radius: 3px;
+}
+pre {
+  font-family: var(--f-mono);
+  font-size: 0.78rem;
+  line-height: 1.6;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 14px 16px;
+  margin: 0.4em 0 1.15em;
+  overflow-x: auto;
+}
+.plate { background: var(--surface); border: 1px solid var(--rule); border-radius: 4px; margin: 32px 0; overflow: hidden; }
+.plate-body { padding: 18px 24px; }
+.plate-cap {
+  border-top: 1px solid var(--rule-soft);
+  padding: 12px 24px 14px;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  background: var(--surface-sunk);
+}
+.plate-cap b {
+  font-family: var(--f-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  color: var(--ink-faint);
+  display: block;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.table-scroll { overflow-x: auto; }
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 560px;
+  font-family: var(--f-mono);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+th, td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--rule-soft); white-space: nowrap; }
+thead th { font-weight: 600; font-size: 0.7rem; letter-spacing: 0.06em; color: var(--ink-faint); border-bottom: 1px solid var(--rule); vertical-align: bottom; }
+thead th.wrap { white-space: normal; min-width: 5.5em; }
+tbody th { text-align: left; font-family: var(--f-body); font-weight: 500; font-size: 0.86rem; color: var(--ink); }
+tr.main td, tr.main th { background: var(--accent-wash); }
+tr.sep td, tr.sep th { border-top: 1px solid var(--rule); }
+td.sub, .sub { color: var(--ink-faint); }
+td.hd { text-align: left; font-size: 0.74rem; color: var(--ink-soft); }
+.tl { font-family: var(--f-mono); font-size: 0.95em; }
+table.res { min-width: 1080px; }
+table.list { min-width: 720px; }
+table.list td.f { text-align: left; font-size: 0.8rem; white-space: normal; }
+table.res td.f { text-align: left; font-size: 0.78rem; }
+code.opt { font-size: 0.7rem; color: var(--ink-faint); background: none; padding: 0; }
+tbody tr:last-child td, tbody tr:last-child th { border-bottom: none; }
+ul.tight { padding-left: 1.2em; margin: 0 0 1.15em; }
+ul.tight li { margin-bottom: 0.5em; }
+.diagram { display: block; width: 100%; height: auto; }
+.diagram text { font-family: var(--f-body); }
+.diagram .d-key { font-size: 12px; fill: var(--ink-soft); }
+.diagram .d-title { font-size: 13px; font-weight: 700; fill: var(--ink); }
+.diagram .d-lab { font-size: 11px; fill: var(--ink-faint); }
+.diagram .d-key-strong { font-size: 12.5px; font-weight: 700; fill: var(--ink); }
+.diagram .d-sep { stroke: var(--rule-soft); stroke-width: 1; }
+.diagram .d-ctx { fill: var(--surface-sunk); stroke: var(--rule); stroke-width: 1; }
+.diagram .d-hid { fill: var(--surface); stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.diagram .d-fut { fill: var(--oracle-wash); stroke: var(--oracle); stroke-width: 1; }
+.diagram .d-flow { fill: none; stroke: var(--ink-faint); stroke-width: 1.5; }
+.diagram .d-ah { fill: var(--ink-faint); }
+.diagram .d-self { fill: var(--surface); stroke: var(--ink); stroke-width: 2; }
+.diagram .d-phid { fill: var(--surface); stroke: var(--accent); stroke-width: 2; }
+.diagram .d-ptrue { fill: var(--oracle); }
+.diagram .d-a-state { stroke: var(--ink-faint); stroke-width: 2.5; }
+.diagram .d-a-surp { stroke: var(--oracle); stroke-width: 2.5; }
+.diagram .d-a-recv { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 6 4; }
+.diagram .d-ah-state { fill: var(--ink-faint); }
+.diagram .d-ah-surp { fill: var(--oracle); }
+.diagram .d-ah-recv { fill: var(--accent); }
+.diagram .d-t-recv { font-size: 12px; font-weight: 700; fill: var(--accent); }
+.diagram .d-ah-q { fill: var(--ink); }
+.diagram .d-drop-h { stroke: var(--accent); stroke-width: 1; stroke-dasharray: 3 3; }
+.diagram .d-drop-k { stroke: var(--oracle); stroke-width: 1; stroke-dasharray: 3 3; }
+.diagram .d-pt { fill: var(--accent); }
+.diagram .d-box { fill: var(--surface-sunk); stroke: var(--rule); stroke-width: 1; }
+math[display="block"].eq { display: block math; margin: 18px 0 22px; padding: 14px 18px; background: var(--surface); border: 1px solid var(--rule-soft); border-left: 3px solid var(--accent); border-radius: 0 4px 4px 0; overflow-x: auto; font-size: 1.06em; }
+math.eq mtd { text-align: left; }
+
+.fig { --m-rand: #9AA5B1; --m-prop: var(--ink); --m-avpre: #2a78d6; --m-vpre: #1baf7a; --m-ff: #eb6834; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .fig { --m-rand: #6E7D8C; --m-avpre: #3987e5; --m-vpre: #199e70; --m-ff: #d95926; } }
+:root[data-theme="dark"] .fig { --m-rand: #6E7D8C; --m-avpre: #3987e5; --m-vpre: #199e70; --m-ff: #d95926; }
+.fig svg { display: block; width: 100%; height: auto; }
+.fig text { font-family: var(--f-mono); font-size: 11px; fill: var(--ink-soft); }
+.fig text.jp { font-family: var(--f-body); font-size: 11.5px; }
+.fig text.t-ink { fill: var(--ink); }
+.fig text.t-b { font-weight: 700; }
+.fig text.t-small { font-size: 10px; }
+.fig text.t-head { fill: var(--ink); font-family: var(--f-body); font-size: 12.5px; font-weight: 700; }
+.fig text.lbl-orc { fill: var(--oracle); font-weight: 600; }
+.fig .grid { stroke: var(--rule-soft); stroke-width: 1; }
+.fig .zero { stroke: var(--ink-faint); stroke-width: 1.2; }
+.fig .pt { fill: var(--surface); stroke: var(--ink); stroke-width: 2; }
+.fig .cell-ctx { fill: var(--surface-sunk); stroke: var(--rule); }
+.fig .cell-reg { fill: var(--rule-soft); stroke: var(--rule); }
+.fig .cell-hid { fill: var(--surface); stroke: var(--ink-faint); stroke-dasharray: 3 2; }
+.fig .cell-fut { fill: var(--oracle-wash); stroke: var(--oracle); }
+.fig .band { fill: var(--accent-wash); stroke: var(--accent); stroke-width: 1.2; }
+.fig .proj { stroke: var(--ink-faint); stroke-width: 1.2; stroke-dasharray: 3 3; }
+.fig .arc { fill: none; stroke: var(--ink-soft); stroke-width: 1.2; }
+.fig .brace { stroke: var(--ink-faint); stroke-width: 1; }
+.fig .dot-all { fill: var(--ink-faint); opacity: 0.45; }
+.takeaway { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; margin: 0 0 1.15em; }
+details.num { margin: 0 0 1.15em; }
+details.num summary { cursor: pointer; color: var(--ink-soft); font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="masthead">
+  <div class="prose">
+    <p class="kicker"><a href="../raf-note.html">RAF 研究ノート</a> · 選び方 · 2026-11-23 · ETTh1 / Chronos-2（凍結） · val</p>
+    <h1>qk と v を<wbr>組み合わせて<wbr>選ぶ</h1>
+    <p class="standfirst">
+      qk の重みを v 前項の大きさで割った点数（qk ÷ v 前項）で事例を選び，ETTh1 の val で MSE を参照なしと比べた．選んだ事例の寄与はクエリが自分の続きを知ったときの変化と同じ向きに近づいたが，その向きの近さでは点数ごとの MSE の違いを説明できなかった．5 つのデータセットの test の結果は <a href="../analysis/test-6datasets.html">6 つのデータセットの test の結果</a> の 3 節にある．
+    </p>
+  </div>
+</header>
+
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">1</span><h2>事例を入れると何が変わるか</h2></div>
+    <p>記号は <a href="qkv-split.html">q，k，v の使い方で選ぶ</a> と同じ．</p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body fig"><svg viewBox="0 0 680 250" role="img" aria-label="クエリと候補の行，v の差の前項と変化項への分解"><defs><marker id="ah-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink)"/></marker><marker id="ah-soft" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink-soft)"/></marker><marker id="ah-faint" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink-faint)"/></marker><marker id="ah-orc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--oracle)"/></marker></defs><text x="16" y="20" text-anchor="start" class="t-head">クエリの行と候補の行（予測パッチの 1 列）</text><text x="16" y="61" text-anchor="start" class="jp">クエリ</text><rect x="64" y="44" width="18" height="24" rx="2" class="cell-ctx"/><rect x="86" y="44" width="18" height="24" rx="2" class="cell-ctx"/><rect x="108" y="44" width="18" height="24" rx="2" class="cell-ctx"/><rect x="130" y="44" width="18" height="24" rx="2" class="cell-ctx"/><rect x="152" y="44" width="18" height="24" rx="2" class="cell-ctx"/><rect x="174" y="44" width="18" height="24" rx="2" class="cell-ctx"/><rect x="196" y="44" width="18" height="24" rx="2" class="cell-reg"/><rect x="218" y="44" width="18" height="24" rx="2" class="cell-hid"/><rect x="240" y="44" width="18" height="24" rx="2" class="cell-hid"/><rect x="262" y="44" width="18" height="24" rx="2" class="cell-hid"/><rect x="284" y="44" width="18" height="24" rx="2" class="cell-hid"/><text x="16" y="101" text-anchor="start" class="jp">候補 1</text><rect x="64" y="84" width="18" height="24" rx="2" class="cell-ctx"/><rect x="86" y="84" width="18" height="24" rx="2" class="cell-ctx"/><rect x="108" y="84" width="18" height="24" rx="2" class="cell-ctx"/><rect x="130" y="84" width="18" height="24" rx="2" class="cell-ctx"/><rect x="152" y="84" width="18" height="24" rx="2" class="cell-ctx"/><rect x="174" y="84" width="18" height="24" rx="2" class="cell-ctx"/><rect x="196" y="84" width="18" height="24" rx="2" class="cell-reg"/><rect x="218" y="84" width="18" height="24" rx="2" class="cell-fut"/><rect x="240" y="84" width="18" height="24" rx="2" class="cell-fut"/><rect x="262" y="84" width="18" height="24" rx="2" class="cell-fut"/><rect x="284" y="84" width="18" height="24" rx="2" class="cell-fut"/><text x="16" y="141" text-anchor="start" class="jp">候補 2</text><rect x="64" y="124" width="18" height="24" rx="2" class="cell-ctx"/><rect x="86" y="124" width="18" height="24" rx="2" class="cell-ctx"/><rect x="108" y="124" width="18" height="24" rx="2" class="cell-ctx"/><rect x="130" y="124" width="18" height="24" rx="2" class="cell-ctx"/><rect x="152" y="124" width="18" height="24" rx="2" class="cell-ctx"/><rect x="174" y="124" width="18" height="24" rx="2" class="cell-ctx"/><rect x="196" y="124" width="18" height="24" rx="2" class="cell-reg"/><rect x="218" y="124" width="18" height="24" rx="2" class="cell-fut"/><rect x="240" y="124" width="18" height="24" rx="2" class="cell-fut"/><rect x="262" y="124" width="18" height="24" rx="2" class="cell-fut"/><rect x="284" y="124" width="18" height="24" rx="2" class="cell-fut"/><rect x="215" y="38" width="24" height="122" rx="3" class="band"/><text x="64" y="176" text-anchor="start" class="jp t-small">文脈</text><text x="218" y="176" text-anchor="start" class="jp t-small">予測区間（4 列）</text><text x="16" y="210" text-anchor="start" class="jp t-ink">事例なし：o = v<tspan baseline-shift="sub" font-size="8">0</tspan>W<tspan baseline-shift="sub" font-size="8">O</tspan>（自分だけを見る）</text><text x="16" y="232" text-anchor="start" class="jp t-ink">事例あり：o − v<tspan baseline-shift="sub" font-size="8">0</tspan>W<tspan baseline-shift="sub" font-size="8">O</tspan> = Σ s<tspan baseline-shift="sub" font-size="8">j</tspan> (v<tspan baseline-shift="sub" font-size="8">j</tspan> − v<tspan baseline-shift="sub" font-size="8">0</tspan>)W<tspan baseline-shift="sub" font-size="8">O</tspan></text><line x1="350" y1="12" x2="350" y2="236" class="grid"/><text x="372" y="20" text-anchor="start" class="t-head">候補 j の v の差を 2 つに分ける</text><line x1="400" y1="200" x2="554" y2="186" stroke="var(--ink-faint)" stroke-width="3" marker-end="url(#ah-faint)"/><line x1="560" y1="185" x2="608" y2="77" stroke="var(--ink)" stroke-width="3" marker-end="url(#ah-ink)"/><line x1="400" y1="200" x2="605" y2="76" stroke="var(--ink-soft)" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#ah-soft)"/><circle cx="400" cy="200" r="5" class="pt"/><circle cx="560" cy="185" r="5" class="pt"/><circle cx="610" cy="70" r="5" class="pt"/><text x="390" y="224" text-anchor="start" class="jp">v<tspan baseline-shift="sub" font-size="8">0</tspan> クエリ（続きなし）</text><text x="572" y="189" text-anchor="start" class="jp">ṽ<tspan baseline-shift="sub" font-size="8">j</tspan> 候補（続きを隠す）</text><text x="598" y="66" text-anchor="end" class="jp">v<tspan baseline-shift="sub" font-size="8">j</tspan> 候補（続きあり）</text><text x="480" y="182" text-anchor="middle" class="jp t-ink t-b">前項</text><text x="596" y="135" text-anchor="start" class="jp t-ink t-b">変化項</text><text x="478" y="112" text-anchor="end" class="t-ink">v<tspan baseline-shift="sub" font-size="8">j</tspan> − v<tspan baseline-shift="sub" font-size="8">0</tspan></text></svg></div>
+      <div class="plate-cap"><b>図 1　事例を入れたときのクエリの出力</b>左：Chronos-2 の group attention は，同じ列（時刻の位置）で行をまたいで混ぜる．クエリの予測区間（破線）は値を入れずに流し，候補の予測区間（橙）には実際の続きを入れる．s<sub>j</sub> は列ごとにクエリ自身と候補の上で取った q<sub>0</sub>·k の softmax，W<sub>O</sub> は出力の射影．右：<span class="tl">ṽ</span><sub>j</sub> は候補の続きを隠して流した v．前項 (<span class="tl">ṽ</span><sub>j</sub> − v<sub>0</sub>)W<sub>O</sub> は，候補とクエリをどちらも続きを隠した同じ条件で比べた差．変化項 (v<sub>j</sub> − <span class="tl">ṽ</span><sub>j</sub>)W<sub>O</sub> は，候補に実際の続きを入れたことで加わる分．どの値も行を 1 本ずつ流した前計算の値で，事例を並べて流したときの値とは一致しない．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <p class="takeaway">→ 事例を入れた分の変化は，重み s と v の差の積の和である．qk は s だけで選ぶ．</p>
+    <p class="takeaway">→ v の差のうち，クエリが持っていない続きの情報は変化項にしか入っていない．</p>
+  </div>
+</section>
+
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">2</span><h2>点数</h2></div>
+    <p>qk ÷ v 前項（<code>avpre</code>）は，qk の重み w(q<sub>0</sub>·k<sub>j</sub>) を前項の大きさ Σ‖(<span class="tl">ṽ</span><sub>j</sub> − v<sub>0</sub>)W<sub>O</sub>‖ で割った点数で，大きい順に 256 件を選ぶ．</p>
+  </div>
+</section>
+
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">3</span><h2>予測を流した結果</h2></div>
+    <p>ETTh1 の val の全起点（1162 クエリ）で予測を流した．候補 2048 件，件数 256 件，入れ方（並列の行，P1 を隠す）は同じで，点数とヘッドだけが違う．ヘッドは 2 通りある．1 つは 3 つの点数で共通の 3 本（L12H1，L11H10，L10H12）．もう 1 つは，その点数で候補を並べたときに予測対象に近い候補を上位に置くヘッド 3 本を，10〜12 層の 36 ヘッドから点数ごとに選んだもの（図 2 の白抜き）．</p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body fig"><svg viewBox="0 0 680 290" role="img" aria-label="参照なしに対する MSE の変化率"><text x="16" y="20" text-anchor="start" class="t-head">参照なしに対する MSE の変化率</text><line x1="250.0" x2="250.0" y1="32" y2="250" class="grid"/><text x="250.0" y="264" text-anchor="middle">−10%</text><line x1="322.7" x2="322.7" y1="32" y2="250" class="grid"/><text x="322.7" y="264" text-anchor="middle">−8%</text><line x1="395.5" x2="395.5" y1="32" y2="250" class="grid"/><text x="395.5" y="264" text-anchor="middle">−6%</text><line x1="468.2" x2="468.2" y1="32" y2="250" class="grid"/><text x="468.2" y="264" text-anchor="middle">−4%</text><line x1="540.9" x2="540.9" y1="32" y2="250" class="grid"/><text x="540.9" y="264" text-anchor="middle">−2%</text><line x1="613.6" x2="613.6" y1="32" y2="250" class="zero"/><text x="613.6" y="264" text-anchor="middle">0</text><text x="16" y="59.0" text-anchor="start" class="jp t-ink">ランダム</text><text x="240" y="59.0" text-anchor="end" class="t-small"></text><line x1="343.0" x2="537.1" y1="55.0" y2="55.0" stroke="var(--m-rand)" stroke-width="1.2" opacity="0.6"/><line x1="391.5" x2="488.6" y1="55.0" y2="55.0" stroke="var(--m-rand)" stroke-width="3.5" stroke-linecap="round"/><circle cx="440.0" cy="55.0" r="5" fill="var(--m-rand)" stroke="var(--m-rand)" stroke-width="2"><title>ランダム ：−4.77%±1.33</title></circle><text x="545.1" y="59.0" text-anchor="start" class="t-ink">−4.77%</text><text x="16" y="89.0" text-anchor="start" class="jp t-ink">qk</text><text x="240" y="89.0" text-anchor="end" class="t-small">L12H1 L11H10 L10H12</text><line x1="337.6" x2="509.2" y1="85.0" y2="85.0" stroke="var(--m-prop)" stroke-width="1.2" opacity="0.6"/><line x1="380.5" x2="466.3" y1="85.0" y2="85.0" stroke="var(--m-prop)" stroke-width="3.5" stroke-linecap="round"/><circle cx="423.4" cy="85.0" r="5" fill="var(--m-prop)" stroke="var(--m-prop)" stroke-width="2"><title>qk L12H1 L11H10 L10H12：−5.23%±1.18</title></circle><text x="517.2" y="89.0" text-anchor="start" class="t-ink">−5.23%</text><text x="16" y="119.0" text-anchor="start" class="jp t-ink">qk</text><text x="240" y="119.0" text-anchor="end" class="t-small">L12H1 L12H7 L12H6</text><line x1="348.4" x2="518.7" y1="115.0" y2="115.0" stroke="var(--m-prop)" stroke-width="1.2" opacity="0.6"/><line x1="391.0" x2="476.2" y1="115.0" y2="115.0" stroke="var(--m-prop)" stroke-width="3.5" stroke-linecap="round"/><circle cx="433.6" cy="115.0" r="5" fill="var(--surface)" stroke="var(--m-prop)" stroke-width="2"><title>qk L12H1 L12H7 L12H6：−4.95%±1.17</title></circle><text x="526.7" y="119.0" text-anchor="start" class="t-ink">−4.95%</text><text x="16" y="149.0" text-anchor="start" class="jp t-ink">v 前項</text><text x="240" y="149.0" text-anchor="end" class="t-small">L12H1 L11H10 L10H12</text><line x1="314.9" x2="524.5" y1="145.0" y2="145.0" stroke="var(--m-vpre)" stroke-width="1.2" opacity="0.6"/><line x1="367.3" x2="472.1" y1="145.0" y2="145.0" stroke="var(--m-vpre)" stroke-width="3.5" stroke-linecap="round"/><circle cx="419.7" cy="145.0" r="5" fill="var(--m-vpre)" stroke="var(--m-vpre)" stroke-width="2"><title>v 前項 L12H1 L11H10 L10H12：−5.33%±1.44</title></circle><text x="532.5" y="149.0" text-anchor="start" class="t-ink">−5.33%</text><text x="16" y="179.0" text-anchor="start" class="jp t-ink">v 前項</text><text x="240" y="179.0" text-anchor="end" class="t-small">L12H1 L12H8 L11H7</text><line x1="329.8" x2="532.3" y1="175.0" y2="175.0" stroke="var(--m-vpre)" stroke-width="1.2" opacity="0.6"/><line x1="380.4" x2="481.6" y1="175.0" y2="175.0" stroke="var(--m-vpre)" stroke-width="3.5" stroke-linecap="round"/><circle cx="431.0" cy="175.0" r="5" fill="var(--surface)" stroke="var(--m-vpre)" stroke-width="2"><title>v 前項 L12H1 L12H8 L11H7：−5.02%±1.39</title></circle><text x="540.3" y="179.0" text-anchor="start" class="t-ink">−5.02%</text><text x="16" y="209.0" text-anchor="start" class="jp t-ink">qk ÷ v 前項</text><text x="240" y="209.0" text-anchor="end" class="t-small">L12H1 L11H10 L10H12</text><line x1="310.1" x2="486.9" y1="205.0" y2="205.0" stroke="var(--m-avpre)" stroke-width="1.2" opacity="0.6"/><line x1="354.3" x2="442.7" y1="205.0" y2="205.0" stroke="var(--m-avpre)" stroke-width="3.5" stroke-linecap="round"/><circle cx="398.5" cy="205.0" r="5" fill="var(--m-avpre)" stroke="var(--m-avpre)" stroke-width="2"><title>qk ÷ v 前項 L12H1 L11H10 L10H12：−5.92%±1.21</title></circle><text x="494.9" y="209.0" text-anchor="start" class="t-ink">−5.92%</text><text x="16" y="239.0" text-anchor="start" class="jp t-ink">qk ÷ v 前項</text><text x="240" y="239.0" text-anchor="end" class="t-small">L12H1 L12H7 L12H8</text><line x1="316.3" x2="487.7" y1="235.0" y2="235.0" stroke="var(--m-avpre)" stroke-width="1.2" opacity="0.6"/><line x1="359.2" x2="444.9" y1="235.0" y2="235.0" stroke="var(--m-avpre)" stroke-width="3.5" stroke-linecap="round"/><circle cx="402.0" cy="235.0" r="5" fill="var(--surface)" stroke="var(--m-avpre)" stroke-width="2"><title>qk ÷ v 前項 L12H1 L12H7 L12H8：−5.82%±1.18</title></circle><text x="495.7" y="239.0" text-anchor="start" class="t-ink">−5.82%</text><text x="609.6363636363636" y="280" text-anchor="end" class="jp t-small">参照なしより小さい ←</text></svg></div>
+      <div class="plate-cap"><b>図 2　参照なしに対する MSE の変化率（ETTh1，val，1162 クエリ）</b>参照なし（事例を入れない Chronos-2，MSE 0.5383）に対する MSE の変化率（チャネルの平均）．太い線は ±1 標準誤差，細い線は ±2 標準誤差で，参照なしとの差を，チャネルごとに起点を 1000 回復元抽出して求めた．名前の右はヘッド．塗りの点は 3 つの点数で共通の 3 本（L12H1，L11H10，L10H12．11-18 の報告書で，クエリと候補を一緒に流した attention の重み（exact）で 10〜12 層から選んだもの）．白抜きの点は，<code>codes/heads.py</code> の precompute（行を 1 本ずつ流す．事例を選ぶときと同じ計算）で，その点数ごとに 10〜12 層の 36 ヘッドから順位相関の高い 3 本を選んだもの（ETTh1 の val の 420 クエリで，候補の点数と，候補の続きの予測対象への近さの順位相関）．白抜きは，ヘッドを選ぶのと評価に同じ val を使っている．1〜12 層から選ぶと qk は L12H1，L12H7，L2H9 になり，MSE は −3.13% だった．予測対象で選ぶ（−19.02%）は図から外した．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <p class="takeaway">→ どの選び方も参照なしより MSE が小さく，選び方どうしの違いは誤差棒と同じ程度である．</p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body fig"><svg viewBox="0 0 680 242" role="img" aria-label="予測対象で選ぶ事例と同じ事例の割合"><text x="16" y="20" text-anchor="start" class="t-head">予測対象で選ぶ 256 件と同じ事例の割合</text><line x1="260.0" x2="260.0" y1="30" y2="218" class="zero"/><text x="260.0" y="232" text-anchor="middle">0%</text><line x1="355.0" x2="355.0" y1="30" y2="218" class="grid"/><text x="355.0" y="232" text-anchor="middle">25%</text><line x1="450.0" x2="450.0" y1="30" y2="218" class="grid"/><text x="450.0" y="232" text-anchor="middle">50%</text><line x1="545.0" x2="545.0" y1="30" y2="218" class="grid"/><text x="545.0" y="232" text-anchor="middle">75%</text><line x1="640.0" x2="640.0" y1="30" y2="218" class="grid"/><text x="640.0" y="232" text-anchor="middle">100%</text><text x="16" y="53.0" text-anchor="start" class="jp t-ink">ランダム</text><text x="250" y="53.0" text-anchor="end" class="t-small"></text><rect x="260" y="42" width="47.3" height="14" rx="3" fill="var(--m-rand)" opacity="1"><title>ランダム ：12.4%</title></rect><text x="313.3" y="53.0" text-anchor="start" class="t-ink">12.4%</text><text x="16" y="79.0" text-anchor="start" class="jp t-ink">qk</text><text x="250" y="79.0" text-anchor="end" class="t-small">L12H1 L11H10 L10H12</text><rect x="260" y="68" width="134.1" height="14" rx="3" fill="var(--m-prop)" opacity="1"><title>qk L12H1 L11H10 L10H12：35.3%</title></rect><text x="400.1" y="79.0" text-anchor="start" class="t-ink">35.3%</text><text x="16" y="105.0" text-anchor="start" class="jp t-ink">qk</text><text x="250" y="105.0" text-anchor="end" class="t-small">L12H1 L12H7 L12H6</text><rect x="260" y="94" width="147.3" height="14" rx="3" fill="var(--m-prop)" opacity="0.55"><title>qk L12H1 L12H7 L12H6：38.8%</title></rect><text x="413.3" y="105.0" text-anchor="start" class="t-ink">38.8%</text><text x="16" y="131.0" text-anchor="start" class="jp t-ink">v 前項</text><text x="250" y="131.0" text-anchor="end" class="t-small">L12H1 L11H10 L10H12</text><rect x="260" y="120" width="145.8" height="14" rx="3" fill="var(--m-vpre)" opacity="1"><title>v 前項 L12H1 L11H10 L10H12：38.4%</title></rect><text x="411.8" y="131.0" text-anchor="start" class="t-ink">38.4%</text><text x="16" y="157.0" text-anchor="start" class="jp t-ink">v 前項</text><text x="250" y="157.0" text-anchor="end" class="t-small">L12H1 L12H8 L11H7</text><rect x="260" y="146" width="153.6" height="14" rx="3" fill="var(--m-vpre)" opacity="0.55"><title>v 前項 L12H1 L12H8 L11H7：40.4%</title></rect><text x="419.6" y="157.0" text-anchor="start" class="t-ink">40.4%</text><text x="16" y="183.0" text-anchor="start" class="jp t-ink">qk ÷ v 前項</text><text x="250" y="183.0" text-anchor="end" class="t-small">L12H1 L11H10 L10H12</text><rect x="260" y="172" width="152.5" height="14" rx="3" fill="var(--m-avpre)" opacity="1"><title>qk ÷ v 前項 L12H1 L11H10 L10H12：40.1%</title></rect><text x="418.5" y="183.0" text-anchor="start" class="t-ink">40.1%</text><text x="16" y="209.0" text-anchor="start" class="jp t-ink">qk ÷ v 前項</text><text x="250" y="209.0" text-anchor="end" class="t-small">L12H1 L12H7 L12H8</text><rect x="260" y="198" width="164.6" height="14" rx="3" fill="var(--m-avpre)" opacity="0.55"><title>qk ÷ v 前項 L12H1 L12H7 L12H8：43.3%</title></rect><text x="430.6" y="209.0" text-anchor="start" class="t-ink">43.3%</text></svg></div>
+      <div class="plate-cap"><b>図 3　予測対象で選ぶ事例と同じ事例の割合</b>予測対象で選ぶは，同じ候補 2048 件のうち，続きがクエリの予測対象に近い（RMSE が小さい）順の 256 件．クエリごとに，選んだ 256 件のうちその 256 件にも入る割合を求め，全クエリで平均した．名前の右はヘッドで，薄い棒は点数ごとに 10〜12 層から選んだ 3 本（図 2 の白抜き）．ランダムに選ぶと期待値は 12.5%．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <p class="takeaway">→ どの点数も，予測対象で選ぶ事例の半分も選べていない．重なりが多い順も，MSE の順とは一致しない．</p>
+  </div>
+  <div class="prose">
+    <details class="num"><summary>数値の表（選んだ事例の RMSE，ヘッドの順位相関，チャネルごとの値）</summary>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body table-scroll">
+        <table class="res">
+          <thead><tr><th style="text-align:left">使うもの</th><th style="text-align:left">項</th><th>MSE</th><th>MAE</th><th class="wrap">事例の続きと予測対象の RMSE</th><th class="wrap">事例どうしの RMSE</th><th class="wrap">事例の平均と予測対象の RMSE</th><th style="text-align:left">式（大きい順に選ぶ）</th><th style="text-align:left">ヘッド（順位相関）</th></tr></thead>
+          <tbody>
+            <tr class="sep"><th>ランダム</th><td class="hd" style="font-family:var(--f-body)"></td><td>−4.77%</td><td>−0.55%</td><td>1.592</td><td>1.543</td><td>1.137</td><td class="f">−</td><td class="hd">−</td></tr>
+            <tr class="sep"><th>qk</th><td class="hd" style="font-family:var(--f-body)">全体</td><td>−5.23%</td><td>−1.02%</td><td>1.283</td><td>1.269</td><td>0.883</td><td class="f">w(q<sub>0</sub>·k<sub>j</sub>)<br><code class="opt">（なし）</code></td><td class="hd">L12H1 +0.516　L11H10 +0.132　L10H12 +0.033</td></tr>
+            <tr><th></th><td class="hd" style="font-family:var(--f-body)"></td><td>−4.95%</td><td>−1.18%</td><td>1.247</td><td>1.197</td><td>0.881</td><td class="f"></td><td class="hd">L12H1 +0.516　L12H7 +0.315　L12H6 +0.239</td></tr>
+            <tr class="sep"><th>v</th><td class="hd" style="font-family:var(--f-body)">前項</td><td>−5.33%</td><td>−0.42%</td><td>1.274</td><td>1.281</td><td>0.861</td><td class="f">−Σ‖(<span class="tl">ṽ</span><sub>j</sub> − v<sub>0</sub>)W<sub>O</sub>‖<br><code class="opt">vpre</code></td><td class="hd">L12H1 +0.462　L11H10 +0.164　L10H12 +0.127</td></tr>
+            <tr><th></th><td class="hd" style="font-family:var(--f-body)"></td><td>−5.02%</td><td>−0.34%</td><td>1.260</td><td>1.261</td><td>0.857</td><td class="f"></td><td class="hd">L12H1 +0.462　L12H8 +0.367　L11H7 +0.360</td></tr>
+            <tr class="sep"><th>qk と v</th><td class="hd" style="font-family:var(--f-body)">qk 全体 ÷ v 前項</td><td>−5.92%</td><td>−1.30%</td><td>1.244</td><td>1.230</td><td>0.854</td><td class="f">w(q<sub>0</sub>·k<sub>j</sub>) ／ Σ‖(<span class="tl">ṽ</span><sub>j</sub> − v<sub>0</sub>)W<sub>O</sub>‖<br><code class="opt">avpre</code></td><td class="hd">L12H1 +0.556　L11H10 +0.188　L10H12 +0.096</td></tr>
+            <tr><th></th><td class="hd" style="font-family:var(--f-body)"></td><td>−5.82%</td><td>−1.30%</td><td>1.217</td><td>1.185</td><td>0.848</td><td class="f"></td><td class="hd">L12H1 +0.556　L12H7 +0.392　L12H8 +0.374</td></tr>
+            <tr class="sep"><th>予測対象で選ぶ</th><td class="hd" style="font-family:var(--f-body)"></td><td>−19.02%</td><td>−8.98%</td><td>0.973</td><td>0.968</td><td>0.652</td><td class="f">−</td><td class="hd">−</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="plate-cap"><b>点数ごとの結果（ETTh1，val，全起点 1162 クエリ）</b>‖·‖ は L2 ノルムで，Σ はヘッドと予測パッチ 4 列の和．s(·) は，列ごとにクエリ自身と候補の上で取った softmax（クエリ自身の項は q<sub>0</sub>·k<sub>0</sub>）．w(·) は s(·) を予測パッチ 4 列で平均し，ヘッドごとに候補の和が 1 になるようにそろえてから，ヘッドで平均したもの．式の下はオプション（<code>codes/run.py --select attn</code> の <code>--value-score</code> の値）．事例の続きと予測対象の RMSE は，クエリごとに，選んだ 256 件それぞれの続き 64 時点（その事例の文脈 512 時点の平均と標準偏差で標準化）と，クエリの予測対象 64 時点（クエリの履歴の最後 512 時点の平均と標準偏差で標準化）の RMSE を，256 件で平均し，全 1162 クエリで平均したもの．事例どうしの RMSE は，同じように標準化した 256 件の続きの 2 件ずつの組（256 × 255 組）の RMSE の平均．事例の平均と予測対象の RMSE は，256 件の続きを時点ごとに平均した 64 時点と予測対象の RMSE．どれもクエリで平均した．予測対象で選ぶ 256 件は，同じ候補 2048 件の中で事例の続きと予測対象の RMSE が小さい順の 256 件なので，その行の値（0.973）がこの列の取りうる最小値である．MSE と MAE は，参照なし（MSE 0.5383，MAE 0.4696）に対する変化率で，チャネルの平均．各点数の 1 行目は共通の 3 本（L12H1，L11H10，L10H12），2 行目は点数ごとに 10〜12 層から順位相関で選んだ 3 本．ヘッドの横の値はその点数で測った順位相関．予測対象で選ぶは，クエリの予測対象を使って選ぶので手法ではない．</div>
+    </div>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body table-scroll">
+        <table class="res">
+          <thead><tr><th style="text-align:left">使うもの</th><th style="text-align:left">項</th><th>HUFL</th><th>HULL</th><th>MUFL</th><th>MULL</th><th>LUFL</th><th>LULL</th><th>OT</th><th style="text-align:left">ヘッド</th></tr></thead>
+          <tbody>
+            <tr class="sep"><th>ランダム</th><td class="hd" style="font-family:var(--f-body)"></td><td>−3.7%</td><td>−6.2%</td><td>−4.4%</td><td>−6.5%</td><td>−8.3%</td><td>+2.0%</td><td>−3.3%</td><td class="hd">−</td></tr>
+            <tr class="sep"><th>qk</th><td class="hd" style="font-family:var(--f-body)">全体</td><td>−3.2%</td><td>−5.9%</td><td>−2.2%</td><td>−8.8%</td><td>−11.0%</td><td>+0.8%</td><td>+3.6%</td><td class="hd">L12H1 L11H10 L10H12</td></tr>
+            <tr><th></th><td class="hd" style="font-family:var(--f-body)"></td><td>−2.6%</td><td>−5.3%</td><td>−2.5%</td><td>−8.3%</td><td>−9.9%</td><td>−0.1%</td><td>+3.0%</td><td class="hd">L12H1 L12H7 L12H6</td></tr>
+            <tr class="sep"><th>v</th><td class="hd" style="font-family:var(--f-body)">前項</td><td>−3.3%</td><td>−6.4%</td><td>−1.4%</td><td>−10.4%</td><td>−11.0%</td><td>+2.7%</td><td>−2.0%</td><td class="hd">L12H1 L11H10 L10H12</td></tr>
+            <tr><th></th><td class="hd" style="font-family:var(--f-body)"></td><td>−4.5%</td><td>−3.8%</td><td>−3.1%</td><td>−8.6%</td><td>−9.3%</td><td>+0.2%</td><td>−1.0%</td><td class="hd">L12H1 L12H8 L11H7</td></tr>
+            <tr class="sep"><th>qk と v</th><td class="hd" style="font-family:var(--f-body)">qk 全体 ÷ v 前項</td><td>−3.6%</td><td>−7.5%</td><td>−3.9%</td><td>−9.7%</td><td>−10.7%</td><td>+1.4%</td><td>+1.0%</td><td class="hd">L12H1 L11H10 L10H12</td></tr>
+            <tr><th></th><td class="hd" style="font-family:var(--f-body)"></td><td>−3.5%</td><td>−6.3%</td><td>−3.8%</td><td>−9.0%</td><td>−11.5%</td><td>+0.5%</td><td>+0.4%</td><td class="hd">L12H1 L12H7 L12H8</td></tr>
+            <tr class="sep"><th>予測対象で選ぶ</th><td class="hd" style="font-family:var(--f-body)"></td><td>−17.2%</td><td>−22.6%</td><td>−20.1%</td><td>−20.4%</td><td>−21.4%</td><td>−8.7%</td><td>−30.9%</td><td class="hd">−</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="plate-cap"><b>チャネルごとの MSE（ETTh1，val）</b>値は，チャネルごとの MSE の，参照なしに対する変化率．</div>
+    </div>
+  </div>
+
+    </details>
+  </div>
+</section>
+
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">4</span><h2>選んだ事例の寄与の向き</h2></div>
+    <p>選んだ事例を入れたときのヘッドの出力の変化（寄与）Δ = Σ<sub>j</sub> s<sub>j</sub>(v<sub>j</sub> − v<sub>0</sub>)W<sub>O</sub>（1 節）を，u<sub>0</sub> = (v<sub>0</sub><sup>*</sup> − v<sub>0</sub>)W<sub>O</sub> と比べた．v<sub>0</sub><sup>*</sup> はクエリを予測対象つきで流したときの v で，* は予測対象を入れて流した値を表す．u<sub>0</sub> は予測対象を使うので分析にだけ使い，事例を選ぶときには使わない．ヘッドは L12H1，L11H10，L10H12 で，値はどれも前計算．</p>
+    <p>確かめたのは次の 2 点．どちらも cos は Δ と u<sub>0</sub> の cos，cos(Δ, u<sub>0</sub>) のことである．</p>
+    <ul class="tight">
+      <li><strong>（1）</strong>前項の小さい事例を選ぶほど，cos(Δ, u<sub>0</sub>) が大きくなるか．大きくなるなら，cos(Δ, u<sub>0</sub>) を Δ = Δ<sub>pre</sub> + Δ<sub>chg</sub>（前項の分と変化項の分）の 2 つの寄与 a<sub>pre</sub> + a<sub>chg</sub> に分けたとき（図 4），どちらが大きくなるためか．</li>
+      <li><strong>（2）</strong>cos(Δ, u<sub>0</sub>) が大きい選び方ほど，予測の MSE が小さいか．</li>
+    </ul>
+    <h3>（1）前項の小ささと cos(Δ, u<sub>0</sub>)</h3>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body fig"><svg viewBox="0 0 680 262" role="img" aria-label="（1）で測るもの"><defs><marker id="ah-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink)"/></marker><marker id="ah-soft" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink-soft)"/></marker><marker id="ah-faint" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink-faint)"/></marker><marker id="ah-orc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--oracle)"/></marker></defs><text x="16" y="20" text-anchor="start" class="t-head">（1）で測るもの：Δ = Δ<tspan baseline-shift="sub" font-size="8">pre</tspan> + Δ<tspan baseline-shift="sub" font-size="8">chg</tspan> を u<tspan baseline-shift="sub" font-size="8">0</tspan> の向きに射影する</text><line x1="70" y1="200" x2="420" y2="200" stroke="var(--oracle)" stroke-width="2.5" stroke-dasharray="7 4" marker-end="url(#ah-orc)"/><line x1="70" y1="200" x2="137" y2="114" stroke="var(--ink-faint)" stroke-width="3" marker-end="url(#ah-faint)"/><line x1="140" y1="110" x2="375" y2="42" stroke="var(--ink)" stroke-width="3" marker-end="url(#ah-ink)"/><line x1="70" y1="200" x2="375" y2="43" stroke="var(--ink-soft)" stroke-width="2" marker-end="url(#ah-soft)"/><line x1="140" y1="116" x2="140" y2="200" class="proj"/><line x1="380" y1="46" x2="380" y2="200" class="proj"/><line x1="70" x2="140" y1="216" y2="216" stroke="var(--ink-faint)" stroke-width="5"/><line x1="140" x2="380" y1="216" y2="216" stroke="var(--ink)" stroke-width="5"/><path d="M160.0,200.0 A90,90 0 0 0 150.0,158.7" class="arc"/><circle cx="70" cy="200" r="5" class="pt"/><text x="60" y="204" text-anchor="end">v<tspan baseline-shift="sub" font-size="8">0</tspan>W<tspan baseline-shift="sub" font-size="8">O</tspan></text><text x="426" y="204" text-anchor="start" class="lbl-orc">u<tspan baseline-shift="sub" font-size="8">0</tspan></text><text x="78" y="150" text-anchor="end" class="t-ink t-b">Δ<tspan baseline-shift="sub" font-size="8">pre</tspan></text><text x="262" y="66" text-anchor="middle" class="t-ink t-b">Δ<tspan baseline-shift="sub" font-size="8">chg</tspan></text><text x="300" y="140" text-anchor="middle" class="t-ink t-b">Δ</text><text x="166" y="186" text-anchor="start" class="t-ink t-b">θ</text><text x="105.0" y="238" text-anchor="middle" class="jp t-small">Δ<tspan baseline-shift="sub" font-size="8">pre</tspan> の射影</text><text x="260.0" y="238" text-anchor="middle" class="jp t-small">Δ<tspan baseline-shift="sub" font-size="8">chg</tspan> の射影</text><text x="452" y="50" text-anchor="start" class="t-head">測るもの</text><text x="452" y="69" text-anchor="start" class="jp">・前項の大きさ</text><text x="452" y="88" text-anchor="start" class="jp">・cos(Δ, u<tspan baseline-shift="sub" font-size="8">0</tspan>) = cos θ</text><text x="452" y="107" text-anchor="start" class="jp">・a<tspan baseline-shift="sub" font-size="8">pre</tspan> = Δ<tspan baseline-shift="sub" font-size="8">pre</tspan> の射影の長さ ／ ‖Δ‖</text><text x="452" y="126" text-anchor="start" class="jp">・a<tspan baseline-shift="sub" font-size="8">chg</tspan> = Δ<tspan baseline-shift="sub" font-size="8">chg</tspan> の射影の長さ ／ ‖Δ‖</text><text x="452" y="145" text-anchor="start" class="jp">　cos θ = a<tspan baseline-shift="sub" font-size="8">pre</tspan> + a<tspan baseline-shift="sub" font-size="8">chg</tspan></text><text x="452" y="164" text-anchor="start" class="jp"></text><text x="452" y="183" text-anchor="start" class="t-head">確かめること</text><text x="452" y="202" text-anchor="start" class="jp">前項が小さい選び方ほど cos θ が</text><text x="452" y="221" text-anchor="start" class="jp">大きいか．大きいなら，a<tspan baseline-shift="sub" font-size="8">pre</tspan> と</text><text x="452" y="240" text-anchor="start" class="jp">a<tspan baseline-shift="sub" font-size="8">chg</tspan> のどちらが大きいためか．</text></svg></div>
+      <div class="plate-cap"><b>図 4　（1）で測るもの（模式図）</b>Δ は選んだ 256 件 S を入れたときのヘッドの出力の変化 Σ<sub>j∈S</sub> s<sub>j</sub>(v<sub>j</sub> − v<sub>0</sub>)W<sub>O</sub> で，前項の分 Δ<sub>pre</sub> = Σ<sub>j∈S</sub> s<sub>j</sub>(<span class="tl">ṽ</span><sub>j</sub> − v<sub>0</sub>)W<sub>O</sub> と変化項の分 Δ<sub>chg</sub> = Σ<sub>j∈S</sub> s<sub>j</sub>(v<sub>j</sub> − <span class="tl">ṽ</span><sub>j</sub>)W<sub>O</sub> の和．s<sub>j</sub> はクエリ自身と S の上の softmax．u<sub>0</sub> = (v<sub>0</sub><sup>*</sup> − v<sub>0</sub>)W<sub>O</sub>（橙の破線）．Δ を u<sub>0</sub> の向きに射影した長さを ‖Δ‖ で割ると cos θ になり，それは Δ<sub>pre</sub> と Δ<sub>chg</sub> の射影の長さ（下の灰色と白の帯）を ‖Δ‖ で割った a<sub>pre</sub> と a<sub>chg</sub> の和に分かれる．a<sub>chg</sub> は Δ<sub>chg</sub> が u<sub>0</sub> の向きに近いほど，また Δ<sub>pre</sub> に比べて長いほど大きい．どの量もヘッドと予測パッチ 4 列ごとに求めて平均する．</div>
+    </div>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body fig"><svg viewBox="0 0 680 244" role="img" aria-label="前項の大きさと cos"><text x="16" y="20" text-anchor="start" class="t-head">（1）前項の大きさと cos(Δ, u<tspan baseline-shift="sub" font-size="8">0</tspan>) の分解（L12H1 L11H10 L10H12）</text><text x="150" y="52" text-anchor="middle" class="jp t-ink t-b">前項の大きさ</text><line x1="232.9" x2="232.9" y1="60" y2="202" class="grid"/><text x="232.9" y="216" text-anchor="middle">0.66</text><line x1="286.4" x2="286.4" y1="60" y2="202" class="grid"/><text x="286.4" y="216" text-anchor="middle">0.69</text><line x1="340.0" x2="340.0" y1="60" y2="202" class="grid"/><text x="340.0" y="216" text-anchor="middle">0.72</text><text x="215" y="52" text-anchor="start" class="t-ink t-b">cos(Δ, u<tspan baseline-shift="sub" font-size="8">0</tspan>)</text><line x1="215" x2="340" y1="83.0" y2="83.0" class="grid"/><circle cx="237.5" cy="83.0" r="5" fill="var(--ink)" stroke="var(--surface)" stroke-width="2"><title>ランダム cos(Δ, u<tspan baseline-shift="sub" font-size="8">0</tspan>)：0.663</title></circle><text x="237.5" y="74.0" text-anchor="middle" class="t-small t-ink">0.663</text><line x1="215" x2="340" y1="117.0" y2="117.0" class="grid"/><circle cx="296.0" cy="117.0" r="5" fill="var(--ink)" stroke="var(--surface)" stroke-width="2"><title>qk cos(Δ, u<tspan baseline-shift="sub" font-size="8">0</tspan>)：0.695</title></circle><text x="296.0" y="108.0" text-anchor="middle" class="t-small t-ink">0.695</text><line x1="215" x2="340" y1="151.0" y2="151.0" class="grid"/><circle cx="312.2" cy="151.0" r="5" fill="var(--ink)" stroke="var(--surface)" stroke-width="2"><title>qk ÷ v 前項 cos(Δ, u<tspan baseline-shift="sub" font-size="8">0</tspan>)：0.704</title></circle><text x="312.2" y="142.0" text-anchor="middle" class="t-small t-ink">0.704</text><line x1="215" x2="340" y1="185.0" y2="185.0" class="grid"/><circle cx="320.3" cy="185.0" r="5" fill="var(--ink)" stroke="var(--surface)" stroke-width="2"><title>v 前項 cos(Δ, u<tspan baseline-shift="sub" font-size="8">0</tspan>)：0.709</title></circle><text x="320.3" y="176.0" text-anchor="middle" class="t-small t-ink">0.709</text><line x1="379.6" x2="379.6" y1="60" y2="202" class="grid"/><text x="379.6" y="216" text-anchor="middle">0.42</text><line x1="437.3" x2="437.3" y1="60" y2="202" class="grid"/><text x="437.3" y="216" text-anchor="middle">0.48</text><line x1="495.0" x2="495.0" y1="60" y2="202" class="grid"/><text x="495.0" y="216" text-anchor="middle">0.54</text><text x="370" y="52" text-anchor="start" class="t-ink t-b">a<tspan baseline-shift="sub" font-size="8">chg</tspan></text><line x1="370" x2="495" y1="83.0" y2="83.0" class="grid"/><circle cx="384.3" cy="83.0" r="5" fill="var(--ink)" stroke="var(--surface)" stroke-width="2"><title>ランダム a<tspan baseline-shift="sub" font-size="8">chg</tspan>：0.425</title></circle><text x="384.3" y="74.0" text-anchor="middle" class="t-small t-ink">0.425</text><line x1="370" x2="495" y1="117.0" y2="117.0" class="grid"/><circle cx="456.4" cy="117.0" r="5" fill="var(--ink)" stroke="var(--surface)" stroke-width="2"><title>qk a<tspan baseline-shift="sub" font-size="8">chg</tspan>：0.500</title></circle><text x="456.4" y="108.0" text-anchor="middle" class="t-small t-ink">0.500</text><line x1="370" x2="495" y1="151.0" y2="151.0" class="grid"/><circle cx="471.6" cy="151.0" r="5" fill="var(--ink)" stroke="var(--surface)" stroke-width="2"><title>qk ÷ v 前項 a<tspan baseline-shift="sub" font-size="8">chg</tspan>：0.516</title></circle><text x="471.6" y="142.0" text-anchor="middle" class="t-small t-ink">0.516</text><line x1="370" x2="495" y1="185.0" y2="185.0" class="grid"/><circle cx="484.6" cy="185.0" r="5" fill="var(--ink)" stroke="var(--surface)" stroke-width="2"><title>v 前項 a<tspan baseline-shift="sub" font-size="8">chg</tspan>：0.529</title></circle><text x="484.6" y="176.0" text-anchor="middle" class="t-small t-ink">0.529</text><line x1="540.6" x2="540.6" y1="60" y2="202" class="grid"/><text x="540.6" y="216" text-anchor="middle">0.18</text><line x1="587.5" x2="587.5" y1="60" y2="202" class="grid"/><text x="587.5" y="216" text-anchor="middle">0.21</text><line x1="634.4" x2="634.4" y1="60" y2="202" class="grid"/><text x="634.4" y="216" text-anchor="middle">0.24</text><text x="525" y="52" text-anchor="start" class="t-ink t-b">a<tspan baseline-shift="sub" font-size="8">pre</tspan></text><line x1="525" x2="650" y1="83.0" y2="83.0" class="grid"/><circle cx="630.7" cy="83.0" r="5" fill="var(--ink)" stroke="var(--surface)" stroke-width="2"><title>ランダム a<tspan baseline-shift="sub" font-size="8">pre</tspan>：0.238</title></circle><text x="630.7" y="74.0" text-anchor="middle" class="t-small t-ink">0.238</text><line x1="525" x2="650" y1="117.0" y2="117.0" class="grid"/><circle cx="564.8" cy="117.0" r="5" fill="var(--ink)" stroke="var(--surface)" stroke-width="2"><title>qk a<tspan baseline-shift="sub" font-size="8">pre</tspan>：0.195</title></circle><text x="564.8" y="108.0" text-anchor="middle" class="t-small t-ink">0.195</text><line x1="525" x2="650" y1="151.0" y2="151.0" class="grid"/><circle cx="554.3" cy="151.0" r="5" fill="var(--ink)" stroke="var(--surface)" stroke-width="2"><title>qk ÷ v 前項 a<tspan baseline-shift="sub" font-size="8">pre</tspan>：0.189</title></circle><text x="554.3" y="142.0" text-anchor="middle" class="t-small t-ink">0.189</text><line x1="525" x2="650" y1="185.0" y2="185.0" class="grid"/><circle cx="540.4" cy="185.0" r="5" fill="var(--ink)" stroke="var(--surface)" stroke-width="2"><title>v 前項 a<tspan baseline-shift="sub" font-size="8">pre</tspan>：0.180</title></circle><text x="540.4" y="176.0" text-anchor="middle" class="t-small t-ink">0.180</text><text x="16" y="87.0" text-anchor="start" class="jp t-ink">ランダム</text><text x="150" y="87.0" text-anchor="middle" class="t-ink">3.60</text><text x="16" y="121.0" text-anchor="start" class="jp t-ink">qk</text><text x="150" y="121.0" text-anchor="middle" class="t-ink">3.12</text><text x="16" y="155.0" text-anchor="start" class="jp t-ink">qk ÷ v 前項</text><text x="150" y="155.0" text-anchor="middle" class="t-ink">2.82</text><text x="16" y="189.0" text-anchor="start" class="jp t-ink">v 前項</text><text x="150" y="189.0" text-anchor="middle" class="t-ink">2.60</text><text x="16" y="236" text-anchor="start" class="jp t-small">上から前項が大きい順．cos(Δ, u<tspan baseline-shift="sub" font-size="8">0</tspan>) = a<tspan baseline-shift="sub" font-size="8">chg</tspan> + a<tspan baseline-shift="sub" font-size="8">pre</tspan>．横軸は 0 から始まらない</text></svg></div>
+      <div class="plate-cap"><b>図 5　（1）前項の大きさと cos(Δ, u<sub>0</sub>) の分解</b>選び方を，前項の大きさ（Σ‖(<span class="tl">ṽ</span><sub>j</sub> − v<sub>0</sub>)W<sub>O</sub>‖，ヘッドと予測パッチ 4 列の和，選んだ 256 件の平均）が大きい順に上から並べた．a<sub>pre</sub> = ⟨Δ<sub>pre</sub>, u<sub>0</sub>⟩ ／ (‖Δ‖‖u<sub>0</sub>‖)，a<sub>chg</sub> = ⟨Δ<sub>chg</sub>, u<sub>0</sub>⟩ ／ (‖Δ‖‖u<sub>0</sub>‖) で，ヘッドと予測パッチ 4 列ごとに cos(Δ, u<sub>0</sub>) = a<sub>pre</sub> + a<sub>chg</sub>（図 4）．列ごとに横軸の範囲が違い，0 から始まらない．どれも全クエリの平均（チャネルごとに起点で平均してからチャネルで平均）で，標準誤差はどれも 0.002 未満．予測対象で選ぶ（前項 3.09）は cos(Δ, u<sub>0</sub>) 0.715，a<sub>chg</sub> 0.526，a<sub>pre</sub> 0.189．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <p class="takeaway">→ （1）は成り立つ．図 5 を上から下へ読むと（前項が小さくなる順），</p>
+    <ul class="tight">
+      <li>cos(Δ, u<sub>0</sub>) は，上から下へ大きくなる．</li>
+      <li>a<sub>chg</sub> は，上から下へ大きくなる．</li>
+      <li>a<sub>pre</sub> は，上から下へ小さくなる．</li>
+    </ul>
+    <p>cos(Δ, u<sub>0</sub>) の増え方は a<sub>chg</sub> の増え方から来ていて，a<sub>pre</sub> はそれを少し打ち消す向きに動く．前項の小さい選び方では，Δ<sub>pre</sub> の長さ ‖Δ<sub>pre</sub>‖ ／ ‖u<sub>0</sub>‖ は短くなり（0.52，0.49，0.47，0.43），cos(Δ<sub>chg</sub>, u<sub>0</sub>) は大きくなる（0.55，0.61，0.63，0.64）．ランダムと qk の間では Δ<sub>chg</sub> の長さも伸びる（0.55，0.64，0.65，0.64）．</p>
+    <h3>（2）cos(Δ, u<sub>0</sub>) と MSE</h3>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body fig"><svg viewBox="0 0 680 240" role="img" aria-label="（2）で測るもの"><defs><marker id="ah-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink)"/></marker><marker id="ah-soft" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink-soft)"/></marker><marker id="ah-faint" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink-faint)"/></marker><marker id="ah-orc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--oracle)"/></marker></defs><text x="16" y="20" text-anchor="start" class="t-head">（2）で測るもの：選び方ごとの cos(Δ, u<tspan baseline-shift="sub" font-size="8">0</tspan>) と MSE</text><line x1="70" y1="200" x2="420" y2="200" stroke="var(--oracle)" stroke-width="2.5" stroke-dasharray="7 4" marker-end="url(#ah-orc)"/><line x1="70" y1="200" x2="355" y2="152" stroke="var(--ink)" stroke-width="2.5" marker-end="url(#ah-ink)"/><line x1="70" y1="200" x2="247" y2="64" stroke="var(--ink-faint)" stroke-width="2.5" marker-end="url(#ah-faint)"/><path d="M220.0,200.0 A150,150 0 0 0 217.8,174.5" class="arc"/><path d="M140.0,200.0 A70,70 0 0 0 125.3,157.0" class="arc"/><circle cx="70" cy="200" r="5" class="pt"/><text x="68" y="222" text-anchor="start" class="jp">v<tspan baseline-shift="sub" font-size="8">0</tspan>W<tspan baseline-shift="sub" font-size="8">O</tspan>（事例なしの出力）</text><text x="390" y="222" text-anchor="start" class="lbl-orc">u<tspan baseline-shift="sub" font-size="8">0</tspan></text><text x="368" y="146" text-anchor="start" class="jp t-ink">選び方 X の Δ</text><text x="258" y="56" text-anchor="start" class="jp t-ink">選び方 Y の Δ</text><text x="226" y="190" text-anchor="start" class="t-ink t-b">θ<tspan baseline-shift="sub" font-size="8">X</tspan></text><text x="130" y="148" text-anchor="start" class="t-ink t-b">θ<tspan baseline-shift="sub" font-size="8">Y</tspan></text><text x="452" y="56" text-anchor="start" class="t-head">測るもの</text><text x="452" y="75" text-anchor="start" class="jp">・選び方ごとの cos(Δ, u<tspan baseline-shift="sub" font-size="8">0</tspan>)</text><text x="452" y="94" text-anchor="start" class="jp">　（X の cos θ<tspan baseline-shift="sub" font-size="8">X</tspan> は Y の cos θ<tspan baseline-shift="sub" font-size="8">Y</tspan> より大きい）</text><text x="452" y="113" text-anchor="start" class="jp">・選び方ごとの予測の MSE</text><text x="452" y="132" text-anchor="start" class="jp"></text><text x="452" y="151" text-anchor="start" class="t-head">確かめること</text><text x="452" y="170" text-anchor="start" class="jp">cos(Δ, u<tspan baseline-shift="sub" font-size="8">0</tspan>) が大きい選び方（X）ほど，</text><text x="452" y="189" text-anchor="start" class="jp">MSE が小さいか．</text></svg></div>
+      <div class="plate-cap"><b>図 6　（2）で測るもの（模式図）</b>選び方ごとに cos(Δ, u<sub>0</sub>)（図 4 の cos θ）を求め，その選び方で流した予測の MSE と並べる．MSE はモデルの最終出力（予測 64 時点）で測る．</div>
+    </div>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body fig"><svg viewBox="0 0 680 244" role="img" aria-label="cos と MSE"><text x="16" y="20" text-anchor="start" class="t-head">（2）cos(Δ, u<tspan baseline-shift="sub" font-size="8">0</tspan>) と MSE（L12H1 L11H10 L10H12）</text><line x1="188.6" x2="188.6" y1="60" y2="202" class="grid"/><text x="188.6" y="216" text-anchor="middle">0.66</text><line x1="245.7" x2="245.7" y1="60" y2="202" class="grid"/><text x="245.7" y="216" text-anchor="middle">0.68</text><line x1="302.9" x2="302.9" y1="60" y2="202" class="grid"/><text x="302.9" y="216" text-anchor="middle">0.70</text><line x1="360.0" x2="360.0" y1="60" y2="202" class="grid"/><text x="360.0" y="216" text-anchor="middle">0.72</text><text x="160" y="52" text-anchor="start" class="t-ink t-b">cos(Δ, u<tspan baseline-shift="sub" font-size="8">0</tspan>)</text><line x1="160" x2="360" y1="83.0" y2="83.0" class="grid"/><circle cx="196.0" cy="83.0" r="5" fill="var(--ink)" stroke="var(--surface)" stroke-width="2"><title>ランダム cos：0.663</title></circle><text x="196.0" y="74.0" text-anchor="middle" class="t-small t-ink">0.663</text><line x1="160" x2="360" y1="117.0" y2="117.0" class="grid"/><circle cx="289.5" cy="117.0" r="5" fill="var(--ink)" stroke="var(--surface)" stroke-width="2"><title>qk cos：0.695</title></circle><text x="289.5" y="108.0" text-anchor="middle" class="t-small t-ink">0.695</text><line x1="160" x2="360" y1="151.0" y2="151.0" class="grid"/><circle cx="315.5" cy="151.0" r="5" fill="var(--ink)" stroke="var(--surface)" stroke-width="2"><title>qk ÷ v 前項 cos：0.704</title></circle><text x="315.5" y="142.0" text-anchor="middle" class="t-small t-ink">0.704</text><line x1="160" x2="360" y1="185.0" y2="185.0" class="grid"/><circle cx="328.5" cy="185.0" r="5" fill="var(--ink)" stroke="var(--surface)" stroke-width="2"><title>v 前項 cos：0.709</title></circle><text x="328.5" y="176.0" text-anchor="middle" class="t-small t-ink">0.709</text><line x1="420.0" x2="420.0" y1="60" y2="202" class="grid"/><text x="420.0" y="216" text-anchor="middle">−6.5%</text><line x1="475.0" x2="475.0" y1="60" y2="202" class="grid"/><text x="475.0" y="216" text-anchor="middle">−6.0%</text><line x1="530.0" x2="530.0" y1="60" y2="202" class="grid"/><text x="530.0" y="216" text-anchor="middle">−5.5%</text><line x1="585.0" x2="585.0" y1="60" y2="202" class="grid"/><text x="585.0" y="216" text-anchor="middle">−5.0%</text><line x1="640.0" x2="640.0" y1="60" y2="202" class="grid"/><text x="640.0" y="216" text-anchor="middle">−4.5%</text><text x="420" y="52" text-anchor="start" class="jp t-ink t-b">参照なしに対する MSE の変化率</text><line x1="420" x2="640" y1="83.0" y2="83.0" class="grid"/><circle cx="609.9" cy="83.0" r="5" fill="var(--ink)" stroke="var(--surface)" stroke-width="2"><title>ランダム MSE：−4.77%</title></circle><text x="609.9" y="74.0" text-anchor="middle" class="t-small t-ink">−4.77%</text><line x1="420" x2="640" y1="117.0" y2="117.0" class="grid"/><circle cx="559.6" cy="117.0" r="5" fill="var(--ink)" stroke="var(--surface)" stroke-width="2"><title>qk MSE：−5.23%</title></circle><text x="559.6" y="108.0" text-anchor="middle" class="t-small t-ink">−5.23%</text><line x1="420" x2="640" y1="151.0" y2="151.0" class="grid"/><circle cx="484.2" cy="151.0" r="5" fill="var(--ink)" stroke="var(--surface)" stroke-width="2"><title>qk ÷ v 前項 MSE：−5.92%</title></circle><text x="484.2" y="142.0" text-anchor="middle" class="t-small t-ink">−5.92%</text><line x1="420" x2="640" y1="185.0" y2="185.0" class="grid"/><circle cx="548.3" cy="185.0" r="5" fill="var(--ink)" stroke="var(--surface)" stroke-width="2"><title>v 前項 MSE：−5.33%</title></circle><text x="548.3" y="176.0" text-anchor="middle" class="t-small t-ink">−5.33%</text><text x="16" y="87.0" text-anchor="start" class="jp t-ink">ランダム</text><text x="16" y="121.0" text-anchor="start" class="jp t-ink">qk</text><text x="16" y="155.0" text-anchor="start" class="jp t-ink">qk ÷ v 前項</text><text x="16" y="189.0" text-anchor="start" class="jp t-ink">v 前項</text><text x="16" y="236" text-anchor="start" class="jp t-small">上から cos(Δ, u<tspan baseline-shift="sub" font-size="8">0</tspan>) が小さい順．横軸は 0 から始まらない</text><text x="640" y="236" text-anchor="end" class="jp t-small">← 参照なしより小さい</text></svg></div>
+      <div class="plate-cap"><b>図 7　（2）cos(Δ, u<sub>0</sub>) と MSE</b>選び方を cos(Δ, u<sub>0</sub>)（図 4 の cos θ）が小さい順に上から並べた．左は cos(Δ, u<sub>0</sub>)，右はその選び方で流した予測の MSE の，参照なしに対する変化率（ヘッドは L12H1，L11H10，L10H12）．横軸は 0 から始まらない．（2）が成り立つなら，右の点も上から下へ左に動く．予測対象で選ぶは cos(Δ, u<sub>0</sub>) 0.715，MSE −19.02% で，図から外した．cos は前計算の値で，1 つの層の 3 本のヘッドの出力であり，そこから予測までの経路は見ていない．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <p class="takeaway">→ （2）は成り立たない．図 7 を上から下へ読むと（cos(Δ, u<sub>0</sub>) が大きくなる順），</p>
+    <ul class="tight">
+      <li>MSE の点は，上から下へ左に動かない．一番下の v 前項は，その上の qk ÷ v 前項より右にある．</li>
+      <li>図の外の予測対象で選ぶは，cos(Δ, u<sub>0</sub>) が v 前項とほぼ同じなのに，MSE はずっと小さい．</li>
+    </ul>
+    <details class="num"><summary>数値の表（寄与）</summary>
+      <div class="table-scroll">
+        <table class="res">
+          <thead><tr><th style="text-align:left">選び方</th><th>MSE</th><th class="wrap">前項の大きさ</th><th class="wrap">変化項の大きさ</th><th class="wrap">寄与と u<sub>0</sub> の cos</th><th class="wrap">a<sub>pre</sub></th><th class="wrap">a<sub>chg</sub></th><th class="wrap">cos(Δ<sub>pre</sub>, u<sub>0</sub>)</th><th class="wrap">cos(Δ<sub>chg</sub>, u<sub>0</sub>)</th><th class="wrap">‖Δ<sub>pre</sub>‖ ／ ‖u<sub>0</sub>‖</th><th class="wrap">‖Δ<sub>chg</sub>‖ ／ ‖u<sub>0</sub>‖</th></tr></thead>
+          <tbody>
+            <tr><th>ランダム</th><td>−4.77%</td><td>3.599</td><td>4.991</td><td>0.663</td><td>0.238</td><td>0.425</td><td>0.360</td><td>0.554</td><td>0.521</td><td>0.551</td></tr>
+            <tr><th>qk</th><td>−5.23%</td><td>3.125</td><td>4.996</td><td>0.695</td><td>0.195</td><td>0.500</td><td>0.315</td><td>0.608</td><td>0.493</td><td>0.636</td></tr>
+            <tr><th>qk 全体 ÷ v 前項</th><td>−5.92%</td><td>2.820</td><td>4.984</td><td>0.704</td><td>0.189</td><td>0.516</td><td>0.318</td><td>0.627</td><td>0.465</td><td>0.646</td></tr>
+            <tr><th>v 前項</th><td>−5.33%</td><td>2.600</td><td>4.994</td><td>0.709</td><td>0.180</td><td>0.529</td><td>0.312</td><td>0.643</td><td>0.434</td><td>0.639</td></tr>
+            <tr class="sep"><th>予測対象で選ぶ</th><td>−19.02%</td><td>3.091</td><td>4.875</td><td>0.715</td><td>0.189</td><td>0.526</td><td>0.308</td><td>0.641</td><td>0.492</td><td>0.615</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="sub">前項と変化項の大きさは，選んだ 256 件の Σ‖(<span class="tl">ṽ</span><sub>j</sub> − v<sub>0</sub>)W<sub>O</sub>‖ と Σ‖(v<sub>j</sub> − <span class="tl">ṽ</span><sub>j</sub>)W<sub>O</sub>‖ の平均．ほかの列は図 4 の量．値は <code>results/ETTh1_val_contrib.json</code>．</p>
+    </details>
+  </div>
+</section>
+
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">5</span><h2>そのほかの点数</h2></div>
+    <p>ほかにも，qk と v を組み合わせた点数を ETTh1 の val で流した．</p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body fig"><svg viewBox="0 0 680 418" role="img" aria-label="そのほかの点数の MSE の変化率"><text x="16" y="20" text-anchor="start" class="t-head">参照なしに対する MSE の変化率（そのほかの点数）</text><line x1="290.0" x2="290.0" y1="32" y2="378" class="grid"/><text x="290.0" y="392" text-anchor="middle">−10%</text><line x1="393.3" x2="393.3" y1="32" y2="378" class="grid"/><text x="393.3" y="392" text-anchor="middle">−5%</text><line x1="496.7" x2="496.7" y1="32" y2="378" class="zero"/><text x="496.7" y="392" text-anchor="middle">0</text><line x1="600.0" x2="600.0" y1="32" y2="378" class="grid"/><text x="600.0" y="392" text-anchor="middle">+5%</text><text x="16" y="57.0" text-anchor="start" class="jp t-ink">qk ÷ v 前項</text><text x="280" y="57.0" text-anchor="end" class="t-small">avpre</text><line x1="324.2" x2="424.6" y1="53.0" y2="53.0" stroke="var(--m-avpre)" stroke-width="1.2" opacity="0.6"/><line x1="349.3" x2="399.5" y1="53.0" y2="53.0" stroke="var(--m-avpre)" stroke-width="3.5" stroke-linecap="round"/><circle cx="374.4" cy="53.0" r="4.5" fill="var(--m-avpre)" stroke="var(--m-avpre)" stroke-width="2"><title>qk ÷ v 前項：−5.92%±1.21</title></circle><text x="432.6" y="57.0" text-anchor="start" class="t-ink">−5.92%</text><text x="16" y="83.0" text-anchor="start" class="jp t-ink">qk</text><text x="280" y="83.0" text-anchor="end" class="t-small">（なし）</text><line x1="339.8" x2="437.3" y1="79.0" y2="79.0" stroke="var(--m-prop)" stroke-width="1.2" opacity="0.6"/><line x1="364.2" x2="412.9" y1="79.0" y2="79.0" stroke="var(--m-prop)" stroke-width="3.5" stroke-linecap="round"/><circle cx="388.6" cy="79.0" r="4.5" fill="var(--m-prop)" stroke="var(--m-prop)" stroke-width="2"><title>qk：−5.23%±1.18</title></circle><text x="445.3" y="83.0" text-anchor="start" class="t-ink">−5.23%</text><line x1="16" x2="664" y1="92.0" y2="92.0" class="grid"/><text x="16" y="109.0" text-anchor="start" class="jp t-ink">qk × v ノルムの近さ</text><text x="280" y="109.0" text-anchor="end" class="t-small">vscale</text><line x1="337.3" x2="433.8" y1="105.0" y2="105.0" stroke="var(--m-rand)" stroke-width="1.2" opacity="0.6"/><line x1="361.4" x2="409.7" y1="105.0" y2="105.0" stroke="var(--m-rand)" stroke-width="3.5" stroke-linecap="round"/><circle cx="385.6" cy="105.0" r="4.5" fill="var(--m-rand)" stroke="var(--m-rand)" stroke-width="2"><title>qk × v ノルムの近さ：−5.38%±1.17</title></circle><text x="441.8" y="109.0" text-anchor="start" class="t-ink">−5.38%</text><text x="16" y="135.0" text-anchor="start" class="jp t-ink">qk ÷ (1 + v の差の比)</text><text x="280" y="135.0" text-anchor="end" class="t-small">vstab</text><line x1="339.7" x2="437.3" y1="131.0" y2="131.0" stroke="var(--m-rand)" stroke-width="1.2" opacity="0.6"/><line x1="364.1" x2="412.9" y1="131.0" y2="131.0" stroke="var(--m-rand)" stroke-width="3.5" stroke-linecap="round"/><circle cx="388.5" cy="131.0" r="4.5" fill="var(--m-rand)" stroke="var(--m-rand)" stroke-width="2"><title>qk ÷ (1 + v の差の比)：−5.24%±1.18</title></circle><text x="445.3" y="135.0" text-anchor="start" class="t-ink">−5.24%</text><text x="16" y="161.0" text-anchor="start" class="jp t-ink">qk ÷ v のノルム</text><text x="280" y="161.0" text-anchor="end" class="t-small">vnorm</text><line x1="346.6" x2="443.3" y1="157.0" y2="157.0" stroke="var(--m-rand)" stroke-width="1.2" opacity="0.6"/><line x1="370.8" x2="419.1" y1="157.0" y2="157.0" stroke="var(--m-rand)" stroke-width="3.5" stroke-linecap="round"/><circle cx="395.0" cy="157.0" r="4.5" fill="var(--m-rand)" stroke="var(--m-rand)" stroke-width="2"><title>qk ÷ v のノルム：−4.92%±1.17</title></circle><text x="451.3" y="161.0" text-anchor="start" class="t-ink">−4.92%</text><text x="16" y="187.0" text-anchor="start" class="jp t-ink">cos(q<tspan baseline-shift="sub" font-size="8">0</tspan>, k) × v ノルムの近さ</text><text x="280" y="187.0" text-anchor="end" class="t-small">cosvscale</text><line x1="336.5" x2="432.9" y1="183.0" y2="183.0" stroke="var(--m-rand)" stroke-width="1.2" opacity="0.6"/><line x1="360.6" x2="408.8" y1="183.0" y2="183.0" stroke="var(--m-rand)" stroke-width="3.5" stroke-linecap="round"/><circle cx="384.7" cy="183.0" r="4.5" fill="var(--m-rand)" stroke="var(--m-rand)" stroke-width="2"><title>cos(q<tspan baseline-shift="sub" font-size="8">0</tspan>, k) × v ノルムの近さ：−5.42%±1.17</title></circle><text x="440.9" y="187.0" text-anchor="start" class="t-ink">−5.42%</text><text x="16" y="213.0" text-anchor="start" class="jp t-ink">双方向の qk</text><text x="280" y="213.0" text-anchor="end" class="t-small">qkbi</text><line x1="340.5" x2="434.7" y1="209.0" y2="209.0" stroke="var(--m-rand)" stroke-width="1.2" opacity="0.6"/><line x1="364.0" x2="411.1" y1="209.0" y2="209.0" stroke="var(--m-rand)" stroke-width="3.5" stroke-linecap="round"/><circle cx="387.6" cy="209.0" r="4.5" fill="var(--m-rand)" stroke="var(--m-rand)" stroke-width="2"><title>双方向の qk：−5.28%±1.14</title></circle><text x="442.7" y="213.0" text-anchor="start" class="t-ink">−5.28%</text><text x="16" y="239.0" text-anchor="start" class="jp t-ink">qkv（ヘッドをまとめる）</text><text x="280" y="239.0" text-anchor="end" class="t-small">qkvo</text><line x1="337.0" x2="439.2" y1="235.0" y2="235.0" stroke="var(--m-rand)" stroke-width="1.2" opacity="0.6"/><line x1="362.5" x2="413.6" y1="235.0" y2="235.0" stroke="var(--m-rand)" stroke-width="3.5" stroke-linecap="round"/><circle cx="388.1" cy="235.0" r="4.5" fill="var(--surface)" stroke="var(--m-rand)" stroke-width="2"><title>qkv（ヘッドをまとめる）：−5.25%±1.24</title></circle><text x="447.2" y="239.0" text-anchor="start" class="t-ink">−5.25%</text><text x="16" y="265.0" text-anchor="start" class="jp t-ink">qk × v 変化項 ÷ v 前項</text><text x="280" y="265.0" text-anchor="end" class="t-small">avchpre</text><line x1="354.6" x2="457.8" y1="261.0" y2="261.0" stroke="var(--m-rand)" stroke-width="1.2" opacity="0.6"/><line x1="380.4" x2="432.0" y1="261.0" y2="261.0" stroke="var(--m-rand)" stroke-width="3.5" stroke-linecap="round"/><circle cx="406.2" cy="261.0" r="4.5" fill="var(--surface)" stroke="var(--m-rand)" stroke-width="2"><title>qk × v 変化項 ÷ v 前項：−4.38%±1.25</title></circle><text x="465.8" y="265.0" text-anchor="start" class="t-ink">−4.38%</text><text x="16" y="291.0" text-anchor="start" class="jp t-ink">ヤコビアン（大きい順）</text><text x="280" y="291.0" text-anchor="end" class="t-small">jac</text><line x1="345.1" x2="449.1" y1="287.0" y2="287.0" stroke="var(--m-rand)" stroke-width="1.2" opacity="0.6"/><line x1="371.1" x2="423.1" y1="287.0" y2="287.0" stroke="var(--m-rand)" stroke-width="3.5" stroke-linecap="round"/><circle cx="397.1" cy="287.0" r="4.5" fill="var(--m-rand)" stroke="var(--m-rand)" stroke-width="2"><title>ヤコビアン（大きい順）：−4.82%±1.26</title></circle><text x="457.1" y="291.0" text-anchor="start" class="t-ink">−4.82%</text><text x="16" y="317.0" text-anchor="start" class="jp t-ink">ヤコビアン（小さい順）</text><text x="280" y="317.0" text-anchor="end" class="t-small">jac_s</text><line x1="346.0" x2="459.3" y1="313.0" y2="313.0" stroke="var(--m-rand)" stroke-width="1.2" opacity="0.6"/><line x1="374.3" x2="431.0" y1="313.0" y2="313.0" stroke="var(--m-rand)" stroke-width="3.5" stroke-linecap="round"/><circle cx="402.6" cy="313.0" r="4.5" fill="var(--m-rand)" stroke="var(--m-rand)" stroke-width="2"><title>ヤコビアン（小さい順）：−4.55%±1.37</title></circle><text x="467.3" y="317.0" text-anchor="start" class="t-ink">−4.55%</text><text x="16" y="343.0" text-anchor="start" class="jp t-ink">qk 変化項</text><text x="280" y="343.0" text-anchor="end" class="t-small">qkchange</text><line x1="401.3" x2="531.3" y1="339.0" y2="339.0" stroke="var(--m-rand)" stroke-width="1.2" opacity="0.6"/><line x1="433.8" x2="498.8" y1="339.0" y2="339.0" stroke="var(--m-rand)" stroke-width="3.5" stroke-linecap="round"/><circle cx="466.3" cy="339.0" r="4.5" fill="var(--m-rand)" stroke="var(--m-rand)" stroke-width="2"><title>qk 変化項：−1.47%±1.57</title></circle><text x="539.3" y="343.0" text-anchor="start" class="t-ink">−1.47%</text><text x="16" y="369.0" text-anchor="start" class="jp t-ink">v 変化項</text><text x="280" y="369.0" text-anchor="end" class="t-small">vchange</text><line x1="418.4" x2="579.8" y1="365.0" y2="365.0" stroke="var(--m-rand)" stroke-width="1.2" opacity="0.6"/><line x1="458.8" x2="539.5" y1="365.0" y2="365.0" stroke="var(--m-rand)" stroke-width="3.5" stroke-linecap="round"/><circle cx="499.1" cy="365.0" r="4.5" fill="var(--m-rand)" stroke="var(--m-rand)" stroke-width="2"><title>v 変化項：+0.12%±1.95</title></circle><text x="587.8" y="369.0" text-anchor="start" class="t-ink">+0.12%</text><text x="492.66666666666663" y="408" text-anchor="end" class="jp t-small">参照なしより小さい ←</text></svg></div>
+      <div class="plate-cap"><b>図 8　そのほかの点数</b>参照なしに対する MSE の変化率．線は ±1，±2 標準誤差（図 2 と同じ）．名前の右は <code>--value-score</code> の値．ヘッドは L12H1，L11H10，L10H12 で，白抜きの 2 つ（qkvo，avchpre）だけ L12H1，L2H9，L2H10（1〜12 層から選んだもの）．v ノルムの近さは 2‖v<sub>0</sub>W<sub>O</sub>‖‖v<sub>j</sub>W<sub>O</sub>‖ ／ (‖v<sub>0</sub>W<sub>O</sub>‖<sup>2</sup> + ‖v<sub>j</sub>W<sub>O</sub>‖<sup>2</sup>) を列で平均したもので，ヘッドごとに qk か cos(q<sub>0</sub>, k<sub>j</sub>) に掛けてからヘッドで平均する．v の差の比は Σ‖(v<sub>j</sub> − v<sub>0</sub>)W<sub>O</sub>‖ ／ Σ‖v<sub>0</sub>W<sub>O</sub>‖，v のノルムは Σ‖v<sub>j</sub>W<sub>O</sub>‖（Σ はヘッドと予測パッチ 4 列の和）．双方向の qk は，qk に候補の行がクエリを読む重み σ(q<sub>j</sub>·k<sub>0</sub> − q<sub>j</sub>·k<sub>j</sub>) を掛けたもの．ヤコビアンは，事例の寄与がクエリの予測 64 時点を動かす大きさ．式は <code>codes/selection.py</code>．値は <code>results/ETTh1_val_select_eval_vsnone.json</code>．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <p class="takeaway">→ どの点数も，参照なしに対する MSE の変化率は qk ÷ v 前項より大きい．変化項の大きさで選ぶ点数（qk 変化項，v 変化項）は，参照なしとの差が標準誤差の中．</p>
+  </div>
+</section>
+
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">次</span><h2>次の一手</h2></div>
+    <ul class="tight">
+      <li><strong>qk ÷ v 前項と v 前項の MSE の違いが何から来るかを調べる．</strong>寄与の向きでも，予測対象で選ぶ事例との重なりでも説明できなかった．</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">条件</span><h2>実験条件</h2></div>
+    <ul class="tight">
+      <li><strong>データと指標</strong>：ETTh1（7 チャネル，train 12 か月，val 4 か月），履歴 512 時点，予測 64 時点，起点は val の中に 17 時点おき（チャネルあたり 166 本，計 1162 クエリ）．MSE・MAE は中央値の誤差をチャネルごとに train の標準偏差で割り，チャネルで平均する．モデルは Chronos-2（<code>amazon/chronos-2</code>）で重みは凍結．test は使っていない．</li>
+      <li><strong>共通の設定</strong>：候補はクエリごとに，起点より 96 時点以上前に終わる train の窓からランダムに 2048 件（どの点数も同じ seed で同じ候補）．上位 K=256 件を並列の行として入れ，P1 を隠す．</li>
+      <li><strong>前計算</strong>：train の 1 時点おきの窓すべて（チャネルあたり 8065 件）を，続きを入れた場合と隠した場合に 1 本ずつ流し，予測パッチ 4 列で，ヘッドの k と v を取り出して <code>results/cache/</code> に保存する．クエリは続きを隠して流す．</li>
+      <li><strong>v の大きさの測り方</strong>：ヘッドごとに W<sub>O,h</sub> のグラム行列のコレスキー因子を掛けてから L2 ノルムを取る（W<sub>O,h</sub> を掛けた空間で測るのと同じ）．</li>
+      <li><strong>実行</strong>（リポジトリの直下で．予測は 1 本あたり約 35 分）：
+<pre>python3 codes/heads.py --head-weights precompute
+python3 codes/run.py
+python3 codes/run.py --select fut=fut
+python3 codes/run.py --select random
+python3 codes/run.py --select attn --heads L12H1,L11H10,L10H12
+python3 codes/run.py --select attn --heads L12H1,L12H7,L12H6
+python3 codes/run.py --select attn --heads L12H1,L12H8,L11H7 --value-score vpre
+python3 codes/run.py --select attn --heads L12H1,L11H10,L10H12 --value-score vpre
+python3 codes/run.py --select attn --heads L12H1,L12H7,L12H8 --value-score avpre
+python3 codes/run.py --select attn --heads L12H1,L11H10,L10H12 --value-score avpre
+python3 codes/evaluate.py --compare results/ETTh1_val_none results/ETTh1_val_attn_L12H1+L11H10+L10H12 \
+    results/ETTh1_val_attn_L12H1+L12H7+L12H8_vavpre ... --out results/ETTh1_val_select_eval.json
+python3 codes/evaluate.py --compare results/ETTh1_val_none results/ETTh1_val_none results/ETTh1_val_random \
+    results/ETTh1_val_attn_L12H1+L11H10+L10H12 ... --out results/ETTh1_val_select_eval_vsnone.json
+python3 codes/evaluate.py --picks results/ETTh1_val_fut-fut results/ETTh1_val_attn_L12H1+L11H10+L10H12 \
+    results/ETTh1_val_attn_L12H1+L12H7+L12H8_vavpre ... --out results/ETTh1_val_select_picks.json
+python3 codes/contrib.py --heads L12H1,L11H10,L10H12 --runs results/ETTh1_val_attn_L12H1+L11H10+L10H12 \
+    results/ETTh1_val_attn_L12H1+L11H10+L10H12_vavpre results/ETTh1_val_attn_L12H1+L11H10+L10H12_vvpre \
+    results/ETTh1_val_random results/ETTh1_val_fut-fut --out results/ETTh1_val_contrib.json</pre>
+        表の値は <code>results/ETTh1_val_select_eval.json</code>（予測とチャネルごとの MSE），<code>results/ETTh1_val_select_eval_vsnone.json</code>（図 2 の参照なしとの差の標準誤差），<code>results/ETTh1_val_select_picks.json</code>（選んだ事例の 3 つの RMSE），<code>results/heads_ETTh1_val_precompute_h512.json</code>（ヘッドの順位相関），<code>results/ETTh1_val_contrib.json</code>（4 節の寄与）．予測対象で選ぶ行の事例どうしの RMSE と事例の平均と予測対象の RMSE は，<code>--picks</code> で予測対象で選ぶ結果自身を比べて求めた．図 3 の割合は <code>--picks</code> の <code>overlap</code>．</li>
+    </ul>
+  </div>
+</section>
+
+</div>
+</body>
+</html>

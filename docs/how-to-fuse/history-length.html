@@ -396,6 +396,11 @@ pre {
   margin: 0 0 1.15em;
   overflow-x: auto;
 }
+tr.main td, tr.main th { background: var(--accent-wash); }
+tr.sep td, tr.sep th { border-top: 1px solid var(--rule); }
+td.better { color: var(--accent); font-weight: 600; }
+td.worse { color: var(--warn); font-weight: 600; }
+td.sub, td .sub { color: var(--ink-faint); }
 </style>
 
 
@@ -466,7 +471,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
     <h1>並列の行は長い履歴の代わりか</h1>
     <p class="standfirst">
       クエリの履歴を 512〜8192 点に変え，事例なしと事例 128 件ありを比べた．<strong>並列の行は長い履歴の代わりではない</strong>．行は中央値を動かすが，区間を良くしない．
-      並列と連結の比較は<a href="../how-to-fuse/parallel-rows.html">並列と連結</a>にまとめた．既定との条件の差は末尾の「実験条件」にまとめた．
+      2 節では，提案手法で履歴を 512・2032・8192 点に変えた．並列と連結の比較は<a href="../how-to-fuse/parallel-rows.html">並列と連結</a>にまとめた．既定との条件の差は末尾の「実験条件」にまとめた．
     </p>
   </div>
 </header>
@@ -570,6 +575,63 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
   </div>
 </section>
 
+<!-- ============================== 2 -->
+<section>
+  <div class="prose">
+    <div class="sec-head"><span class="sec-num">2</span><h2>提案手法で履歴の長さを変える</h2></div>
+    <p>提案手法（<code>--select attn</code>）でも，履歴の長さを変えて参照なしと比べた．同じ val の起点（7 チャネル × 166 本）で，参照なしと提案手法を履歴 512 時点（今の設定），2032 時点（以前の設定），8192 時点（最大長）で流した．</p>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body table-scroll">
+        <table>
+          <thead><tr><th style="text-align:left">履歴</th><th style="text-align:left">選び方</th><th>MSE</th><th>MAE</th><th>QL</th><th>MSE 変化率の 95% 区間</th><th>MSE が下がった起点</th></tr></thead>
+          <tbody>
+            <tr><th>512</th><th>参照なし</th><td>0.5383</td><td>0.4696</td><td>0.1884</td><td class="sub">−</td><td class="sub">−</td></tr>
+            <tr class="main"><th>512</th><th>提案手法</th><td class="better">0.5083 <span class="sub">−5.6%</span></td><td class="better">0.4638 <span class="sub">−1.2%</span></td><td class="better">0.1851 <span class="sub">−1.8%</span></td><td>[−8.0%, −3.0%]</td><td>55.3%</td></tr>
+            <tr class="sep"><th>2032</th><th>参照なし</th><td>0.5254</td><td>0.4634</td><td>0.1852</td><td class="sub">−</td><td class="sub">−</td></tr>
+            <tr><th>2032</th><th>提案手法</th><td class="better">0.4940 <span class="sub">−6.0%</span></td><td class="better">0.4579 <span class="sub">−1.2%</span></td><td class="better">0.1821 <span class="sub">−1.7%</span></td><td>[−8.1%, −3.9%]</td><td>51.7%</td></tr>
+            <tr class="sep"><th>8192</th><th>参照なし</th><td>0.5141</td><td>0.4580</td><td>0.1825</td><td class="sub">−</td><td class="sub">−</td></tr>
+            <tr class="main"><th>8192</th><th>提案手法</th><td class="better">0.4863 <span class="sub">−5.4%</span></td><td class="better">0.4554 <span class="sub">−0.6%</span></td><td class="better">0.1807 <span class="sub">−1.0%</span></td><td>[−7.7%, −3.1%]</td><td>48.7%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="plate-cap"><b>参照なしと提案手法（ETTh1，val，7 チャネルの平均）</b>変化率は同じ履歴の参照なしに対するもの．95% 区間は，チャネルごとに起点を復元抽出して MSE の変化率を求めることを 2000 回繰り返した 2.5〜97.5 パーセンタイル．MSE が下がった起点は，起点ごとの 64 時点の MSE が参照なしより小さい割合（1162 本中）．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <h3>チャネルごと</h3>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body table-scroll">
+        <table>
+          <thead><tr><th style="text-align:left">チャネル</th><th>512 参照なし</th><th>512 提案</th><th>変化率</th><th>2032 参照なし</th><th>2032 提案</th><th>変化率</th><th>8192 参照なし</th><th>8192 提案</th><th>変化率</th></tr></thead>
+          <tbody>
+            <tr><th>HUFL</th><td>0.5662</td><td>0.5353</td><td class="better">−5.5%</td><td>0.5521</td><td>0.5248</td><td class="better">−4.9%</td><td>0.5425</td><td>0.5169</td><td class="better">−4.7%</td></tr>
+            <tr><th>HULL</th><td>0.6466</td><td>0.6042</td><td class="better">−6.6%</td><td>0.6083</td><td>0.5735</td><td class="better">−5.7%</td><td>0.6052</td><td>0.5741</td><td class="better">−5.1%</td></tr>
+            <tr><th>MUFL</th><td>0.5713</td><td>0.5353</td><td class="better">−6.3%</td><td>0.5616</td><td>0.5297</td><td class="better">−5.7%</td><td>0.5507</td><td>0.5226</td><td class="better">−5.1%</td></tr>
+            <tr><th>MULL</th><td>0.6093</td><td>0.5600</td><td class="better">−8.1%</td><td>0.5688</td><td>0.5295</td><td class="better">−6.9%</td><td>0.5754</td><td>0.5330</td><td class="better">−7.4%</td></tr>
+            <tr><th>LUFL</th><td>0.7476</td><td>0.6843</td><td class="better">−8.5%</td><td>0.7558</td><td>0.6930</td><td class="better">−8.3%</td><td>0.7194</td><td>0.6595</td><td class="better">−8.3%</td></tr>
+            <tr><th>LULL</th><td>0.5413</td><td>0.5512</td><td class="worse">+1.8%</td><td>0.5485</td><td>0.5219</td><td class="better">−4.9%</td><td>0.5253</td><td>0.5167</td><td class="better">−1.6%</td></tr>
+            <tr><th>OT</th><td>0.0857</td><td>0.0881</td><td class="worse">+2.8%</td><td>0.0829</td><td>0.0859</td><td class="worse">+3.6%</td><td>0.0805</td><td>0.0812</td><td class="worse">+0.8%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="plate-cap"><b>チャネルごとの MSE（val）</b>train の標準偏差で割った MSE．変化率は同じ履歴の参照なしに対するもの．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <ul class="tight">
+      <li><strong>どの履歴でも，提案手法の MSE は参照なしより下がる．</strong>下がる幅は 3 つの履歴でほぼ同じで，95% 区間も重なる．</li>
+      <li><strong>MAE と QL の下がる幅は MSE より小さく，履歴が最大長のときに最も小さい．</strong></li>
+      <li><strong>参照なしも提案手法も，履歴が長いほど MSE と MAE が下がる．</strong>履歴 512 時点の提案手法は，最大長の参照なしより MSE が小さく，MAE は大きい．</li>
+      <li><strong>最大長では，MSE が下がった起点は半分を下回るが，平均の MSE は下がる．</strong></li>
+      <li><strong>チャネルで見ると，5 つはどの履歴でも MSE が下がる．</strong>OT はどの履歴でも MSE が上がり，LULL は履歴 512 時点だけで上がる．</li>
+    </ul>
+  </div>
+</section>
+
 <!-- ============================== 条件 -->
 <section>
   <div class="prose">
@@ -579,6 +641,20 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
       <li>ETTh1，各チャネルを 1 変量として扱う．予測 64 点，Chronos-2 は凍結．予測の起点は val・test の中に 17 時間おき（7 チャネルで 1,162 本）．</li>
       <li><strong>既定（履歴 8192 点，事例の文脈 384 点，K=128，候補は train の 1 点おきの全窓）との差</strong>は次のとおり．</li>
       <li><strong>1 節</strong>：履歴 512〜8192 点，事例の文脈 384 点，K=128，候補は 11 点おき．ランダムは全クエリ共通のセット（seed 0・1）で，<a href="../how-to-read/patch-mask.html">パッチを隠す</a>のクエリごとのランダムとは違う．<code>codes/run.py --history 512|1024|4096|8192</code> で取った <code>results/ETTh1_val_*_h*.parquet</code>．</li>
+      <li><strong>2 節</strong>：
+        <ul class="tight">
+          <li><strong>提案手法</strong>：事例を並列の行として入れ（<code>--fusion parallel</code>），最初の予測パッチ P1 を隠し（<code>--hide P1</code>），attention で選ぶ．候補はクエリごとに，起点より 96 時点以上前に終わる train の 1 時点おきの窓からランダムに 2048 件（seed [0, crc32(チャネル), クエリ番号]）．ヘッド <code>L12H1,L12H7,L11H10</code> の重みを前計算で求め，上位 K=256 件を入れる．事例の文脈は 384 時点．</li>
+          <li><strong>条件のずれ</strong>：K=256，事例の文脈 384 時点，候補 2048 件，ヘッドは，どれも履歴 2032 時点で決めた値で，履歴 512 時点・8192 時点では選び直していない．11-04 に既定の事例の文脈を 512 時点（クエリの履歴と同じ長さ）に変えたので，このページの提案手法は既定と違う．提案手法の予測の表（<code>ETTh1_val_attn_sl384*</code>）は 11-04 に誤って消した．数値は消す前に計算したもの．ヘッドは train の末尾で履歴 2032 時点，正確な重みで決めたもの（<code>results/heads_ETTh1_exact_h2032.json</code>）．</li>
+          <li><strong>履歴 2032 時点・8192 時点の行</strong>：同じコードで <code>--history</code> だけを変えたもの．履歴 8192 時点の起点は train の大半までさかのぼる．</li>
+          <li><strong>実行</strong>：
+<pre>python3 codes/run.py                                               # results/ETTh1_val_none.parquet
+python3 codes/run.py --select attn --seq-len 384                   # results/ETTh1_val_attn_sl384.parquet
+python3 codes/run.py --history 8192                                # results/ETTh1_val_none_h8192.parquet
+python3 codes/run.py --select attn --seq-len 384 --history 8192    # results/ETTh1_val_attn_sl384_h8192.parquet
+python3 codes/evaluate.py results/ETTh1_val_*.parquet</pre>
+        提案手法は履歴 512 時点で計 27 分，8192 時点で計 31 分．チャネルごとの値，95% 区間，MSE が下がった起点の割合は scratchpad の <code>h512_detail.py</code>．</li>
+        </ul>
+      </li>
     </ul>
   </div>
 </section>
