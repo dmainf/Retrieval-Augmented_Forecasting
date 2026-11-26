@@ -117,6 +117,14 @@ h1 {
   margin: 0 0 20px;
   text-wrap: balance;
 }
+.subtitle {
+  font-family: var(--f-display);
+  font-size: 1.3rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin: -8px 0 24px;
+  text-wrap: balance;
+}
 .standfirst {
   font-size: 1.03rem;
   color: var(--ink-soft);
@@ -530,11 +538,12 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
 
 <header class="masthead">
   <div class="prose">
-    <p class="kicker">RAF 研究ノート · 論旨 · 改訂 2026-11-18 · Chronos-2（凍結）</p>
-    <h1>参照予測を文脈内学習として読む</h1>
+    <p class="kicker">RAF 研究ノート · 論旨 · 改訂 2026-11-25 · Chronos-2（凍結）</p>
+    <h1><span style="white-space:nowrap">時系列基盤モデルによる</span> <span style="white-space:nowrap">Retrieval-Augmented</span> <span style="white-space:nowrap">Forecasting</span></h1>
+    <p class="subtitle">並列入力による many-shot の文脈内学習と，基盤モデルの attention による事例の選択</p>
     <p class="standfirst">
-      過去の窓（事例）を参照して予測する RAF を，凍結した時系列基盤モデルの<strong>文脈内学習</strong>として見る．
-      Chronos-2 の <strong>time attention</strong> と <strong>group attention</strong> の性質に合わせて事例を渡し，読ませ方を学習なしで直す．
+      過去の窓（事例）を参照して予測する Retrieval-Augmented Forecasting（RAF）を，凍結した時系列基盤モデルの<strong>文脈内学習</strong>として組み立てる．
+      モデルは学習せず，Chronos-2 がすでに持つ <strong>time attention</strong> と <strong>group attention</strong> を，事例の渡し方，読ませ方，選び方のすべてに使う．
       このノートには全体の論旨を書き，提案手法の評価と解析は analysis（<a href="analysis/test-6datasets.html">test の結果</a>・<a href="analysis/mae-vs-mse.html">MAE が下がらず MSE が下がる理由</a>）に，実験は渡し方（<a href="how-to-fuse/parallel-rows.html">並列と連結</a>・<a href="how-to-fuse/history-length.html">履歴の長さ</a>），選び方（<a href="how-to-select/match-key.html">照合で選ぶ</a>・<a href="how-to-select/attention-weight.html">attention で選ぶ</a>・<a href="how-to-select/qkv-split.html">q，k，v の使い方で選ぶ</a>・<a href="how-to-select/qk-and-v.html">qk と v を組み合わせて選ぶ</a>），読ませ方（<a href="how-to-read/patch-mask.html">パッチを隠す</a>・<a href="how-to-read/level-align.html">段差をそろえる</a>・<a href="how-to-read/time-shift.html">時間方向にずらす</a>）の 8 冊に置く．
     </p>
   </div>
@@ -544,16 +553,23 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
 <section>
   <div class="prose">
     <div class="sec-head"><span class="sec-num">0</span><h2>全体の流れ</h2></div>
-    <p>図 1 に，提案手法に至るまでの問題と解決策を示す．各段の詳細は 2 節に書く．</p>
+    <p><strong>研究テーマ：</strong>時系列基盤モデルを学習せずに使い，基盤モデルが持つ仕組みを最大限に使って参照予測を行う．融合の部品も検索器も作らず，事例をどこに置くか，どの列で読ませるか，どれを選ぶかを，基盤モデル自身の attention に合わせて決める．</p>
+    <ul class="tight">
+      <li><strong>渡す</strong>：事例を共変量の行として並列に置き，group attention に数百件を読ませる（(A)）．行の中と行どうしを別の attention で混ぜる 2 軸のモデルなら同じやり方が使える（Chronos-2 以外ではまだ確かめていない）．</li>
+      <li><strong>読ませる</strong>：最初の予測パッチの列だけ，クエリから事例を隠す（(B)）．</li>
+      <li><strong>選ぶ</strong>：基盤モデル自身の attention weight で選び（(C)），key を前計算して候補を広げる（(D)）．発展として，v 前項で状態のずれを補正する（(E)）．比べる相手は，類似度で選ぶ文脈照合である．</li>
+    </ul>
+    <p style="margin-top:0.7em">新規性は 3 つに置く．(1) 数百件の事例を並列の行として凍結した時系列基盤モデルに読ませる many-shot の文脈内学習．(2) 時系列基盤モデル自身の attention weight で事例を選び，key の前計算で候補の数を文脈長から切り離すこと．(3) 発展として，attention weight（qk）だけを使う ICR や QRHead と違い，value の状態のずれ（v 前項）も使って選ぶこと．</p>
+    <p style="margin-top:0.7em">図 1 に，提案手法に至るまでの問題と解決策を示す．各段の詳細は 2 節に書く．</p>
   </div>
   <div class="wide">
     <div class="plate">
-      <div class="plate-body rfig"><svg class="rflow" viewBox="0 0 680 350" role="img" aria-label="問題と解決策"><text class="hd" x="16" y="20">問題</text><text class="hd" x="360" y="20">解決策</text><rect class="prob" x="16" y="34" width="270" height="58" rx="4"/><text class="" x="28" y="52.0" text-anchor="start">連結では，事例をクエリの前につないで</text><text class="" x="28" y="67.0" text-anchor="start">1 本の系列にするため，事例の続きが</text><text class="" x="28" y="82.0" text-anchor="start">ほとんど読まれない</text><line class="arrow" x1="290" y1="63.0" x2="354" y2="63.0"/><path class="ah" d="M358,63.0 L351,59.0 L351,67.0 Z"/><rect class="sol" x="360" y="34" width="304" height="58" rx="4"/><text class="tag lbl" x="372" y="67.0" style="fill:var(--accent)">(A)</text><text class="" x="406" y="59.5" text-anchor="start">事例を共変量の行として並列に置き，</text><text class="" x="406" y="74.5" text-anchor="start">group attention で読ませる</text><rect class="prob" x="16" y="118" width="270" height="58" rx="4"/><text class="" x="28" y="143.5" text-anchor="start">並列で読ませると，直近の予測が</text><text class="" x="28" y="158.5" text-anchor="start">事例に引っぱられて悪くなる</text><line class="arrow" x1="290" y1="147.0" x2="354" y2="147.0"/><path class="ah" d="M358,147.0 L351,143.0 L351,151.0 Z"/><rect class="sol" x="360" y="118" width="304" height="58" rx="4"/><text class="tag lbl" x="372" y="151.0" style="fill:var(--accent)">(B)</text><text class="" x="406" y="143.5" text-anchor="start">最初の予測パッチ P1 の列だけ，</text><text class="" x="406" y="158.5" text-anchor="start">クエリから事例を隠す</text><path class="arrow" d="M400,92 L400,105.0 L151.0,105.0 L151.0,113"/><path class="ah" d="M151.0,117 L147.0,110 L155.0,110 Z"/><text class="note" x="408" y="109.0">副作用</text><rect class="prob" x="16" y="202" width="270" height="58" rx="4"/><text class="" x="28" y="227.5" text-anchor="start">履歴が似た窓を類似度で選んでも，</text><text class="" x="28" y="242.5" text-anchor="start">ランダムに選ぶのと変わらない</text><line class="arrow" x1="290" y1="231.0" x2="354" y2="231.0"/><path class="ah" d="M358,231.0 L351,227.0 L351,235.0 Z"/><rect class="sol" x="360" y="202" width="304" height="58" rx="4"/><text class="tag lbl" x="372" y="235.0" style="fill:var(--accent)">(C)</text><text class="" x="406" y="227.5" text-anchor="start">予測対象に近い事例を重く読むヘッドの</text><text class="" x="406" y="242.5" text-anchor="start">attention weight で選ぶ</text><text class="note" x="16" y="193.0">別の問題</text><rect class="prob" x="16" y="286" width="270" height="58" rx="4"/><text class="" x="28" y="304.0" text-anchor="start">重みを正確に取るには候補を全部</text><text class="" x="28" y="319.0" text-anchor="start">まとめて通す必要があり，候補を</text><text class="" x="28" y="334.0" text-anchor="start">増やせない</text><line class="arrow" x1="290" y1="315.0" x2="354" y2="315.0"/><path class="ah" d="M358,315.0 L351,311.0 L351,319.0 Z"/><rect class="sol" x="360" y="286" width="304" height="58" rx="4"/><text class="tag lbl" x="372" y="319.0" style="fill:var(--accent)">(D)</text><text class="" x="406" y="311.5" text-anchor="start">候補ごとに key を前計算し，</text><text class="" x="406" y="326.5" text-anchor="start">候補 2048 件から 256 件を選ぶ</text><path class="arrow" d="M400,260 L400,273.0 L151.0,273.0 L151.0,281"/><path class="ah" d="M151.0,285 L147.0,278 L155.0,278 Z"/><text class="note" x="408" y="277.0">副作用</text></svg></div>
-      <div class="plate-cap"><b>図 1．問題と解決策</b>連結は従来の方法で，どの解決策もモデルを学習しない．(A) は事例の渡し方，(B) は読ませ方，(C) と (D) は選び方である．</div>
+      <div class="plate-body rfig"><svg class="rflow" viewBox="0 0 680 434" role="img" aria-label="問題と解決策"><text class="hd" x="16" y="20">問題</text><text class="hd" x="360" y="20">解決策</text><rect class="prob" x="16" y="34" width="270" height="58" rx="4"/><text class="" x="28" y="52.0" text-anchor="start">連結では，事例をクエリの前につないで</text><text class="" x="28" y="67.0" text-anchor="start">1 本の系列にするため，事例の続きが</text><text class="" x="28" y="82.0" text-anchor="start">ほとんど読まれない</text><line class="arrow" x1="290" y1="63.0" x2="354" y2="63.0"/><path class="ah" d="M358,63.0 L351,59.0 L351,67.0 Z"/><rect class="sol" x="360" y="34" width="304" height="58" rx="4"/><text class="tag lbl" x="372" y="67.0" style="fill:var(--accent)">(A)</text><text class="" x="406" y="59.5" text-anchor="start">事例を共変量の行として並列に置き，</text><text class="" x="406" y="74.5" text-anchor="start">group attention で読ませる</text><rect class="prob" x="16" y="118" width="270" height="58" rx="4"/><text class="" x="28" y="143.5" text-anchor="start">並列で読ませると，直近の予測が</text><text class="" x="28" y="158.5" text-anchor="start">事例に引っぱられて悪くなる</text><line class="arrow" x1="290" y1="147.0" x2="354" y2="147.0"/><path class="ah" d="M358,147.0 L351,143.0 L351,151.0 Z"/><rect class="sol" x="360" y="118" width="304" height="58" rx="4"/><text class="tag lbl" x="372" y="151.0" style="fill:var(--accent)">(B)</text><text class="" x="406" y="143.5" text-anchor="start">最初の予測パッチ P1 の列だけ，</text><text class="" x="406" y="158.5" text-anchor="start">クエリから事例を隠す</text><path class="arrow" d="M400,92 L400,105.0 L151.0,105.0 L151.0,113"/><path class="ah" d="M151.0,117 L147.0,110 L155.0,110 Z"/><text class="note" x="408" y="109.0">副作用</text><rect class="prob" x="16" y="202" width="270" height="58" rx="4"/><text class="" x="28" y="227.5" text-anchor="start">履歴が似た窓を類似度で選ぶと，</text><text class="" x="28" y="242.5" text-anchor="start">ランダムに選ぶより悪くなる</text><line class="arrow" x1="290" y1="231.0" x2="354" y2="231.0"/><path class="ah" d="M358,231.0 L351,227.0 L351,235.0 Z"/><rect class="sol" x="360" y="202" width="304" height="58" rx="4"/><text class="tag lbl" x="372" y="235.0" style="fill:var(--accent)">(C)</text><text class="" x="406" y="227.5" text-anchor="start">予測対象に近い事例を重く読むヘッドの</text><text class="" x="406" y="242.5" text-anchor="start">attention weight で選ぶ</text><text class="note" x="16" y="193.0">別の問題</text><rect class="prob" x="16" y="286" width="270" height="58" rx="4"/><text class="" x="28" y="304.0" text-anchor="start">重みを正確に取るには候補を全部</text><text class="" x="28" y="319.0" text-anchor="start">まとめて通す必要があり，候補を</text><text class="" x="28" y="334.0" text-anchor="start">増やせない</text><line class="arrow" x1="290" y1="315.0" x2="354" y2="315.0"/><path class="ah" d="M358,315.0 L351,311.0 L351,319.0 Z"/><rect class="sol" x="360" y="286" width="304" height="58" rx="4"/><text class="tag lbl" x="372" y="319.0" style="fill:var(--accent)">(D)</text><text class="" x="406" y="311.5" text-anchor="start">候補ごとに key を前計算し，</text><text class="" x="406" y="326.5" text-anchor="start">候補 2048 件から 256 件を選ぶ</text><path class="arrow" d="M400,260 L400,273.0 L151.0,273.0 L151.0,281"/><path class="ah" d="M151.0,285 L147.0,278 L155.0,278 Z"/><text class="note" x="408" y="277.0">副作用</text><text class="note" x="16" y="361.0">残る問題</text><rect class="prob" x="16" y="370" width="270" height="58" rx="4"/><text class="" x="28" y="388.0" text-anchor="start">attention weight は読む量だけで，</text><text class="" x="28" y="403.0" text-anchor="start">読んだ事例が出力をどう動かすかを</text><text class="" x="28" y="418.0" text-anchor="start">見ない</text><line class="arrow" x1="290" y1="399.0" x2="354" y2="399.0"/><path class="ah" d="M358,399.0 L351,395.0 L351,403.0 Z"/><rect class="sol" x="360" y="370" width="304" height="58" rx="4"/><text class="tag lbl" x="372" y="403.0" style="fill:var(--accent)">(E)</text><text class="" x="406" y="395.5" text-anchor="start">attention weight を v 前項で割り，</text><text class="" x="406" y="410.5" text-anchor="start">状態のずれが小さい事例を選ぶ</text></svg></div>
+      <div class="plate-cap"><b>図 1．問題と解決策</b>連結は従来の方法で，どの解決策もモデルを学習しない．(A) は事例の渡し方，(B) は読ませ方，(C)〜(E) は選び方である．(C)〜(E) はどれも，事例を選ぶのに基盤モデル自身の attention を使う．</div>
     </div>
   </div>
   <div class="prose">
-    <p>提案手法は (A)〜(D) をすべて使う．提案手法の評価として，6 つのデータセットの test で MSE はすべてのデータで下がり，MAE はほとんど下がらなかった（<a href="analysis/test-6datasets.html">test の結果</a>）．ETTh1 の val で調べると，動きが予測対象の方向を向く時点は参照なしの絶対誤差が大きい時点に偏り，予測対象で選ぶとこの割合が上がった（<a href="analysis/mae-vs-mse.html">MAE が下がらず MSE が下がる理由</a>）．</p>
+    <p>提案手法は (A)〜(D) で，(E) は (C) の選び方を発展させたものである．(A)〜(D) は，6 つのデータセットの test で MSE がすべてのデータで下がり，MAE はほとんど下がらなかった．(E) を加えると，ETT の 4 つでは MSE がさらに下がり，exchange_rate では上がった（<a href="analysis/test-6datasets.html">test の結果</a>）．ETTh1 の val で調べると，動きが予測対象の方向を向く時点は参照なしの絶対誤差が大きい時点に偏り，予測対象で選ぶとこの割合が上がった（<a href="analysis/mae-vs-mse.html">MAE が下がらず MSE が下がる理由</a>）．</p>
   </div>
 </section>
 
@@ -608,8 +624,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
       この研究は，2 つの attention の役割分担に合わせてデモを渡し，読ませ方を学習なしで直す．
     </p>
     <p>
-      モデルは凍結したまま使う．モデルを大きくするほど性能が上がるというスケール則が言語モデルで報告され（Kaplan et al.），時系列でも同じ傾向が報告されている（Edwards et al.）．
-      モデルが大きいほど，微調整に要る計算と記憶は増える．文脈内学習は重みを更新しないので，基盤モデルを替えても同じ手順をそのまま使える．
+      モデルは凍結したまま使い，重みを更新しない．基盤モデルは大きくするほど性能が上がり（Kaplan et al.，Edwards et al.），そのぶん fine-tuning は重くなる．文脈内学習なら，より大きな基盤モデルに替えても同じ手順がそのまま使え，モデルの改良をそのまま受け取れる．
     </p>
   </div>
 </section>
@@ -867,12 +882,8 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
       <div class="down">↓</div>
       <div class="step">
         <h4><span class="tag later">補足</span>融合は，基盤モデルにそのまま任せる</h4>
-        <p>従来の RAF の多くは，検索した事例とクエリをどう混ぜるか（融合）を改良してきた．融合の層やクロスアテンションを学習する，類似度で重み付けする，振幅や水準をそろえる，参照なしの予測と後から平均する，などである．
-        並列に置くと，この融合を Chronos-2 の group attention がそのまま行う．事前学習で身につけた「並走する行を混ぜる仕組み」を流用するので，追加の部品も学習も要らない．
-        しかも混ぜ方は，予測の列ごと，ヘッドごとに，クエリに応じて変わる．こちらが変えるのは，何を渡すかと，どの列で見せるかだけである．</p>
-        <p style="margin-top:0.7em">行の中を混ぜる attention と，行どうしを混ぜる attention を交互にかける 2 軸の設計は，最近の基盤モデルで広がっている（Chronos-2 の time / group attention，表データの TabPFN と TabFM の行と列の attention，多変量予測の Crossformer の時間と系列の 2 段の attention など）．
-        並列の行で参照する方法は，この設計にそのまま乗る．専用の融合の部品を作らなくても，2 軸の attention を持つモデルなら同じやり方で事例を読ませられる．
-        LLM でも，デモを並列のグループに分けて渡し，1,000 件まで扱う方法がある（Structured Prompting）．Chronos-2 の論文も，group attention を検索拡張に使うことを今後の課題に挙げている．</p>
+        <p>従来の RAF は，事例とクエリをどう混ぜるか（融合）を，学習する層や類似度の重みとして作り込んできた．並列に置くと，混ぜるのは事前学習ずみの group attention で，混ぜ方は列ごと，ヘッドごとにクエリに応じて変わる．そのため設計の対象は，どう混ぜるかから，何を渡すか（(C)〜(E)）とどの列で見せるか（(B)）に移る．</p>
+        <p style="margin-top:0.7em">行の中と行どうしを別の attention で混ぜる 2 軸の設計は，Chronos-2 のほか表データの TabPFN や多変量予測の Crossformer にもあり，そうしたモデルなら同じやり方で事例を読ませられる．LLM でもデモを並列のグループで渡す方法がある（Structured Prompting）．Chronos-2 の論文は，group attention を検索拡張に使うことを今後の課題に挙げている．</p>
       </div>
       <div class="down">↓</div>
       <div class="step done">
@@ -923,7 +934,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
       <div class="down">↓</div>
       <div class="step now">
         <h4><span class="tag now">(B) 提案</span>最初の予測パッチだけ，クエリから事例を隠す</h4>
-        <p>最初の予測パッチの列でだけ group attention の相手から事例を外すと，1〜16 時間先の平均は参照なしとほぼ同じになる．17 時間先以降の MSE の減少は残り，少し大きくなる．後ろのパッチは time attention で最初のパッチを読む．隠さずに最初のパッチだけ参照なしの予測に差し替えるより MSE は少し下がる（候補 1024 件からランダム 128 件で，隠すと −4.3%，差し替えると −4.0%．差は標準誤差の約 1.5 倍）．1〜2 時間先の MSE の上昇は残る（<a href="how-to-read/patch-mask.html">パッチを隠す</a> 1 節）．評価は val だけ．</p>
+        <p>事例を読むと，1〜16 時間先の MSE は上がり，17 時間先以降は下がる．そこで最初の予測パッチの列でだけ，group attention の相手から事例を外す．すると 1〜16 時間先は参照なしとほぼ同じになり，17 時間先以降の MSE の減少は残る．隠すのはモデルの中なので，後ろのパッチは time attention で，事例を読まずに作った最初のパッチを読む．最初のパッチだけを後から参照なしの予測に差し替えるより，MSE は少し下がる．1〜2 時間先の MSE の上昇は残る（<a href="how-to-read/patch-mask.html">パッチを隠す</a> 1 節）．評価は val だけ．</p>
       </div>
       </div>
   </div>
@@ -955,57 +966,53 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
 <line class="s-faint" x1="76" x2="100" y1="196" y2="196"/><text class="t-ink" x="106" y="200">隠さない（全体 −3.7%）</text>
 <line class="s-ctx" x1="266" x2="290" y1="196" y2="196"/><text class="t-ink" x="296" y="200">隠す</text>
 <rect x="366" y="189" width="18" height="13" fill="var(--accent-wash)"/><text class="t-ink" x="390" y="200">隠したパッチ</text>
-</svg></div><div class="plate-cap"><b>最初の予測パッチを隠したときの，何時間先かごとの MSE の変化（参照なし比）</b>3 時点の移動平均．色の付いた範囲が隠したパッチ．履歴 2032 時点，事例の文脈 384 時点，K=128，事例はクエリごとにランダム（<a href="how-to-read/patch-mask.html">パッチを隠す</a> 1 節）．</div></div>
+</svg></div><div class="plate-cap"><b>最初の予測パッチを隠したときの，何時間先かごとの MSE の変化（参照なし比）</b>3 時点の移動平均．色の付いた範囲が隠したパッチ．履歴 2032 時点，事例の文脈 384 時点，K=128，事例はクエリごとにランダム．差し替えとの比較は図とは別の実行で，候補 1024 件からランダム 128 件のとき，隠すと −4.3%，最初のパッチを参照なしの予測に差し替えると −4.0%（差は標準誤差の約 1.5 倍）（<a href="how-to-read/patch-mask.html">パッチを隠す</a> 1 節）．</div></div>
   </div>
   <div class="prose">
     <div class="flow">
       <div class="down">↓</div>
       <div class="step done">
-        <h4><span class="tag done">問題</span>類似度で選んでも，ランダムに選ぶのと変わらない</h4>
-        <p>履歴が似た窓を類似度で上位 128 件選んでも，MSE はランダムに選ぶのとほとんど変わらない．256 件ではランダムより少し下がるが，MSE の減少の大半は件数と事例の文脈の長さで決まる．LLM の many-shot でも件数が多いと選び方の差が小さくなること（Baek et al.，Bertsch et al.），時系列でも検索で予測が変わるかは窓に入らない情報で決まること（When Does Retrieval Help）が報告されている（<a href="how-to-select/match-key.html">照合で選ぶ</a> 1〜3 節，<a href="how-to-select/attention-weight.html#rq3">attention で選ぶ</a> 2 節）．</p>
+        <h4><span class="tag done">問題</span>類似度で選ぶと，ランダムに選ぶより悪くなる</h4>
+        <p>選び方の余地は大きい．続きが予測対象に近い事例を同じ候補から選べれば，MSE は参照なしより大きく下がる（予測対象を使うので手法ではない）．しかし履歴が似た窓を類似度で上位から選ぶと，MSE はランダムに選ぶより大きい．</p>
+        <p style="margin-top:0.7em">理由は 2 つある．文脈から作った距離は，モデルがすでに使った情報しか持たず，予測の外れと相関しない（<a href="how-to-select/match-key.html">照合で選ぶ</a> 3 節）．さらに，文脈が似た事例ほどモデルは強く信じ，違う続きを写す（同 1 節）．文脈照合で選んだ事例の続きはランダムより予測対象に近いのに，MSE は悪い．事例が良いかどうかは，予測対象への近さだけでは決まらず，モデルがその事例をどう読むかで決まる．LLM の many-shot でも件数が多いと選び方の差が小さくなること（Baek et al.，Bertsch et al.），時系列でも検索で予測が変わるかは窓に入らない情報で決まること（When Does Retrieval Help）が報告されている．</p>
       </div>
       </div>
   </div>
   <div class="wide">
     <div class="plate">
-      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 210" role="img" aria-label="参照なしに対する MSE の変化の比較（K=128，事例の文脈 384 時点）">
-<line class="grid" x1="230.0" x2="230.0" y1="10" y2="184"/>
-<text x="230.0" y="200" text-anchor="middle">0</text>
-<line class="grid" x1="302.5" x2="302.5" y1="10" y2="184"/>
-<text x="302.5" y="200" text-anchor="middle">3.5 pt</text>
-<line class="grid" x1="375.0" x2="375.0" y1="10" y2="184"/>
-<text x="375.0" y="200" text-anchor="middle">7.0 pt</text>
-<line class="grid" x1="447.5" x2="447.5" y1="10" y2="184"/>
-<text x="447.5" y="200" text-anchor="middle">10.5 pt</text>
-<line class="grid" x1="520.0" x2="520.0" y1="10" y2="184"/>
-<text x="520.0" y="200" text-anchor="middle">14.0 pt</text>
-<text class="t-ink" x="220" y="31" text-anchor="end">参照なし</text>
-<rect class="bar-rnd" x="230" y="17" width="1.5" height="20" rx="2"><title>参照なし：0.0 pt</title></rect>
-<text class="t-ink" x="237.5" y="31">0</text>
-<text class="t-ink" x="220" y="65" text-anchor="end">ランダム（3 seed の平均）</text>
-<rect class="bar-rnd" x="230" y="51" width="85.3" height="20" rx="2"><title>ランダム（3 seed の平均）：4.1 pt</title></rect>
-<text class="t-ink" x="321.3" y="65">−4.1%</text>
-<text class="t-ink" x="220" y="99" text-anchor="end">文脈＝文脈照合</text>
-<rect class="bar-ctx" x="230" y="85" width="100.9" height="20" rx="2"><title>文脈＝文脈照合：4.9 pt</title></rect>
-<text class="t-ink" x="336.9" y="99">−4.9%</text>
-<text class="t-ink" x="220" y="133" text-anchor="end">予測＝予測照合</text>
-<rect class="bar-ctx" x="230" y="119" width="99.4" height="20" rx="2"><title>予測＝予測照合：4.8 pt</title></rect>
-<text class="t-ink" x="335.4" y="133">−4.8%</text>
-<text class="t-ink" x="220" y="167" text-anchor="end">未来＝未来照合（診断）</text>
-<rect class="bar-orc" x="230" y="153" width="193.5" height="20" rx="2"><title>未来＝未来照合（診断）：9.3 pt</title></rect>
-<text class="t-ink" x="429.5" y="167">−9.3%　予測対象を使う上限</text>
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 160" role="img" aria-label="類似度で選ぶ場合とランダム，予測対象で選ぶ場合の MSE の変化">
+<line class="zero" x1="230" x2="230" y1="10" y2="118"/>
+<text x="230" y="134" text-anchor="middle">0</text>
+<line class="grid" x1="330" x2="330" y1="10" y2="118"/>
+<text x="330" y="134" text-anchor="middle">−5%</text>
+<line class="grid" x1="430" x2="430" y1="10" y2="118"/>
+<text x="430" y="134" text-anchor="middle">−10%</text>
+<line class="grid" x1="530" x2="530" y1="10" y2="118"/>
+<text x="530" y="134" text-anchor="middle">−15%</text>
+<line class="grid" x1="630" x2="630" y1="10" y2="118"/>
+<text x="630" y="134" text-anchor="middle">−20%</text>
+<text x="430" y="154" text-anchor="middle">参照なしの MSE からの変化</text>
+<text class="t-ink" x="220" y="31" text-anchor="end">ランダム</text>
+<rect class="bar-rnd" x="230" y="17" width="95.4" height="20" rx="2"><title>ランダム：−4.77%</title></rect>
+<text class="t-ink" x="331.4" y="31">−4.8%</text>
+<text class="t-ink" x="220" y="65" text-anchor="end">文脈照合</text>
+<rect class="bar-soft" x="230" y="51" width="35.4" height="20" rx="2"><title>文脈照合：−1.77%</title></rect>
+<text class="t-ink" x="271.4" y="65">−1.8%</text>
+<text class="t-ink" x="220" y="99" text-anchor="end">予測対象で選ぶ（手法ではない）</text>
+<rect class="bar-orc" x="230" y="85" width="380.4" height="20" rx="2"><title>予測対象で選ぶ：−19.02%</title></rect>
+<text class="t-ink" x="616.4" y="99">−19.0%</text>
 </svg></div>
-      <div class="plate-cap"><b>参照なしに対する MSE の変化（val）</b>どれも K=128，事例の文脈 384 時点にそろえた（当時の既定と同じ件数と長さ）．2 つの照合とランダムの差は 1 pt 未満で，予測対象を使う上限とは 4 pt 以上離れている．件数と長さを選び直すと上限は K=16 で −13.9% まで伸びる（1 節）．予測＝予測照合は scratchpad の別実装（3 節と同じ）．ETTh1 全 7 チャネル，履歴 2032 時点，予測 64 時点，事例は並列，候補は 11 時点おき．参照なしの val MSE は 0.5254．</div>
+      <div class="plate-cap"><b>選び方の余地と類似度で選ぶ場合（ETTh1，val）</b>どれも (A) の並列で (B) 最初の予測パッチを隠し，クエリごとにランダムな同じ候補 2048 件から 256 件を選ぶ．履歴 512 時点，事例の文脈 512 時点．文脈照合はクエリの直近 512 時点と候補の文脈の距離（それぞれの文脈で標準化した L2）が近い順，予測対象で選ぶは候補の続きが予測対象に近い順．文脈照合とランダムの差は +3.0 pt（ブートストラップの標準誤差 ±1.0）．選んだ事例の続きと予測対象の RMSE（それぞれの文脈で標準化）はランダム 1.59，文脈照合 1.34，予測対象で選ぶ 0.97．MAE の変化はランダム −0.6%，文脈照合 +1.3%，予測対象で選ぶ −9.0%．参照なしの val MSE は 0.5383．以前の設定での比較は<a href="how-to-select/match-key.html">照合で選ぶ</a> 1 節．値は results/ETTh1_val_select_eval.json と results/ETTh1_val_select_picks.json ．</div>
     </div>
   </div>
   <div class="prose">
     <div class="flow">
       <div class="down">↓</div>
       <div class="step now">
-        <h4><span class="tag now">(C)</span>予測対象に近い事例を重く読むヘッドの attention weight で選ぶ</h4>
-        <p>人が決めた距離ではなく，モデルが事例を読むときの attention weight で選ぶ．</p>
-        <p style="margin-top:0.7em">group attention のヘッドの多くは，続きが予測対象から遠い事例や振幅の大きい事例を重く読む．第 10〜12 層の一部のヘッドは，続きが予測対象に近い事例を重く読む．そこで候補を多めに入れて 1 回読ませ，そのヘッドの重みで K 件に絞ってから予測し直す．このヘッドを選択ヘッドと呼ぶ．選択ヘッドは，重みと事例の続きの予測対象への近さの順位相関が高い第 10〜12 層の 3 つで，当時は train の末尾のクエリで L12H1，L12H7，L11H10 に決めた．今はデータごとに val で選び直している（ETTh1 は L12H1，L11H10，L10H12）．</p>
-        <p style="margin-top:0.7em">候補 1024 件から 128 件を選ぶと，MSE はランダムに選ぶ場合とも候補を全部入れる場合とも比べて下がり，MAE も参照なしを下回る．候補を全部入れても MSE は下がらない．(B) と重ねると MSE はさらに少し下がる．全ヘッドの平均の重み，前の層のヘッド，予測の MSE で決めたヘッドで選ぶと，ランダムに選ぶ場合との MSE の差は標準誤差の中か，MSE が上がる．同じ候補から照合で選ぶと，128 件では選択ヘッドより MSE が大きく，256 件では差は標準誤差の中である．重みはクエリの予測の列の query と事例の続きの列の key から決まる．照合との差が何から来るかは確かめていない（<a href="how-to-select/attention-weight.html#rq3">attention で選ぶ</a> 2 節）．</p>
+        <h4><span class="tag now">(C)</span>基盤モデル自身の attention weight で選ぶ：予測対象に近い事例を重く読むヘッドを使う</h4>
+        <p>事例が良いかどうかはモデルの読み方で決まるので，モデルが事例を読むときの attention weight で選ぶ．並列に置くと事例 1 件が 1 行になるので，group attention の attention weight がそのまま事例ごとの点数になる．言語の検索拡張にも，読み手の attention で文書を選ぶ方法がある（Izacard &amp; Grave，ICR，QRHead）．この研究はそれを時系列基盤モデルの group attention に使う．</p>
+        <p style="margin-top:0.7em">ただし全ヘッドの平均では選べない．多くのヘッドは続きが予測対象から遠い事例や振幅の大きい事例を重く読み，続きが近い事例を重く読むのは第 10〜12 層の一部のヘッドだけである．そこで重みと続きの近さの順位相関が高い 3 ヘッド（選択ヘッド）を val で決め，候補を 1 回読ませてその重みで K 件に絞り，予測し直す．</p>
+        <p style="margin-top:0.7em">選択ヘッドで選ぶと，MSE はランダムに選ぶ場合より下がる．全ヘッドの平均，前の層のヘッド，予測の MSE で決めたヘッドで選ぶと，ランダムと区別できないか MSE が上がる．LLM でも全ヘッドより選んだヘッドのほうがよく選べる（QRHead）．照合で選ぶ場合より，128 件では MSE が下がり，256 件では差がない（<a href="how-to-select/attention-weight.html#rq3">attention で選ぶ</a> 2 節）．</p>
       </div>
     </div>
   </div>
@@ -1079,40 +1086,30 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
       <div class="plate-cap"><b>ヘッドの重みで事例を選ぶ手順</b>候補は 6 件，K は 3 件だけ描いた．重みは選択ヘッド 3 つのそれぞれで，予測の 4 列の重みを平均してから 3 ヘッドで平均する．1 回目の推論は選ぶためだけに使い，予測は選んだ K 件で 2 回目に行う．</div>
     </div>
     <div class="plate">
-      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 300" role="img" aria-label="ヘッドで選ぶことと最初のパッチを隠すことを重ねたときの MSE">
-<line class="grid" x1="200.0" x2="200.0" y1="24" y2="230"/>
-<text x="200.0" y="246" text-anchor="middle">−6%</text>
-<line class="grid" x1="330.0" x2="330.0" y1="24" y2="230"/>
-<text x="330.0" y="246" text-anchor="middle">−4%</text>
-<line class="grid" x1="460.0" x2="460.0" y1="24" y2="230"/>
-<text x="460.0" y="246" text-anchor="middle">−2%</text>
-<line class="zero" x1="590.0" x2="590.0" y1="24" y2="230"/>
-<text x="590.0" y="246" text-anchor="middle">0</text>
-<text class="t-ink" x="190" y="59.0" text-anchor="end">ランダム 128 件</text>
-<rect class="bar-rnd" x="355.8" y="36" width="234.2" height="16" rx="2"><title>ランダム 128 件：−3.6%</title></rect>
-<text x="598.0" y="48">−3.6%</text>
-<rect class="bar-orc" x="313.0" y="55" width="277.0" height="16" rx="2"><title>ランダム 128 件＋1 パッチ隠す：−4.3%</title></rect>
-<text x="598.0" y="67">−4.3%</text>
-<text class="t-ink" x="190" y="109.0" text-anchor="end">ランダム 256 件</text>
-<rect class="bar-rnd" x="309.1" y="86" width="280.9" height="16" rx="2"><title>ランダム 256 件：−4.3%</title></rect>
-<text x="598.0" y="98">−4.3%</text>
-<rect class="bar-orc" x="276.1" y="105" width="313.9" height="16" rx="2"><title>ランダム 256 件＋1 パッチ隠す：−4.8%</title></rect>
-<text x="598.0" y="117">−4.8%</text>
-<text class="t-ink" x="190" y="159.0" text-anchor="end">ヘッドで 128 件</text>
-<rect class="bar-ctx" x="244.3" y="136" width="345.7" height="16" rx="2"><title>ヘッドで 128 件：−5.3%</title></rect>
-<text x="598.0" y="148">−5.3%</text>
-<rect class="bar-orc" x="225.8" y="155" width="364.2" height="16" rx="2"><title>ヘッドで 128 件＋1 パッチ隠す：−5.6%</title></rect>
-<text x="598.0" y="167">−5.6%</text>
-<text class="t-ink" x="190" y="209.0" text-anchor="end">ヘッドで 256 件</text>
-<rect class="bar-ctx" x="235.2" y="186" width="354.8" height="16" rx="2"><title>ヘッドで 256 件：−5.5%</title></rect>
-<text x="598.0" y="198">−5.5%</text>
-<rect class="bar-orc" x="222.3" y="205" width="367.7" height="16" rx="2"><title>ヘッドで 256 件＋1 パッチ隠す：−5.7%</title></rect>
-<text x="598.0" y="217">−5.7%</text>
-<rect class="bar-rnd" x="200" y="264" width="14" height="12" rx="2"/><rect class="bar-ctx" x="216" y="264" width="14" height="12" rx="2"/><text class="t-ink" x="236" y="274">隠さない</text>
-<rect class="bar-orc" x="330" y="264" width="14" height="12" rx="2"/><text class="t-ink" x="350" y="274">最初のパッチを隠す</text>
-<text x="395.0" y="296" text-anchor="middle">参照なしの MSE との差</text>
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 240" role="img" aria-label="最初のパッチを隠した上で，ヘッドで選ぶ場合とランダムに選ぶ場合の MSE">
+<line class="grid" x1="200.0" x2="200.0" y1="24" y2="190"/>
+<text x="200.0" y="206" text-anchor="middle">−6%</text>
+<line class="grid" x1="330.0" x2="330.0" y1="24" y2="190"/>
+<text x="330.0" y="206" text-anchor="middle">−4%</text>
+<line class="grid" x1="460.0" x2="460.0" y1="24" y2="190"/>
+<text x="460.0" y="206" text-anchor="middle">−2%</text>
+<line class="zero" x1="590.0" x2="590.0" y1="24" y2="190"/>
+<text x="590.0" y="206" text-anchor="middle">0</text>
+<text class="t-ink" x="190" y="49" text-anchor="end">ランダム 128 件</text>
+<rect class="bar-rnd" x="310.5" y="36" width="279.5" height="18" rx="2"><title>ランダム 128 件：−4.3%</title></rect>
+<text x="598.0" y="49">−4.3%</text>
+<text class="t-ink" x="190" y="89" text-anchor="end">ランダム 256 件</text>
+<rect class="bar-rnd" x="278.0" y="76" width="312.0" height="18" rx="2"><title>ランダム 256 件：−4.8%</title></rect>
+<text x="598.0" y="89">−4.8%</text>
+<text class="t-ink" x="190" y="129" text-anchor="end">ヘッドで 128 件</text>
+<rect class="bar-ctx" x="226.0" y="116" width="364.0" height="18" rx="2"><title>ヘッドで 128 件：−5.6%</title></rect>
+<text x="598.0" y="129">−5.6%</text>
+<text class="t-ink" x="190" y="169" text-anchor="end">ヘッドで 256 件</text>
+<rect class="bar-ctx" x="219.5" y="156" width="370.5" height="18" rx="2"><title>ヘッドで 256 件：−5.7%</title></rect>
+<text x="598.0" y="169">−5.7%</text>
+<text x="395.0" y="228" text-anchor="middle">参照なしの MSE との差</text>
 </svg></div>
-      <div class="plate-cap"><b>(C) ヘッドで選ぶことと (B) 最初のパッチを隠すことを重ねたときの MSE（val）</b>どれも (A) の並列．履歴 2032 時点，事例の文脈 384 時点，ヘッドは当時の L12H1，L12H7，L11H10，候補はクエリごとにランダムな 1024 件で，どの棒も同じ候補．ランダムは候補の最初の 128 件と 256 件．ヘッドは第 10〜12 レイヤーの上位 3 つ．候補 1024 件を全部入れると −3.7%．MAE は参照なし 0.4634 に対し，ヘッドで 128 件＋隠す 0.4579．隠した上でのヘッドとランダムの差は，128 件 −1.3 pt（ブートストラップの標準誤差 ±0.5），256 件 −0.8 pt（±0.3）（<a href="how-to-select/attention-weight.html#rq3">attention で選ぶ</a> 2 節）．</div>
+      <div class="plate-cap"><b>(C) ヘッドで選ぶ場合とランダムに選ぶ場合の MSE（ETTh1，val）</b>どれも (A) の並列で (B) 最初の予測パッチを隠す．履歴 2032 時点，事例の文脈 384 時点，ヘッドは当時 train の末尾のクエリで決めた L12H1，L12H7，L11H10（今の val で決めたヘッドとは違う），候補はクエリごとにランダムな 1024 件で，どの棒も同じ候補．ランダムは候補の最初の 128 件と 256 件．ヘッドは第 10〜12 レイヤーの上位 3 つ．隠さずに候補 1024 件を全部入れると −3.7%．MAE は参照なし 0.4634 に対し，ヘッドで 128 件 0.4579．ヘッドとランダムの差は，128 件 −1.3 pt（ブートストラップの標準誤差 ±0.5），256 件 −0.8 pt（±0.3），隠さない場合は 128 件 −1.7 pt（±0.5），256 件 −1.1 pt（±0.4）（<a href="how-to-select/attention-weight.html#rq3">attention で選ぶ</a> 2 節）．</div>
     </div>
   </div>
   <div class="prose">
@@ -1120,7 +1117,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
       <div class="down">↓</div>
       <div class="step done">
         <h4><span class="tag done">問題</span>重みを正確に取るには候補を全部まとめて通す必要があり，候補を増やせない</h4>
-        <p>ヘッドの重みで選ぶとき，候補 2048 件までは，候補を増やすと MSE は下がるか変わらない．しかし重みは，クエリと候補を全部まとめてモデルに通さないと得られない．前の層で行どうしが読み合い，重みが一緒に入れた候補に左右されるためである．計算は候補の数に比例し，候補 1024 件でも選ぶほうが予測より何倍もかかる．候補 2048 件はメモリに載らない．</p>
+        <p>ヘッドの重みで選ぶとき，候補 2048 件までは，候補を増やすと MSE は下がるか変わらない．しかし正確な重みは，クエリと候補 <i>M</i> 件をまとめてモデルに通さないと得られない．前の層で行どうしが読み合い，重みが一緒に入れた候補に左右されるためである．クエリ 1 本あたりの計算は <i>O</i>(<i>LMP</i>(<i>d</i><sup>2</sup>＋<i>Md</i>)) になる（<i>L</i> はレイヤー数，<i>P</i> は 1 行のパッチ数，<i>d</i> は隠れ次元）．第 1 項は各行の time attention と FFN，第 2 項は行どうしの group attention である．Chronos-2 は <i>d</i>=768 なので，<i>M</i> が数千件までは第 1 項が大きく，計算量は <i>M</i> にほぼ比例する．ただし測った時間はそれより速く増え，候補 128 件から 1024 件で約 21 倍になった（図）．選ぶための推論が予測（<i>K</i> 行）の <i>M</i>/<i>K</i> 倍以上重く，候補 2048 件はメモリに載らない．</p>
       </div>
     </div>
   </div>
@@ -1186,8 +1183,9 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
       <div class="down">↓</div>
       <div class="step now">
         <h4><span class="tag now">(D)</span>候補ごとに key を前計算し，候補 2048 件から 256 件を選ぶ</h4>
-        <p>候補を 1 件ずつ単独で通し，ヘッドの key を前もって保存しておく．クエリの query は参照なしの推論から取れる．選ぶのはモデルの外で内積と softmax をとるだけなので，候補を増やしても，時間はランダムに選ぶのとほとんど変わらない．行どうしの読み合いを切るので重みは近似になる．同じ候補 1024 件で比べると，MSE は正確な重みと標準誤差の中で同じである．</p>
-        <p style="margin-top:0.7em">候補をさらに増やすと，選んだ事例が隣り合う窓に固まり，MSE が上がる．そこで，候補 2048 件から 256 件を選ぶことを提案手法とする．候補 1024 件との差は標準誤差の中である（<a href="how-to-select/attention-weight.html#rq3">attention で選ぶ</a> 2 節）．</p>
+        <p>候補を 1 件ずつ単独で通し，ヘッドの key を前もって保存しておく．これはデータベース <i>N</i> 件で <i>O</i>(<i>NLPd</i><sup>2</sup>) を 1 回だけかける．クエリの query は，クエリ 1 行の推論 <i>O</i>(<i>LPd</i><sup>2</sup>) から取れる．クエリごとに <i>M</i> に比例するのは <i>M</i> 件の key との内積 <i>O</i>(<i>Md</i>) だけで，モデルを通す部分は <i>M</i> によらない．予測の <i>O</i>(<i>LKP</i>(<i>d</i><sup>2</sup>＋<i>Kd</i>)) は正確な重みと同じである．選ぶのはモデルの外で内積と softmax をとるだけなので，候補を増やしても，時間はランダムに選ぶのとほとんど変わらない．行どうしの読み合いを切るので重みは近似になる．同じ候補 1024 件で比べると，MSE は正確な重みと標準誤差の中で同じである．</p>
+        <p style="margin-top:0.7em">候補をさらに増やすと，選んだ事例が隣り合う窓に固まり，MSE が上がる．そこで，候補 2048 件から 256 件を選ぶ．候補 1024 件との差は標準誤差の中である（<a href="how-to-select/attention-weight.html#rq3">attention で選ぶ</a> 2 節）．</p>
+        <p style="margin-top:0.7em">保存する key はモデル自身の key なので，選ぶ空間と読む空間が同じで，検索器を別に作ることも学習することもない．ICR や QRHead は候補を全部文脈に入れて流すので，候補の数が文脈長で頭打ちになる．前計算では，候補の数は文脈長に縛られない．</p>
       </div>
     </div>
   </div>
@@ -1369,10 +1367,90 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
     </div>
   </div>
   <div class="prose">
+    <div class="flow">
+      <div class="down">↓</div>
+      <div class="step done">
+        <h4><span class="tag done">問題</span>attention weight は読む量だけを見て，読んだ事例が出力をどう動かすかを見ない</h4>
+        <p>group attention のヘッドの出力は，列ごとに，クエリ自身の value と事例の value の差を attention weight で足したものになる（図）．attention weight はクエリが事例をどれだけ読むかで，読んだときに出力がどちらへどれだけ動くかは value の差で決まる．(C) も ICR も QRHead も，attention weight だけで選ぶ．</p>
+        <p style="margin-top:0.7em">候補を続きを隠しても流すと，value の差は，続きを見せる前の項（前項）と，続きを見せたことによる変化の項（変化項）に分かれる．前項は続きを隠しても残る，事例とクエリの状態のずれである．クエリが持っていない続きの情報は，変化項にしか入っていない．前項の大きい事例は，読まれると，続きと関係のない状態のずれの分もクエリの出力を動かす（<a href="how-to-select/qkv-split.html">q，k，v の使い方で選ぶ</a> 1 節）．</p>
+      </div>
+    </div>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 242" role="img" aria-label="ヘッドの出力と，value の差の前項と変化項への分解"><defs><marker id="ahE-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink)"/></marker><marker id="ahE-soft" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink-soft)"/></marker><marker id="ahE-faint" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink-faint)"/></marker></defs>
+<text class="t-ink" x="16" y="22" font-weight="600">クエリの出力（ヘッド 1 本，予測の 1 列）</text>
+<text class="t-ink" x="16" y="58" font-size="13">o − v<tspan baseline-shift="sub" font-size="8">0</tspan>W<tspan baseline-shift="sub" font-size="8">O</tspan> = Σ s<tspan baseline-shift="sub" font-size="8">j</tspan> (v<tspan baseline-shift="sub" font-size="8">j</tspan> − v<tspan baseline-shift="sub" font-size="8">0</tspan>)W<tspan baseline-shift="sub" font-size="8">O</tspan></text>
+<text class="lbl-ctx" x="16" y="90">s<tspan baseline-shift="sub" font-size="8">j</tspan>：クエリが事例 j を読む量（attention weight）</text>
+<text class="t-ink" x="16" y="112">v<tspan baseline-shift="sub" font-size="8">j</tspan> − v<tspan baseline-shift="sub" font-size="8">0</tspan>：読んだときに出力が動く向きと大きさ</text>
+<line x1="16" x2="330" y1="132" y2="132" stroke="var(--rule)"/>
+<text class="t-ink" x="16" y="156">(C)：s<tspan baseline-shift="sub" font-size="8">j</tspan> だけで選ぶ</text>
+<text class="t-ink" x="16" y="178">(E)：s<tspan baseline-shift="sub" font-size="8">j</tspan> を前項の大きさで割って選ぶ</text>
+<text x="16" y="204" font-size="10">v<tspan baseline-shift="sub" font-size="8">0</tspan> はクエリ，v<tspan baseline-shift="sub" font-size="8">j</tspan> は候補を続きありで流した value，</text>
+<text x="16" y="224" font-size="10">ṽ<tspan baseline-shift="sub" font-size="8">j</tspan> は同じ候補を続きを隠して流した value</text>
+<line x1="350" y1="12" x2="350" y2="226" class="grid"/>
+<text class="t-ink" x="372" y="22" font-weight="600">候補 j の value の差を 2 つに分ける</text>
+<line x1="400" y1="196" x2="554" y2="182" stroke="var(--ink-faint)" stroke-width="3" marker-end="url(#ahE-faint)"/>
+<line x1="560" y1="181" x2="608" y2="73" stroke="var(--ink)" stroke-width="3" marker-end="url(#ahE-ink)"/>
+<line x1="400" y1="196" x2="605" y2="72" stroke="var(--ink-soft)" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#ahE-soft)"/>
+<circle cx="400" cy="196" r="5" fill="var(--ink)"/><circle cx="560" cy="181" r="5" fill="var(--ink)"/><circle cx="610" cy="66" r="5" fill="var(--ink)"/>
+<text x="384" y="230">v<tspan baseline-shift="sub" font-size="8">0</tspan> クエリ（続きなし）</text>
+<text x="566" y="200">ṽ<tspan baseline-shift="sub" font-size="8">j</tspan> 候補（続きを隠す）</text>
+<text x="598" y="58" text-anchor="end">v<tspan baseline-shift="sub" font-size="8">j</tspan> 候補（続きあり）</text>
+<text class="t-ink" x="478" y="208" text-anchor="middle"><tspan font-weight="600">前項</tspan>（状態のずれ）</text>
+<text class="t-ink" x="596" y="128" text-anchor="start" font-weight="600">変化項</text>
+<text x="596" y="144" text-anchor="start" font-size="10">続きの情報</text>
+<text class="t-ink" x="486" y="112" text-anchor="end">v<tspan baseline-shift="sub" font-size="8">j</tspan> − v<tspan baseline-shift="sub" font-size="8">0</tspan></text>
+</svg></div>
+      <div class="plate-cap"><b>ヘッドの出力と，value の差の分解</b>s<sub>j</sub> は列ごとにクエリ自身と候補の上で取った softmax，W<sub>O</sub> はヘッドの出力の射影．value はどれも W<sub>O</sub> を掛けた出力の空間で測る．どの値も行を 1 本ずつ流した前計算の値で，事例を並べて流したときの値とは一致しない（<a href="how-to-select/qk-and-v.html">qk と v を組み合わせて選ぶ</a> 1 節）．</div>
+    </div>
+  </div>
+  <div class="prose">
+    <div class="flow">
+      <div class="down">↓</div>
+      <div class="step now">
+        <h4><span class="tag now">(E) 発展</span>attention weight を v 前項の大きさで割り，状態のずれが小さい事例を選ぶ</h4>
+        <p>点数を次のようにして，上位 256 件を選ぶ（qk ÷ v 前項）．w は (C) と同じまとめ方の attention weight，Σ は選択ヘッドと予測の 4 列の和である．</p>
+        <math display="block" class="eq"><msub><mi>S</mi><mi>j</mi></msub><mo>=</mo><mfrac><mrow><mi>w</mi><mo>(</mo><msub><mi>q</mi><mn>0</mn></msub><mo>·</mo><msub><mi>k</mi><mi>j</mi></msub><mo>)</mo></mrow><mrow><mo>∑</mo><mo>‖</mo><mo>(</mo><msub><mover><mi>v</mi><mo>~</mo></mover><mi>j</mi></msub><mo>−</mo><msub><mi>v</mi><mn>0</mn></msub><mo>)</mo><msub><mi>W</mi><mi>O</mi></msub><mo>‖</mo></mrow></mfrac></math>
+        <p>分子は，モデルがその事例をどれだけ読むかである．分母は，事例の続きを隠しても残る，クエリとの状態のずれである．状態がずれた事例は，続きの情報とは関係なく出力を動かす．割ることで，よく読まれ，かつクエリと同じ状態から出発した事例を選ぶ．同じ状態から出発した過去の続きを借りるという analog ensemble の考え方（Delle Monache et al.）を，人が決めた距離ではなく，モデル自身の value の空間で課すことにあたる．ṽ<sub>j</sub> は候補を続きを隠して 1 本ずつ流せば得られるので，k と同じく前計算できる．</p>
+        <p style="margin-top:0.7em">分母だけでは選び方にならない．v 前項だけで選ぶと MSE は (C) と区別できず，qk ÷ v 前項は (C) が選んだ事例の多くを残して一部を入れ替える．(E) は (C) を置き換えるものではなく，(C) を補正するものである（<a href="how-to-select/qk-and-v.html">qk と v を組み合わせて選ぶ</a> 3・4 節）．</p>
+        <p style="margin-top:0.7em">val では MSE が (C) より下がり，文脈照合との差も広がる．ただし，割るとなぜ良くなるかはまだ確かめていない．前項の小さい事例ほど，出力の変化の向きはクエリが自分の続きを知ったときの向きに近づくが，その近さでは選び方ごとの MSE の順を説明できない．test では ETT の 4 つで (C) より MSE が下がり，exchange_rate では上がった（<a href="analysis/test-6datasets.html">test の結果</a> 3 節）．</p>
+      </div>
+    </div>
+  </div>
+  <div class="wide">
+    <div class="plate">
+      <div class="plate-body"><svg class="diagram chart" viewBox="0 0 680 196" role="img" aria-label="選び方ごとの MSE の変化">
+<line class="zero" x1="230" x2="230" y1="10" y2="152"/>
+<text x="230" y="168" text-anchor="middle">0</text>
+<line class="grid" x1="350" x2="350" y1="10" y2="152"/>
+<text x="350" y="168" text-anchor="middle">−2%</text>
+<line class="grid" x1="470" x2="470" y1="10" y2="152"/>
+<text x="470" y="168" text-anchor="middle">−4%</text>
+<line class="grid" x1="590" x2="590" y1="10" y2="152"/>
+<text x="590" y="168" text-anchor="middle">−6%</text>
+<text x="410" y="188" text-anchor="middle">参照なしの MSE からの変化</text>
+<text class="t-ink" x="220" y="31" text-anchor="end">ランダム</text>
+<rect class="bar-rnd" x="230" y="17" width="286.2" height="20" rx="2"><title>ランダム：−4.77%</title></rect>
+<text class="t-ink" x="522.2" y="31">−4.8%</text>
+<text class="t-ink" x="220" y="65" text-anchor="end">文脈照合</text>
+<rect class="bar-soft" x="230" y="51" width="106.2" height="20" rx="2"><title>文脈照合：−1.77%</title></rect>
+<text class="t-ink" x="342.2" y="65">−1.8%</text>
+<text class="t-ink" x="220" y="99" text-anchor="end">(C)(D) qk</text>
+<rect class="bar-ctx" x="230" y="85" width="313.8" height="20" rx="2"><title>qk：−5.23%</title></rect>
+<text class="t-ink" x="549.8" y="99">−5.2%</text>
+<text class="t-ink" x="220" y="133" text-anchor="end">(E) qk ÷ v 前項</text>
+<rect class="bar-ctx" x="230" y="119" width="355.2" height="20" rx="2"><title>qk ÷ v 前項：−5.92%</title></rect>
+<text class="t-ink" x="591.2" y="133">−5.9%</text>
+</svg></div>
+      <div class="plate-cap"><b>選び方ごとの MSE（ETTh1，val）</b>条件は「類似度で選ぶと」の図と同じ（(A)，(B)，同じ候補 2048 件から 256 件，履歴 512 時点，事例の文脈 512 時点）で，点数だけが違う．qk と qk ÷ v 前項のヘッドはどちらも L12H1，L11H10，L10H12（val で正確な重みから選んだもの）．ヘッドを選ぶのにも評価にも同じ val を使っている．文脈照合との差（ブートストラップの標準誤差）は，ランダム −3.0 pt（±1.0），qk −3.5 pt（±1.2），qk ÷ v 前項 −4.1 pt（±1.2）．qk との差は，ランダム +0.5 pt（±0.8），qk ÷ v 前項 −0.7 pt（±0.4）．qk ÷ v 前項が選ぶ事例のうち (C) と同じものは 7 割前後，v 前項だけで選ぶと 4 割弱．qk ÷ v 前項は，点数ごとに 10〜12 層から選び直したヘッド（L12H1，L12H7，L12H8）では −5.8%．MAE の変化はランダム −0.6%，文脈照合 +1.3%，qk −1.0%，qk ÷ v 前項 −1.3%．予測対象で選ぶ（−19.0%）は図から外した．値は results/ETTh1_val_select_eval.json ．</div>
+    </div>
+  </div>
+  <div class="prose">
     <p>
       どの段階でもモデルは凍結したままで，学習しない．変えるのは，事例をどこに置くか，どの列でどの行を見せるか，どの行を入れるかだけである．
-      ここまでの数値は，ETTh1 の val で，クエリの履歴 2032 時点，事例の文脈 384 時点で測った．その後，クエリの履歴を先行研究に合わせて 512 時点にし，事例の文脈も 512 時点にした．選択ヘッドはデータごとに val で選び直した．
-      この設定で 6 つのデータセットの test を 1 回だけ流すと，MSE はすべてのデータで下がり，MAE はほとんど下がらなかった（<a href="analysis/test-6datasets.html">test の結果</a>）．図 2 に提案手法の全体を示す．
+      (A)〜(D) の数値は，ETTh1 の val で，クエリの履歴 2032 時点，事例の文脈 384 時点で測った．その後，クエリの履歴を先行研究に合わせて 512 時点にし，事例の文脈も 512 時点にした．選択ヘッドはデータごとに val で選び直した．「類似度で選ぶと」と (E) の図の数値は，この設定のものである．
+      この設定で (A)〜(D) を 6 つのデータセットの test で 1 回だけ流すと，MSE はすべてのデータで下がり，MAE はほとんど下がらなかった．(E) は weather を除く 5 つで流した（<a href="analysis/test-6datasets.html">test の結果</a>）．図 2 に提案手法の全体を示す．
     </p>
   </div>
   <div class="wide">
@@ -1466,7 +1544,7 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
   <text class="t-small" x="16" y="430">・クエリの履歴も事例の文脈も 512 時点．正規化は行ごとに行う</text>
   <text class="t-small" x="16" y="446">・Chronos-2 は凍結したままで，学習するものはない．出力はクエリの行の予測 64 時点</text>
 </svg></div>
-      <div class="plate-cap"><b>図 2．提案手法の全体</b>(D) で前計算した key を使って (C) で 256 件を選び，(A) の並列の行に置き，(B) で P1 の列だけ事例を隠して予測する．</div>
+      <div class="plate-cap"><b>図 2．提案手法の全体</b>(D) で前計算した key を使って (C) で 256 件を選び，(A) の並列の行に置き，(B) で P1 の列だけ事例を隠して予測する．発展の (E) では，(C) の attention weight を，同じく前計算した v 前項の大きさで割ってから選ぶ（図には描いていない）．</div>
     </div>
   </div>
 </section>
@@ -1526,7 +1604,10 @@ ul.tight, ol.tight { padding-left: 1.4em; margin: 0 0 1.15em; } ul.tight li, ol.
       <li>Structured Prompting（arXiv 2212.06713）：デモを並列のグループに分けて注意を再スケールし，1,000 件まで渡す．</li>
       <li>When Does Retrieval Help（arXiv 2609.20193）：検索の効き目は窓に入らない情報で決まる．</li>
       <li>RACE（arXiv 2610.00405），ECHO（arXiv 2610.16433）：近い過去の誤差で予測を後から補正する．</li>
-      <li>Delle Monache et al.（2013）の analog ensemble：予測＝予測照合の考え方の元．</li>
+      <li>Delle Monache et al.（2013）の analog ensemble：予測＝予測照合と (E) の考え方の元．</li>
+      <li>Izacard &amp; Grave（ICLR 2021，arXiv 2012.04584）：FiD の読み手が文書に置く cross-attention を，検索器を学習する教師に使う．</li>
+      <li>ICR（Chen et al.，ICLR 2025，arXiv 2410.02642）：LLM の全層・全ヘッドの attention weight で文書を並べ替える．中身のないクエリで較正する．学習なし．</li>
+      <li>QRHead（Zhang et al.，EMNLP 2025，arXiv 2506.09944）：正解の文書に置く attention の量で 16 ヘッドほどを選び，その attention weight で文書を選ぶ．全ヘッドより良い．</li>
       <li>Han et al.（2023）：文脈内学習をカーネル回帰として見る．</li>
       <li>TabPFN（Hollmann et al.，Nature 2025），TabFM（arXiv 2609.37959）：表データの基盤モデルで，行と列の attention を交互にかける．</li>
       <li>Crossformer（ICLR 2023）：多変量予測で，時間方向と系列方向の 2 段の attention を持つ．</li>
